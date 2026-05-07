@@ -6,8 +6,14 @@
 # Ham kaynak veri (büyük dosya, uygulamada kullanılmıyor)
 veriX.json
 
-# Yerel sunucu scripti (sadece PC'de kullanılır)
+# Büyük CSV kaynak dosyası (hassas üretim verisi)
+kalitex.csv
+*.csv
+
+# Yerel araç scriptleri (sadece PC'de kullanılır)
 KaliteX-Baslat.bat
+_convert.ps1
+*.ps1
 
 # OS
 Thumbs.db
