@@ -1,98 +1,94 @@
-// KaliteX Service Worker — v1
-// Strateji: Cache-first (offline önce), Network-fallback
-// CDN kaynakları ilk yüklemede önbelleğe alınır
+// KaliteX Service Worker — v3
+// Strateji:
+//   - Uygulama dosyaları (HTML, JSON, SVG): Cache-first
+//   - CDN (Tailwind, Lucide, Fonts): Cache-first, ilk görüldüğünde dinamik olarak cache'le
+//   - Supabase auth: Her zaman network (login gerektirir)
+//   - Supabase REST API: Network-first, offline'da cache'den dön
+//   - Font dosyaları (.woff2): Görüldükçe cache'le (opaque response da dahil)
 
-const CACHE = 'kalitex-v2';
+const CACHE = 'kalitex-v3';
 
-// Her zaman önbelleğe alınacak yerel dosyalar
 const LOCAL_ASSETS = [
+  './',
   './kalite.html',
-  './dataX.json',
   './manifest.json',
   './icon.svg',
+  './dataX.json',
 ];
 
-// İlk açılışta önbelleğe alınmaya çalışılacak CDN dosyaları
 const CDN_ASSETS = [
   'https://cdn.tailwindcss.com/3.4.17',
   'https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js',
   'https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap',
-  'https://fonts.gstatic.com',
 ];
 
-// ── Kurulum: yerel dosyaları kesin, CDN'i best-effort önbelleğe al ─────────
+// ── Kurulum ─────────────────────────────────────────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE).then(async cache => {
-      // Yerel dosyalar başarısız olursa kurulum durur
       await cache.addAll(LOCAL_ASSETS);
-      // CDN dosyaları için hata olursa devam et
       await Promise.allSettled(
         CDN_ASSETS.map(url =>
           fetch(url, { mode: 'cors' })
-            .then(r => { if (r.ok) cache.put(url, r); })
+            .then(r => { if (r.ok || r.type === 'opaque') cache.put(url, r); })
             .catch(() => null)
         )
       );
     })
   );
-  // Eski SW beklemeye gerek kalmadan etkinleştir
   self.skipWaiting();
 });
 
-// ── Etkinleştirme: eski önbellekleri temizle ────────────────────────────────
+// ── Etkinleştirme ────────────────────────────────────────────────────────────
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
-      )
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
     )
   );
-  // Tüm sekmeleri hemen bu SW'ye bağla
   self.clients.claim();
 });
 
-// ── Fetch: Cache-first, Network-fallback ────────────────────────────────────
+// ── Fetch ────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', event => {
   const { request } = event;
-
-  // Sadece GET isteklerini yönet
   if (request.method !== 'GET') return;
 
-  // SDK isteklerini (platform-specific) atla — offline olunca zaten çalışmaz
-  if (request.url.includes('/_sdk/')) return;
+  const url = request.url;
 
-  // Supabase gibi API istekleri için Network-first (gerçek zamanlı veri önemli)
-  if (request.url.includes('supabase.co')) {
+  // Supabase AUTH — her zaman network (offline'da login zaten olmaz, session localStorage'da)
+  if (url.includes('supabase.co/auth/')) return;
+
+  // Supabase REST — network-first, offline'da cache'den dön
+  if (url.includes('supabase.co')) {
     event.respondWith(
       fetch(request)
-        .then(response => {
-          if (response.ok) {
-            const clone = response.clone();
+        .then(res => {
+          if (res.ok) {
+            const clone = res.clone();
             caches.open(CACHE).then(c => c.put(request, clone));
           }
-          return response;
+          return res;
         })
         .catch(() => caches.match(request))
     );
     return;
   }
 
-  // Diğer her şey için Cache-first
+  // Diğer her şey (uygulama dosyaları + CDN + fontlar): cache-first, dinamik cache
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
 
-      return fetch(request).then(response => {
-        // Başarılı yanıtları önbelleğe ekle
-        if (response.ok) {
-          const clone = response.clone();
+      return fetch(request).then(res => {
+        // Başarılı yanıtları ve opaque (no-cors font) yanıtları cache'le
+        if (res.ok || res.type === 'opaque') {
+          const clone = res.clone();
           caches.open(CACHE).then(c => c.put(request, clone));
         }
-        return response;
+        return res;
       }).catch(() => {
-        // Sayfa navigasyonunda offline fallback
+        // Sayfa navigasyonunda offline fallback — ana sayfayı döndür
         if (request.mode === 'navigate') {
           return caches.match('./kalite.html');
         }
@@ -101,15 +97,11 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// ── Arkaplan sync (ileride Supabase entegrasyonu için hazır) ────────────────
+// ── Arkaplan sync ────────────────────────────────────────────────────────────
 self.addEventListener('sync', event => {
-  if (event.tag === 'sync-forms') {
-    event.waitUntil(syncPendingForms());
-  }
+  if (event.tag === 'sync-forms') event.waitUntil(syncPendingForms());
 });
 
 async function syncPendingForms() {
-  // Offline'da biriken form verilerini Supabase'e gönder
-  // [Supabase entegrasyonu eklenince burası doldurulacak]
-  console.log('[SW] Bekleyen formlar senkronize ediliyor...');
+  console.log('[KaliteX SW] Bekleyen formlar kontrol ediliyor...');
 }
