@@ -478,6 +478,7 @@
     'PYT40':'pyt-40','PYT90':'pyt-90','PYT750':'pyt-750','PYT800':'pyt-800',
     'MSTPRO02':'mst-pro-02','LVB60':'mts-lvb-60','LVB100':'mst-lvb-100',
     'RTS2B':'rts-346-2b','RTS4B':'rts-346-4b','ULT400':'ult-m400-1b-l',
+    'KNV303000':'knv-30-3000-2b','KNV604250':'knv-60-4250-1b','KNV606000':'knv-60-6000-2b',
   };
 
   function khImportCSV() {
@@ -992,6 +993,7 @@
             <button class="khbtn khbr" onclick="khImportJSON()">📥 JSON Yükle</button>
             <button class="khbtn khbr" onclick="khExportJSON()">JSON İndir</button>
             <button class="khbtn khbgr" onclick="khAddRow()">+ Satır Ekle</button>
+            <button class="khbtn" style="background:#7c3aed;color:#fff;" onclick="khForceReload()" title="localStorage temizle, Supabase'den sıfırdan çek">&#8635; Supabase'den Yenile</button>
             <span id="kh-sync-st" style="font-size:11px;font-weight:700;padding:0 8px;"></span>
             <span style="margin-left:auto;font-size:10px;color:#9ca3af;font-weight:600;">
               Ctrl+C Kopyala &nbsp;|&nbsp; Ctrl+V Yapıştır &nbsp;|&nbsp; Ctrl+X Kes &nbsp;|&nbsp; Ctrl+A Tümü &nbsp;|&nbsp; Del Sil &nbsp;|&nbsp; Çift tık / F2: düzenle
@@ -1614,6 +1616,56 @@
       <div class="kf-kb-disp">${disp}</div>
       <div class="kf-kb-keys">${keys}</div>
     `;
+  }
+
+  // ── Kalite Havuzu Kaydet / Yükle ─────────────────────────────────────────────
+  async function khForceReload() {
+    if (!navigator.onLine) { khToast('Offline — Supabase\'e bağlanılamıyor', 3000); return; }
+    if (!confirm('localStorage temizlenecek ve Supabase\'den tüm veriler yeniden çekilecek. Emin misiniz?')) return;
+    localStorage.removeItem('dataX');
+    localStorage.removeItem('dataX_version');
+    KH._ready = false;
+    KH.paramData = [];
+    for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
+    KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
+    khSyncStatus('syncing');
+    khToast('Supabase\'den yükleniyor...', 5000);
+    try {
+      await khLoadFromSupabase();
+      khSaveLocal();
+      khSyncStatus('ok');
+      KH._ready = true;
+      khBuildFR(); khBuildHeader(); khVSR();
+      khToast('Supabase\'den yülendi ✓', 2000);
+    } catch(e) {
+      khSyncStatus('error');
+      khToast('Hata: ' + (e.message||e), 4000);
+    }
+  }
+
+  // ── Kalite Havuzu Force Reload ───────────────────────────────────────────────
+  async function khForceReload() {
+    if (!navigator.onLine) { khToast('Offline — Supabase\'e bağlanılamıyor', 3000); return; }
+    if (!confirm('localStorage temizlenecek ve Supabase\'den tüm veriler yeniden çekilecek. Emin misiniz?')) return;
+    localStorage.removeItem('dataX');
+    localStorage.removeItem('dataX_version');
+    KH._ready = false;
+    KH.paramData = [];
+    for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
+    KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
+    khSyncStatus('syncing');
+    khToast('Supabase\'den yükleniyor...', 5000);
+    try {
+      await khLoadFromSupabase();
+      khSaveLocal();
+      khSyncStatus('ok');
+      KH._ready = true;
+      khBuildFR(); khBuildHeader(); khVSR();
+      khToast('Supabase\'den yüklendi ✓', 2000);
+    } catch(e) {
+      khSyncStatus('error');
+      khToast('Hata: ' + (e.message||e), 4000);
+    }
   }
 
   // ── Kalite Formu Kaydet / Yükle ─────────────────────────────────────────────
