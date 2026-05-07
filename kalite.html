@@ -267,6 +267,24 @@
   }
 
   // ── Data init / load / save ──────────────────────────────────
+  async function khGetSupabaseAsamaCount() {
+    // Sadece Content-Range header'dan toplam atama sayısını çek (hafif istek)
+    try {
+      const r = await fetch(SB_URL + '/rest/v1/model_atama?select=model_id&limit=1', {
+        headers: sbH({ 'Prefer': 'count=exact' })
+      });
+      const range = r.headers.get('Content-Range'); // örn: "0-0/4425"
+      if (range) { const m = range.match(/\/(\d+)$/); if (m) return parseInt(m[1]); }
+    } catch(e) {}
+    return null;
+  }
+
+  function khLocalAsamaCount() {
+    let n = 0;
+    for (const obj of Object.values(KH.assignments)) n += Object.keys(obj || {}).length;
+    return n;
+  }
+
   async function khInit() {
     if (KH._ready) return;
     KH._ready = true;
@@ -274,32 +292,45 @@
     for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
     KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
 
-    // 1. localStorage — her zaman önce bak (hızlı ve güvenilir)
+    // 1. localStorage — hızlı yükle ve UI'ı göster
+    let localLoaded = false;
     const saved = localStorage.getItem('dataX');
     if (saved) {
       try {
         khLoadJSON(JSON.parse(saved));
         if (KH.paramData.some(r => r[0])) {
+          localLoaded = true;
           khSyncStatus('ok');
-          return;
         }
       } catch(e) { console.warn('[KaliteX] localStorage okunamadi:', e); }
     }
 
-    // 2. localStorage boşsa Supabase'den yükle (ilk kurulum / yeni cihaz)
+    // 2. Online ise Supabase atama sayısını kontrol et
     if (navigator.onLine) {
       try {
-        await khLoadFromSupabase();
-        if (KH.paramData.some(r => r[0])) {
-          khSaveLocal(); // Supabase verisini localStorage'a kaydet
-          khSyncStatus('ok');
-          return;
+        const sbCount = await khGetSupabaseAsamaCount();
+        const localCount = khLocalAsamaCount();
+        console.log(`[KaliteX] Atama: local=${localCount}, supabase=${sbCount}`);
+        if (sbCount !== null && sbCount !== localCount) {
+          // Supabase'de farklı veri var — tam yükle ve localStorage'ı güncelle
+          console.log('[KaliteX] Supabase farkli, yeniden yukleniyor...');
+          khSyncStatus('syncing');
+          KH.paramData = [];
+          for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
+          KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
+          await khLoadFromSupabase();
+          if (KH.paramData.some(r => r[0])) {
+            khSaveLocal();
+            khSyncStatus('ok');
+            return;
+          }
         }
-        console.warn('[KaliteX] Supabase\'dan veri gelmedi');
-      } catch(e) { console.warn('[KaliteX] Supabase yüklenemedi:', e); }
+      } catch(e) { console.warn('[KaliteX] Supabase sayim hatasi:', e); }
     }
 
-    // Veri yok — kullanıcıdan CSV yüklenmesini bekle
+    if (localLoaded) return;
+
+    // 3. localStorage da Supabase da boşsa CSV bekle
     khSyncStatus('offline');
     khToast('Veri bulunamadı. Lütfen 📂 CSV Yükle butonunu kullanın.', 4000);
   }
