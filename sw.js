@@ -2,7 +2,7 @@
 // Strateji: Cache-first (offline önce), Network-fallback
 // CDN kaynakları ilk yüklemede önbelleğe alınır
 
-const CACHE = 'kalitex-v1';
+const CACHE = 'kalitex-v2';
 
 // Her zaman önbelleğe alınacak yerel dosyalar
 const LOCAL_ASSETS = [

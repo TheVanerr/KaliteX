@@ -1167,15 +1167,14 @@
       // Oturum aç
       SB_TOKEN = data.access_token;
       const userName = data.user?.email?.split('@')[0] || data.user?.email || 'Kullanıcı';
-      document.getElementById('header-user').textContent = userName;
-      document.getElementById('auth-modal').style.display = 'none';
-      document.getElementById('splash').style.display = 'none';
-      const app = document.getElementById('app');
-      app.style.removeProperty('display');
-      app.style.display = 'flex';
-      lucide.createIcons();
-      await khInit(); khBuildHeader(); khBuildFR(); khVSR();
-      renderPage(currentPage);
+      // Session'ı localStorage'a kaydet (sayfa yenilemede kaybolmasın)
+      localStorage.setItem('kx_session', JSON.stringify({
+        access_token: data.access_token,
+        email: data.user?.email || '',
+        user_name: userName,
+        expires_at: Math.floor(Date.now() / 1000) + (data.expires_in || 3600)
+      }));
+      authShowApp(userName);
     } catch(ex) {
       err.textContent = ex.message; err.style.display = 'block';
     } finally {
@@ -1185,12 +1184,25 @@
 
   function authSignOut() {
     SB_TOKEN = null;
+    localStorage.removeItem('kx_session');
     document.getElementById('app').style.display = 'none';
     document.getElementById('auth-modal').style.display = 'none';
     document.getElementById('splash').style.display = 'flex';
     document.getElementById('auth-pass').value = '';
     document.getElementById('auth-err').style.display = 'none';
     KH._ready = false;
+  }
+
+  async function authShowApp(userName) {
+    document.getElementById('header-user').textContent = userName;
+    document.getElementById('auth-modal').style.display = 'none';
+    document.getElementById('splash').style.display = 'none';
+    const app = document.getElementById('app');
+    app.style.removeProperty('display');
+    app.style.display = 'flex';
+    lucide.createIcons();
+    await khInit(); khBuildHeader(); khBuildFR(); khVSR();
+    renderPage(currentPage);
   }
 
   function openLogin() {}
@@ -1252,6 +1264,24 @@
 
   applyConfig(defaultConfig);
   lucide.createIcons(); // splash ekranındaki ikonlar için
+
+  // ── Sayfa açılınca kaydedilmiş session kontrolü ─────────────────────────────
+  (async () => {
+    try {
+      const raw = localStorage.getItem('kx_session');
+      if (raw) {
+        const session = JSON.parse(raw);
+        const now = Math.floor(Date.now() / 1000);
+        if (session.access_token && session.expires_at > now) {
+          // Geçerli session var — login ekranını atla
+          SB_TOKEN = session.access_token;
+          await authShowApp(session.user_name || session.email?.split('@')[0] || 'Kullanıcı');
+          return;
+        }
+      }
+    } catch(e) {}
+    // Session yoksa ya da süre dolmuşsa splash ekranında kal
+  })();
 
   // ── PWA: Service Worker kaydı ──────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
