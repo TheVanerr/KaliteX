@@ -1117,29 +1117,30 @@
       const isModelPage = typeof KH_MODELS !== 'undefined' && KH_MODELS.some(m => m.id === currentPage);
 
       if (isModelPage) {
-        if (!window.mpData) window.mpData = {};
-        if (!window.mpData[currentPage]) {
-          window.mpData[currentPage] = [];
-          for (let r = 0; r < 100; r++) window.mpData[currentPage].push(new Array(7).fill(''));
-        }
-        const _mpId = currentPage;
+        const _mpId   = currentPage;
         const _mpCols = ['KOD', 'ALAN TÜRÜ', 'UZUNLUK', 'DESİMAL', 'AÇIKLAMA', 'GRUP', 'GRUP KODU'];
-        const _mpW   = [80, 100, 90, 85, 270, 70, 90];
+        const _mpW    = [80, 100, 90, 85, 270, 70, 90];
+        // Ortalanacak sütunlar (AÇIKLAMA hariç hepsi)
+        const _mpCtr  = [true, true, true, true, false, true, true];
 
         function _mpEsc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+        // Kalite Havuzundan X işaretli satırları çek
+        const rows = khGetModelParams(_mpId);
+
         function _mpRows() {
-          const data = window.mpData[_mpId];
-          let html = '';
-          for (let ri = 0; ri < data.length; ri++) {
-            html += `<tr class="mp-row" data-ri="${ri}">`;
-            html += `<td class="mp-rn">${ri + 1}</td>`;
-            for (let ci = 0; ci < 7; ci++) {
-              html += `<td class="mp-cell"><div class="mp-cv">${_mpEsc(data[ri][ci])}</div></td>`;
-            }
-            html += `</tr>`;
-          }
-          return html;
+          if (!rows.length) return `<tr><td colspan="8" style="text-align:center;padding:32px;color:#9ca3af;font-size:13px;">Bu model için Kalite Havuzunda atama bulunamadı.</td></tr>`;
+          return rows.map((r, idx) => `
+            <tr class="mp-row">
+              <td class="mp-rn">${idx + 1}</td>
+              <td class="mp-cell"><div class="mp-cv mp-ctr">${_mpEsc(r.kod)}</div></td>
+              <td class="mp-cell"><div class="mp-cv mp-ctr">${_mpEsc(r.alanTuru)}</div></td>
+              <td class="mp-cell"><div class="mp-cv mp-ctr">${_mpEsc(r.uzunluk)}</div></td>
+              <td class="mp-cell"><div class="mp-cv mp-ctr">${_mpEsc(r.desimal)}</div></td>
+              <td class="mp-cell" style="min-width:270px;"><div class="mp-cv">${_mpEsc(r.aciklama)}</div></td>
+              <td class="mp-cell"><div class="mp-cv mp-ctr">${_mpEsc(r.grup)}</div></td>
+              <td class="mp-cell"><div class="mp-cv mp-ctr">${_mpEsc(r.grupKodu)}</div></td>
+            </tr>`).join('');
         }
 
         document.getElementById('page-content').innerHTML = `
@@ -1152,14 +1153,16 @@
             .mp-tbl th { background:#dc2626; color:#fff; font-size:11px; font-weight:700; text-align:center; padding:10px 8px; border-right:1px solid rgba(255,255,255,0.2); white-space:nowrap; }
             .mp-tbl th:first-child { width:46px; min-width:46px; background:#dc2626; }
             .mp-rn { width:46px; min-width:46px; text-align:center; font-size:10px; color:#9ca3af; background:#f9fafb; border-right:1px solid #e5e7eb; border-bottom:1px solid #f0f0f0; padding:0; height:38px; line-height:38px; user-select:none; position:sticky; left:0; }
-            .mp-row { background:#fff; } .mp-row:nth-child(even) { background:#fafafa; }
+            .mp-row { background:#fff; } .mp-row:nth-child(even) { background:#fafafa; } .mp-row:hover { background:#fef2f2; }
             .mp-cell { border-bottom:1px solid #f0f0f0; border-right:1px solid #f0f0f0; height:38px; padding:0; cursor:default; vertical-align:middle; user-select:text; }
             .mp-cv { padding:4px 9px; font-size:12px; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:30px; }
+            .mp-ctr { text-align:center; }
           </style>
           <div class="mp-wrap page-fade">
             <div class="mp-bar">
               <span style="font-size:15px;font-weight:800;color:#111827;">${p.title}</span>
-              <span style="font-size:11px;color:#9ca3af;font-weight:600;">Salt okunur — veriler Kalite Havuzundan çekilir</span>
+              <span style="font-size:11px;color:#6b7280;font-weight:600;">${rows.length} parametre</span>
+              <span style="font-size:11px;color:#9ca3af;font-weight:500;">— Kalite Havuzundan otomatik çekilir</span>
             </div>
             <div class="mp-tbl-wrap">
               <table class="mp-tbl">
