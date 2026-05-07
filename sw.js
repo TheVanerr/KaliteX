@@ -13,6 +13,8 @@ const LOCAL_ASSETS = [
   './kalite.html',
   './manifest.json',
   './icon.svg',
+  './icon-192.png',
+  './icon-512.png',
 ];
 
 const CDN_ASSETS = [
