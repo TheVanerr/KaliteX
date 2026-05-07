@@ -1,0 +1,14 @@
+# Excel dosyaları
+*.xlsm
+*.xlsx
+~$*
+
+# Ham kaynak veri (büyük dosya, uygulamada kullanılmıyor)
+veriX.json
+
+# Yerel sunucu scripti (sadece PC'de kullanılır)
+KaliteX-Baslat.bat
+
+# OS
+Thumbs.db
+.DS_Store

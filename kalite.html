@@ -1,0 +1,1212 @@
+﻿<!doctype html>
+<html lang="tr" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Dolfin Kalite Kontrol</title>
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#dc2626">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KaliteX">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Outfit', sans-serif; }
+    .sidebar-transition { transition: transform 0.3s ease, opacity 0.3s ease; }
+    .page-fade { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full w-full flex bg-gray-50 overflow-hidden"><!-- Sidebar -->
+   <aside id="sidebar" class="sidebar-transition w-64 bg-white border-r border-gray-200 flex flex-col h-full shrink-0 z-30">
+    <div class="p-5 border-b border-gray-100">
+     <div class="flex flex-col items-center">
+      <div id="brand-title" class="text-6xl font-900 text-red-600 tracking-tight leading-none">
+       DOLFIN
+      </div>
+      <div id="brand-subtitle" class="text-[10px] font-600 text-gray-500 tracking-widest uppercase mt-1 leading-tight whitespace-nowrap">
+       Endüstriyel Yıkama Makineleri
+      </div>
+     </div>
+    </div>
+    <nav class="flex-1 overflow-y-auto p-3 space-y-1"><button onclick="navigate('kalite-formu')" data-page="kalite-formu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Kalite Formu</button> <button onclick="navigate('kalite-havuzu')" data-page="kalite-havuzu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Kalite Havuzu</button> <button onclick="navigate('rapor')" data-page="rapor" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Rapor</button> <button onclick="toggleSeries('lym')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>LYM Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-lym transition-transform"></i> </button>
+     <div id="lym-models" class="space-y-0"><button onclick="navigate('lym-950')" data-page="lym-950" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">LYM 950</button> <button onclick="navigate('lym-1150')" data-page="lym-1150" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">LYM 1150</button> <button onclick="navigate('lym-1350')" data-page="lym-1350" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">LYM 1350</button> <button onclick="navigate('lym-1500')" data-page="lym-1500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">LYM 1500</button>
+     </div><button onclick="toggleSeries('vdl')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>VDL Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-vdl transition-transform"></i> </button>
+     <div id="vdl-models" class="space-y-0"><button onclick="navigate('vdl-2500')" data-page="vdl-2500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 2500</button> <button onclick="navigate('vdl-3500')" data-page="vdl-3500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 3500</button> <button onclick="navigate('vdl-4250')" data-page="vdl-4250" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 4250</button> <button onclick="navigate('vdl-5500')" data-page="vdl-5500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 5500</button> <button onclick="navigate('vdl-6500')" data-page="vdl-6500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 6500</button>
+     </div><button onclick="toggleSeries('kbn')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>KBN Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-kbn transition-transform"></i> </button>
+     <div id="kbn-models" class="space-y-0"><button onclick="navigate('kbn-1b-1650')" data-page="kbn-1b-1650" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">KBN 1B 1650</button> <button onclick="navigate('kbn-1b-1850')" data-page="kbn-1b-1850" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">KBN 1B 1850</button> <button onclick="navigate('kbn-1b-2050')" data-page="kbn-1b-2050" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">KBN 1B 2050</button> <button onclick="navigate('kbn-2b-1650')" data-page="kbn-2b-1650" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">KBN 2B 1650</button> <button onclick="navigate('kbn-2b-1850')" data-page="kbn-2b-1850" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">KBN 2B 1850</button> <button onclick="navigate('kbn-2b-2050')" data-page="kbn-2b-2050" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">KBN 2B 2050</button>
+     </div><button onclick="toggleSeries('rts')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>RTS Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-rts transition-transform"></i> </button>
+     <div id="rts-models" class="space-y-0"><button onclick="navigate('rts-346-2b')" data-page="rts-346-2b" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">RTS 346 2B</button> <button onclick="navigate('rts-346-4b')" data-page="rts-346-4b" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">RTS 346 4B</button>
+     </div><button onclick="toggleSeries('pyt')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>PYT Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-pyt transition-transform"></i> </button>
+     <div id="pyt-models" class="space-y-0"><button onclick="navigate('pyt-40')" data-page="pyt-40" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">PYT 40</button> <button onclick="navigate('pyt-90')" data-page="pyt-90" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">PYT 90</button> <button onclick="navigate('pyt-750')" data-page="pyt-750" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">PYT 750</button> <button onclick="navigate('pyt-800')" data-page="pyt-800" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">PYT 800</button>
+     </div><button onclick="toggleSeries('mst')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>MST Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-mst transition-transform"></i> </button>
+     <div id="mst-models" class="space-y-0"><button onclick="navigate('mst-pro-02')" data-page="mst-pro-02" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">MST PRO 02</button> <button onclick="navigate('mts-lvb-60')" data-page="mts-lvb-60" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">MTS LVB 60</button> <button onclick="navigate('mst-lvb-100')" data-page="mst-lvb-100" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">MST LVB 100</button>
+     </div><button onclick="toggleSeries('ult')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>ULT Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-ult transition-transform"></i> </button>
+     <div id="ult-models" class="space-y-0"><button onclick="navigate('ult-m40')" data-page="ult-m40" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">ULT M40</button> <button onclick="navigate('ult-m60')" data-page="ult-m60" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">ULT M60</button> <button onclick="navigate('ult-m80')" data-page="ult-m80" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">ULT M80</button> <button onclick="navigate('ult-m100')" data-page="ult-m100" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">ULT M100</button> <button onclick="navigate('ult-m140')" data-page="ult-m140" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">ULT M140</button> <button onclick="navigate('ult-m400-1b-l')" data-page="ult-m400-1b-l" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">ULT M400 1B L</button>
+     </div><button onclick="toggleSeries('knv')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>KNV Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-knv transition-transform"></i> </button>
+     <div id="knv-models" class="space-y-0"><button onclick="navigate('knv-30-3000-2b')" data-page="knv-30-3000-2b" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">KNV 30 3000 2B</button> <button onclick="navigate('knv-60-4250-1b')" data-page="knv-60-4250-1b" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">KNV 60 4250 1B</button> <button onclick="navigate('knv-60-6000-2b')" data-page="knv-60-6000-2b" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">KNV 60 6000 2B</button>
+     </div>
+    </nav>
+   </aside><!-- Main Content -->
+   <div class="flex-1 flex flex-col h-full overflow-hidden"><!-- Top Bar -->
+    <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0"><button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-gray-100 transition"> <i data-lucide="menu" class="w-5 h-5 text-gray-600"></i> </button> <button onclick="openLogin()" class="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition"> <i data-lucide="user" class="w-4 h-4"></i> Kullanıcı Girişi </button>
+    </header><!-- Page Content -->
+    <main id="page-content" class="flex-1 overflow-y-auto p-6 page-fade">
+    </main>
+   </div>
+  </div><!-- Login Modal -->
+  <div id="login-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
+   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative"><button onclick="closeLogin()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <div class="text-center mb-6">
+     <div class="text-2xl font-800 text-red-600">
+      DOLFIN
+     </div>
+     <p class="text-sm text-gray-500 mt-1">Kalite Kontrol Sistemi</p>
+    </div>
+    <form onsubmit="handleLogin(event)" class="space-y-4">
+     <div><label for="username" class="block text-sm font-600 text-gray-700 mb-1">Kullanıcı Adı</label> <input id="username" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none" placeholder="Kullanıcı adınızı girin">
+     </div>
+     <div><label for="password" class="block text-sm font-600 text-gray-700 mb-1">�?ifre</label> <input id="password" type="password" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none" placeholder="�?ifrenizi girin">
+     </div><button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-600 py-2.5 rounded-lg transition text-sm">Giriş Yap</button>
+    </form>
+   </div>
+  </div>
+  <script>
+  let currentPage = 'kalite-formu';
+  let sidebarOpen = true;
+
+  const pageContents = {
+    'kalite-formu': { title: 'Kalite Formu', desc: 'Üretim kalite kontrol formlarını buradan yönetin.' },
+    'kalite-havuzu': { title: 'Kalite Havuzu', desc: 'Tüm kalite kayıtlarını görüntüleyin ve analiz edin.' },
+    'rapor': { title: 'Rapor', desc: 'Kalite kontrol raporlarını görüntüleyin ve indirin.' },
+    'lym-950': { title: 'LYM 950', desc: 'LYM 950 modeli kalite kontrol parametreleri.' },
+    'lym-1150': { title: 'LYM 1150', desc: 'LYM 1150 modeli kalite kontrol parametreleri.' },
+    'lym-1350': { title: 'LYM 1350', desc: 'LYM 1350 modeli kalite kontrol parametreleri.' },
+    'lym-1500': { title: 'LYM 1500', desc: 'LYM 1500 modeli kalite kontrol parametreleri.' },
+    'vdl-2500': { title: 'VDL 2500', desc: 'VDL 2500 modeli kalite kontrol parametreleri.' },
+    'vdl-3500': { title: 'VDL 3500', desc: 'VDL 3500 modeli kalite kontrol parametreleri.' },
+    'vdl-4250': { title: 'VDL 4250', desc: 'VDL 4250 modeli kalite kontrol parametreleri.' },
+    'vdl-5500': { title: 'VDL 5500', desc: 'VDL 5500 modeli kalite kontrol parametreleri.' },
+    'vdl-6500': { title: 'VDL 6500', desc: 'VDL 6500 modeli kalite kontrol parametreleri.' },
+    'kbn-1b-1650': { title: 'KBN 1B 1650', desc: 'KBN 1B 1650 modeli kalite kontrol parametreleri.' },
+    'kbn-1b-1850': { title: 'KBN 1B 1850', desc: 'KBN 1B 1850 modeli kalite kontrol parametreleri.' },
+    'kbn-1b-2050': { title: 'KBN 1B 2050', desc: 'KBN 1B 2050 modeli kalite kontrol parametreleri.' },
+    'kbn-2b-1650': { title: 'KBN 2B 1650', desc: 'KBN 2B 1650 modeli kalite kontrol parametreleri.' },
+    'kbn-2b-1850': { title: 'KBN 2B 1850', desc: 'KBN 2B 1850 modeli kalite kontrol parametreleri.' },
+    'kbn-2b-2050': { title: 'KBN 2B 2050', desc: 'KBN 2B 2050 modeli kalite kontrol parametreleri.' },
+    'rts-346-2b': { title: 'RTS 346 2B', desc: 'RTS 346 2B modeli kalite kontrol parametreleri.' },
+    'rts-346-4b': { title: 'RTS 346 4B', desc: 'RTS 346 4B modeli kalite kontrol parametreleri.' },
+    'pyt-40': { title: 'PYT 40', desc: 'PYT 40 modeli kalite kontrol parametreleri.' },
+    'pyt-90': { title: 'PYT 90', desc: 'PYT 90 modeli kalite kontrol parametreleri.' },
+    'pyt-750': { title: 'PYT 750', desc: 'PYT 750 modeli kalite kontrol parametreleri.' },
+    'pyt-800': { title: 'PYT 800', desc: 'PYT 800 modeli kalite kontrol parametreleri.' },
+    'mst-pro-02': { title: 'MST PRO 02', desc: 'MST PRO 02 modeli kalite kontrol parametreleri.' },
+    'mts-lvb-60': { title: 'MTS LVB 60', desc: 'MTS LVB 60 modeli kalite kontrol parametreleri.' },
+    'mst-lvb-100': { title: 'MST LVB 100', desc: 'MST LVB 100 modeli kalite kontrol parametreleri.' },
+    'ult-m40': { title: 'ULT M40', desc: 'ULT M40 modeli kalite kontrol parametreleri.' },
+    'ult-m60': { title: 'ULT M60', desc: 'ULT M60 modeli kalite kontrol parametreleri.' },
+    'ult-m80': { title: 'ULT M80', desc: 'ULT M80 modeli kalite kontrol parametreleri.' },
+    'ult-m100': { title: 'ULT M100', desc: 'ULT M100 modeli kalite kontrol parametreleri.' },
+    'ult-m140': { title: 'ULT M140', desc: 'ULT M140 modeli kalite kontrol parametreleri.' },
+    'ult-m400-1b-l': { title: 'ULT M400 1B L', desc: 'ULT M400 1B L modeli kalite kontrol parametreleri.' },
+    'knv-30-3000-2b': { title: 'KNV 30 3000 2B', desc: 'KNV 30 3000 2B modeli kalite kontrol parametreleri.' },
+    'knv-60-4250-1b': { title: 'KNV 60 4250 1B', desc: 'KNV 60 4250 1B modeli kalite kontrol parametreleri.' },
+    'knv-60-6000-2b': { title: 'KNV 60 6000 2B', desc: 'KNV 60 6000 2B modeli kalite kontrol parametreleri.' },
+  };
+
+  const seriesStates = {
+    lym: true,
+    vdl: true,
+    kbn: true,
+    rts: true,
+    pyt: true,
+    mst: true,
+    ult: true,
+    knv: true,
+  };
+
+  function navigate(page) {
+    currentPage = page;
+    renderPage();
+    updateNav();
+  }
+
+  // ============================================================
+  // KALİTE HAVUZU — Master Matrix Engine
+  // Satırlar = kalite parametreleri | Sütunlar = makine modelleri
+  // ============================================================
+  const KH_FIXED = ['KOD', 'ALAN TÜRÜ', 'UZUNLUK', 'DESİMAL', 'AÇIKLAMA', 'GRUP', 'GRUP KODU'];
+  const KH_MODELS = [
+    { id: 'lym-950',       label: 'LYM 950',       series: 'LYM' },
+    { id: 'lym-1150',      label: 'LYM 1150',      series: 'LYM' },
+    { id: 'lym-1350',      label: 'LYM 1350',      series: 'LYM' },
+    { id: 'lym-1500',      label: 'LYM 1500',      series: 'LYM' },
+    { id: 'vdl-2500',      label: 'VDL 2500',      series: 'VDL' },
+    { id: 'vdl-3500',      label: 'VDL 3500',      series: 'VDL' },
+    { id: 'vdl-4250',      label: 'VDL 4250',      series: 'VDL' },
+    { id: 'vdl-5500',      label: 'VDL 5500',      series: 'VDL' },
+    { id: 'vdl-6500',      label: 'VDL 6500',      series: 'VDL' },
+    { id: 'kbn-1b-1650',   label: 'KBN 1B 1650',   series: 'KBN' },
+    { id: 'kbn-1b-1850',   label: 'KBN 1B 1850',   series: 'KBN' },
+    { id: 'kbn-1b-2050',   label: 'KBN 1B 2050',   series: 'KBN' },
+    { id: 'kbn-2b-1650',   label: 'KBN 2B 1650',   series: 'KBN' },
+    { id: 'kbn-2b-1850',   label: 'KBN 2B 1850',   series: 'KBN' },
+    { id: 'kbn-2b-2050',   label: 'KBN 2B 2050',   series: 'KBN' },
+    { id: 'rts-346-2b',    label: 'RTS 346 2B',    series: 'RTS' },
+    { id: 'rts-346-4b',    label: 'RTS 346 4B',    series: 'RTS' },
+    { id: 'pyt-40',        label: 'PYT 40',        series: 'PYT' },
+    { id: 'pyt-90',        label: 'PYT 90',        series: 'PYT' },
+    { id: 'pyt-750',       label: 'PYT 750',       series: 'PYT' },
+    { id: 'pyt-800',       label: 'PYT 800',       series: 'PYT' },
+    { id: 'mst-pro-02',    label: 'MST PRO 02',    series: 'MST' },
+    { id: 'mts-lvb-60',    label: 'MTS LVB 60',    series: 'MST' },
+    { id: 'mst-lvb-100',   label: 'MST LVB 100',   series: 'MST' },
+    { id: 'ult-m40',       label: 'ULT M40',       series: 'ULT' },
+    { id: 'ult-m60',       label: 'ULT M60',       series: 'ULT' },
+    { id: 'ult-m80',       label: 'ULT M80',       series: 'ULT' },
+    { id: 'ult-m100',      label: 'ULT M100',      series: 'ULT' },
+    { id: 'ult-m140',      label: 'ULT M140',      series: 'ULT' },
+    { id: 'ult-m400-1b-l', label: 'ULT M400 1B L', series: 'ULT' },
+    { id: 'knv-30-3000-2b',label: 'KNV 30 3000 2B',series: 'KNV' },
+    { id: 'knv-60-4250-1b',label: 'KNV 60 4250 1B',series: 'KNV' },
+    { id: 'knv-60-6000-2b',label: 'KNV 60 6000 2B',series: 'KNV' },
+  ];
+
+  // ── Supabase config ──────────────────────────────────────────────────────────
+  const SB_URL = 'https://rhrhueocmcjtntkyyack.supabase.co';
+  const SB_KEY = 'sb_publishable_T0ZpujhmI_kBuuT4M6U1Gw_BCdweMf-';
+  function sbH(extra) {
+    return Object.assign({ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' }, extra || {});
+  }
+  async function sbGet(tbl, qs) {
+    const r = await fetch(SB_URL + '/rest/v1/' + tbl + (qs ? '?' + qs : ''), { headers: sbH() });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+  async function sbPost(tbl, data, pref) {
+    const r = await fetch(SB_URL + '/rest/v1/' + tbl, {
+      method: 'POST', headers: sbH({ 'Prefer': pref || 'return=minimal' }), body: JSON.stringify(data)
+    });
+    if (!r.ok) throw new Error(await r.text());
+  }
+  async function sbDel(tbl, filter) {
+    const r = await fetch(SB_URL + '/rest/v1/' + tbl + '?' + filter, { method: 'DELETE', headers: sbH() });
+    if (!r.ok) throw new Error(await r.text());
+  }
+
+  const KH = {
+    TOTAL_ROWS: 500,
+    ROW_H: 38,
+    showSel: false,
+    BUFFER: 18,
+    paramData: [],     // paramData[ri][0..6] = string
+    assignments: {},   // modelId -> Set<rowIdx>
+    filteredRows: [],  // array of rowIdx after filter/sort
+    filters: {},       // colIdx -> string
+    sortState: { col: -1, asc: true },
+    sel: { r1: -1, c1: -1, r2: -1, c2: -1 },
+    mousedown: false,
+    editCell: null,
+    editEl: null,
+    clipboard: null,
+    vsStart: 0,
+    vsEnd: 60,
+    _dirty: false,
+    _ready: false,
+  };
+
+  // ── Helpers ─────────────────────────────────────────────────
+  function khTC() { return KH_FIXED.length + KH_MODELS.length; }
+  function khIsX(ci) { return ci >= KH_FIXED.length; }
+  function khMVal(mid, ri) { return (KH.assignments[mid] || {})[ri] || ''; }
+  function khMValSet(mid, ri, val) { if (!KH.assignments[mid]) KH.assignments[mid] = {}; if (val) KH.assignments[mid][ri] = val; else delete KH.assignments[mid][ri]; }
+  function khEsc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function khToast(msg, dur) {
+    const t = document.getElementById('kh-toast'); if (!t) return;
+    t.textContent = msg; t.style.opacity = '1';
+    clearTimeout(t._t); t._t = setTimeout(() => t.style.opacity = '0', dur || 2000);
+  }
+
+  // ── Data init / load / save ──────────────────────────────────
+  async function khInit() {
+    if (KH._ready) return;
+    KH._ready = true;
+    KH.paramData = [];
+    for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
+    KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
+    // 1. Supabase (online)
+    if (navigator.onLine) {
+      try { await khLoadFromSupabase(); khSaveLocal(); khSyncStatus('ok'); return; } catch(e) { console.warn('[KaliteX] Supabase yüklenemedi:', e); }
+    }
+    // 2. localStorage (offline fallback)
+    const saved = localStorage.getItem('dataX');
+    if (saved) { try { khLoadJSON(JSON.parse(saved)); khSyncStatus('offline'); return; } catch(e) {} }
+    // 3. dataX.json (ilk kurulum)
+    try { const res = await fetch('./dataX.json'); if (res.ok) { khLoadJSON(await res.json()); khSyncStatus('offline'); } } catch(e) {}
+  }
+
+  async function khLoadFromSupabase() {
+    const [params, atamaList] = await Promise.all([
+      sbGet('kalite_parametreleri', 'order=id.asc&limit=2000'),
+      sbGet('model_atama', 'select=model_id,parametre_kod&limit=20000')
+    ]);
+    const kodIdx = {};
+    params.forEach((p, i) => {
+      kodIdx[p.kod] = i;
+      KH.paramData[i] = [p.kod, p.alan_turu||'', p.uzunluk||'', p.desimal||'', p.aciklama||'', p.grup||'', p.grup_kodu||''];
+    });
+    KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
+    atamaList.forEach(a => {
+      const ri = kodIdx[a.parametre_kod];
+      if (ri !== undefined && KH.assignments[a.model_id] !== undefined) KH.assignments[a.model_id][ri] = 'X';
+    });
+  }
+
+  async function khSyncToSupabase() {
+    khSyncStatus('syncing');
+    try {
+      // Parametreler — upsert (merge)
+      const params = KH.paramData.filter(r => r[0]).map(r => ({
+        kod: r[0], alan_turu: r[1]||'', uzunluk: r[2]||'', desimal: r[3]||'', aciklama: r[4]||'', grup: r[5]||'', grup_kodu: r[6]||''
+      }));
+      for (let i = 0; i < params.length; i += 500)
+        await sbPost('kalite_parametreleri', params.slice(i, i+500), 'resolution=merge-duplicates,return=minimal');
+      // Model atamaları — sil + yeniden ekle
+      await sbDel('model_atama', 'model_id=not.is.null');
+      const atamaRows = [];
+      for (const [mid, obj] of Object.entries(KH.assignments))
+        for (const ri of Object.keys(obj)) { const kod = KH.paramData[Number(ri)]?.[0]; if (kod) atamaRows.push({ model_id: mid, parametre_kod: kod }); }
+      for (let i = 0; i < atamaRows.length; i += 500)
+        await sbPost('model_atama', atamaRows.slice(i, i+500), 'return=minimal');
+      khSyncStatus('ok');
+    } catch(e) {
+      khSyncStatus('error');
+      console.error('[KaliteX] Supabase sync hatası:', e);
+    }
+  }
+
+  function khSyncStatus(s) {
+    const el = document.getElementById('kh-sync-st');
+    if (!el) return;
+    const map = { ok: '☁️ Senkron', syncing: '⟳ Kaydediliyor...', error: '⚠️ Bulut hatası', offline: '📴 Çevrimdışı' };
+    const col = { ok: '#16a34a', syncing: '#d97706', error: '#dc2626', offline: '#6b7280' };
+    el.textContent = map[s] || ''; el.style.color = col[s] || '#6b7280';
+  }
+
+  function khLoadJSON(j) {
+    if (j.paramData) for (let r = 0; r < Math.min(j.paramData.length, KH.TOTAL_ROWS); r++) {
+      if (Array.isArray(j.paramData[r])) for (let c = 0; c < KH_FIXED.length; c++) KH.paramData[r][c] = j.paramData[r][c] || '';
+    }
+    if (j.assignments) for (const [mid, obj] of Object.entries(j.assignments)) {
+      if (Array.isArray(obj)) { KH.assignments[mid] = {}; obj.forEach(ri => { KH.assignments[mid][ri] = 'X'; }); }
+      else KH.assignments[mid] = obj || {};
+    }
+  }
+
+  function khToJSON() {
+    const asgn = {};
+    for (const [mid, obj] of Object.entries(KH.assignments)) asgn[mid] = obj || {};
+    return { paramData: KH.paramData.map(r => [...r]), assignments: asgn };
+  }
+
+  function khSaveLocal() {
+    localStorage.setItem('dataX', JSON.stringify(khToJSON()));
+  }
+
+  function khSave() {
+    khSaveLocal();
+    khToast('Kaydedildi ✓', 1400);
+    if (navigator.onLine) khSyncToSupabase();
+    else khSyncStatus('offline');
+  }
+
+  function khExportJSON() {
+    const blob = new Blob([JSON.stringify(khToJSON(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'dataX.json'; a.click(); URL.revokeObjectURL(a.href);
+  }
+
+  function khImportJSON() {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json';
+    inp.onchange = () => {
+      const f = inp.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = e => { try { khLoadJSON(JSON.parse(e.target.result)); khBuildFR(); khVSR(); khSave(); khToast('Yüklendi ve kaydedildi ✓'); } catch(err) { alert('Geçersiz JSON dosyası'); } };
+      rd.readAsText(f);
+    };
+    inp.click();
+  }
+
+  // ── Model data accessor (for model pages) ───────────────────
+  function khGetModelParams(modelId) {
+    const vals = KH.assignments[modelId] || {};
+    return Object.keys(vals).map(Number).sort((a,b) => a-b).map(ri => ({
+      rowIdx: ri,
+      kod:       KH.paramData[ri][0] || '',
+      alanTuru:  KH.paramData[ri][1] || '',
+      uzunluk:   KH.paramData[ri][2] || '',
+      desimal:   KH.paramData[ri][3] || '',
+      aciklama:  KH.paramData[ri][4] || '',
+      grup:      KH.paramData[ri][5] || '',
+      grupKodu:  KH.paramData[ri][6] || '',
+    }));
+  }
+
+  // ── Filtered rows ────────────────────────────────────────────
+  function khBuildFR() {
+    const rows = [];
+    for (let r = 0; r < KH.TOTAL_ROWS; r++) {
+      let ok = true;
+      for (const [ci, val] of Object.entries(KH.filters)) {
+        if (!val) continue;
+        const c = parseInt(ci);
+        const cv = c < KH_FIXED.length ? (KH.paramData[r][c] || '') : khMVal(KH_MODELS[c - KH_FIXED.length].id, r);
+        if (!cv.toLowerCase().includes(val.toLowerCase())) { ok = false; break; }
+      }
+      if (ok) rows.push(r);
+    }
+    if (KH.sortState.col >= 0) {
+      const sc = KH.sortState.col;
+      rows.sort((a, b) => {
+        let av, bv;
+        if (sc < KH_FIXED.length) { av = (KH.paramData[a][sc]||'').toLowerCase(); bv = (KH.paramData[b][sc]||'').toLowerCase(); }
+        else { const mid = KH_MODELS[sc - KH_FIXED.length].id; av = khMVal(mid, a).toLowerCase(); bv = khMVal(mid, b).toLowerCase(); }
+        return KH.sortState.asc ? av.localeCompare(bv,'tr') : bv.localeCompare(av,'tr');
+      });
+    }
+    KH.filteredRows = rows;
+  }
+
+  // ── Virtual scroll ───────────────────────────────────────────
+  function khOnScroll() {
+    const w = document.getElementById('kh-scroll'); if (!w) return;
+    const st = w.scrollTop, vh = w.clientHeight;
+    const start = Math.max(0, Math.floor(st / KH.ROW_H) - KH.BUFFER);
+    const end = Math.min(KH.filteredRows.length - 1, Math.ceil((st + vh) / KH.ROW_H) + KH.BUFFER);
+    if (start === KH.vsStart && end === KH.vsEnd) return;
+    KH.vsStart = start; KH.vsEnd = end;
+    khVSR();
+  }
+
+  function khVSR() {
+    const tot = KH.filteredRows.length;
+    const colSpan = khTC() + 2;
+    const topH = KH.vsStart * KH.ROW_H;
+    const botH = Math.max(0, (tot - KH.vsEnd - 1)) * KH.ROW_H;
+    const { r1, c1, r2, c2 } = KH.sel;
+    const minR = Math.min(r1,r2), maxR = Math.max(r1,r2);
+    const minC = Math.min(c1,c2), maxC = Math.max(c1,c2);
+
+    let html = `<tr><td colspan="${colSpan}" style="height:${topH}px;padding:0;border:none;"></td></tr>`;
+    for (let vi = KH.vsStart; vi <= KH.vsEnd && vi < tot; vi++) {
+      const ri = KH.filteredRows[vi];
+      const rSel = KH.showSel && r1 >= 0 && ri >= minR && ri <= maxR;
+      html += `<tr class="khr${rSel?' khra':''}" data-ri="${ri}">`;
+      html += `<td class="khrn khrn-fr${rSel?' khrns':''}" data-ri="${ri}" onmousedown="khRND(event,${ri})">${ri+1}</td>`;
+      for (let ci = 0; ci < KH_FIXED.length; ci++) {
+        const v = KH.paramData[ri][ci] || '';
+        const s = rSel && ci >= minC && ci <= maxC;
+        const w5 = ci === 4 ? ' style="min-width:270px;"' : '';
+        html += `<td class="khc${s?' khs':''}" data-ri="${ri}" data-ci="${ci}" onmousedown="khCD(event,${ri},${ci})" onmouseover="khCO(event,${ri},${ci})" ondblclick="khDD(event,${ri},${ci})"${w5}><div class="khcv">${khEsc(v)}</div></td>`;
+      }
+      for (let mi = 0; mi < KH_MODELS.length; mi++) {
+        const ci = KH_FIXED.length + mi;
+        const xv = khMVal(KH_MODELS[mi].id, ri);
+        const xs = rSel && ci >= minC && ci <= maxC;
+        html += `<td class="khc${xs?' khs':''}" data-ri="${ri}" data-ci="${ci}" onmousedown="khCD(event,${ri},${ci})" onmouseover="khCO(event,${ri},${ci})" ondblclick="khDD(event,${ri},${ci})"><div class="khcv">${khEsc(xv)}</div></td>`;
+      }
+      html += `<td style="min-width:30px;border:none;"></td></tr>`;
+    }
+    html += `<tr><td colspan="${colSpan}" style="height:${botH}px;padding:0;border:none;"></td></tr>`;
+    document.getElementById('kh-tbody').innerHTML = html;
+    const el = document.getElementById('kh-sc'); if (el) el.textContent = `${tot} / ${KH.TOTAL_ROWS} satır`;
+  }
+
+  // ── Header ───────────────────────────────────────────────────
+  function khBuildHeader() {
+    const ss = KH.sortState;
+    // Fixed column min-widths (px) so label fits single line
+    const fixedW = [80, 100, 90, 85, 270, 70, 90]; // KOD,ALAN TÜRÜ,UZUNLUK,DESİMAL,AÇIKLAMA,GRUP,GRUP KODU
+    let h = `<tr>`;
+    h += `<th class="khth khth-fr" style="z-index:22;">#</th>`;
+    KH_FIXED.forEach((col, ci) => {
+      const sorted = ss.col === ci;
+      const fActive = !!KH.filters[ci];
+      h += `<th class="khth" data-ci="${ci}" style="min-width:${fixedW[ci]}px;"><div class="khth-inner">`;
+      h += `<span style="white-space:nowrap;">${col}</span>`;
+      h += `<button class="khsb" onclick="khTS(${ci})" title="Sırala">${sorted?(ss.asc?'▲':'▼'):'⇅'}</button>`;
+      h += `<button class="khfb${fActive?' khfb-on':''}" onclick="khOpenFilter(${ci})" title="Filtrele">▼</button>`;
+      h += `</div></th>`;
+    });
+    KH_MODELS.forEach((m, mi) => {
+      const ci = KH_FIXED.length + mi;
+      const sorted = ss.col === ci;
+      h += `<th class="khth khxth" data-ci="${ci}"><div class="khth-inner"><span style="white-space:nowrap;">${m.label}</span><button class="khsb" onclick="khTS(${ci})" title="Sırala">${sorted?(ss.asc?'▲':'▼'):'⇅'}</button></div></th>`;
+    });
+    h += `<th class="khth" style="min-width:30px;border:none;background:#dc2626;"></th></tr>`;
+    document.getElementById('kh-thead').innerHTML = h;
+  }
+
+  // ── Full render ──────────────────────────────────────────────
+  async function khRenderPage() {
+    await khInit();
+    khBuildFR();
+    KH.vsStart = 0; KH.vsEnd = 60;
+    const w = document.getElementById('kh-scroll');
+    if (w) w.scrollTop = 0;
+    khBuildHeader();
+    khVSR();
+  }
+
+  // (X toggle removed — model columns are now plain text cells)
+
+  // ── Selection ────────────────────────────────────────────────
+  function khCD(e, ri, ci) {
+    if (e.button !== 0) return;
+    khCE(); KH.mousedown = true; KH.showSel = true;
+    if (e.shiftKey && KH.sel.r1 >= 0) { KH.sel.r2 = ri; KH.sel.c2 = ci; }
+    else KH.sel = { r1: ri, c1: ci, r2: ri, c2: ci };
+    khSelUI();
+    e.preventDefault();
+  }
+
+  function khCO(e, ri, ci) {
+    if (!KH.mousedown) return;
+    KH.sel.r2 = ri; KH.sel.c2 = ci;
+    KH.showSel = true;
+    khSelUI();
+  }
+
+  function khRND(e, ri) {
+    khCE(); KH.showSel = true; KH.sel = { r1: ri, c1: 0, r2: ri, c2: khTC() - 1 };
+    khSelUI(); e.preventDefault();
+  }
+
+  function khSelUI() {
+    if (!KH.showSel) return;
+    const { r1, c1, r2, c2 } = KH.sel; if (r1 < 0) return;
+    const minR = Math.min(r1,r2), maxR = Math.max(r1,r2);
+    const minC = Math.min(c1,c2), maxC = Math.max(c1,c2);
+    document.querySelectorAll('.khc').forEach(td => {
+      const ri = +td.dataset.ri, ci = +td.dataset.ci;
+      td.classList.toggle('khs', ri >= minR && ri <= maxR && ci >= minC && ci <= maxC);
+    });
+    document.querySelectorAll('.khrn').forEach(td => {
+      td.classList.toggle('khrns', +td.dataset.ri >= minR && +td.dataset.ri <= maxR);
+    });
+    document.querySelectorAll('.khr').forEach(tr => {
+      tr.classList.toggle('khra', +tr.dataset.ri >= minR && +tr.dataset.ri <= maxR);
+    });
+  }
+
+  // ── Edit ─────────────────────────────────────────────────────
+  function khDD(e, ri, ci) {
+    khCE();
+    const cell = e.currentTarget;
+    const val = ci < KH_FIXED.length ? (KH.paramData[ri][ci] || '') : khMVal(KH_MODELS[ci - KH_FIXED.length].id, ri);
+    KH.editCell = { ri, ci, el: cell };
+    cell.innerHTML = `<input class="khei" type="text" value="${khEsc(val)}">`;    
+    KH.editEl = cell.querySelector('input');
+    KH.editEl.focus(); KH.editEl.select();
+    KH.editEl.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter') { khCE(); ev.preventDefault(); }
+      if (ev.key === 'Escape') { khCA(); ev.preventDefault(); }
+      if (ev.key === 'Tab') {
+        khCE();
+        const nc = ci + (ev.shiftKey ? -1 : 1);
+        if (nc >= 0 && nc < khTC()) setTimeout(() => {
+          const n = document.querySelector(`.khc[data-ri="${ri}"][data-ci="${nc}"]`);
+          if (n) khDD({ currentTarget: n, stopPropagation: () => {} }, ri, nc);
+        }, 10);
+        ev.preventDefault();
+      }
+    });
+    KH.editEl.addEventListener('blur', () => setTimeout(khCE, 80));
+    e.stopPropagation();
+  }
+
+  function khCE() {
+    if (!KH.editCell || !KH.editEl) return;
+    const { ri, ci, el } = KH.editCell;
+    const v = KH.editEl.value;
+    if (ci < KH_FIXED.length) KH.paramData[ri][ci] = v;
+    else khMValSet(KH_MODELS[ci - KH_FIXED.length].id, ri, v);
+    el.innerHTML = `<div class="khcv">${khEsc(v)}</div>`;
+    KH.editCell = null; KH.editEl = null; KH._dirty = true;
+  }
+
+  function khCA() {
+    if (!KH.editCell) return;
+    const { ri, ci, el } = KH.editCell;
+    const v = ci < KH_FIXED.length ? (KH.paramData[ri][ci]||'') : khMVal(KH_MODELS[ci - KH_FIXED.length].id, ri);
+    el.innerHTML = `<div class="khcv">${khEsc(v)}</div>`;
+    KH.editCell = null; KH.editEl = null;
+  }
+
+  // ── Copy / Cut / Paste ───────────────────────────────────────
+  function khCopy() {
+    const { r1, c1, r2, c2 } = KH.sel; if (r1 < 0) return;
+    const minR = Math.min(r1,r2), maxR = Math.max(r1,r2);
+    const minC = Math.min(c1,c2), maxC = Math.max(c1,c2);
+    const rows = [];
+    for (let r = minR; r <= maxR; r++) {
+      const row = [];
+      for (let c = minC; c <= maxC; c++) {
+        row.push(c < KH_FIXED.length ? (KH.paramData[r][c]||'') : khMVal(KH_MODELS[c - KH_FIXED.length].id, r));
+      }
+      rows.push(row);
+    }
+    KH.clipboard = { data: rows };
+    navigator.clipboard.writeText(rows.map(r => r.join('\t')).join('\n')).catch(() => {});
+    khToast(`${(maxR-minR+1)*(maxC-minC+1)} hücre kopyalandı`);
+  }
+
+  function khPaste() {
+    const doIt = rows => {
+      if (KH.sel.r1 < 0) return;
+      const sR = Math.min(KH.sel.r1, KH.sel.r2), sC = Math.min(KH.sel.c1, KH.sel.c2);
+      rows.forEach((row, ri) => row.forEach((val, ci) => {
+        const tr = sR + ri, tc = sC + ci;
+        if (tr >= KH.TOTAL_ROWS || tc >= khTC()) return;
+        if (tc < KH_FIXED.length) { KH.paramData[tr][tc] = val; }
+        else { khMValSet(KH_MODELS[tc - KH_FIXED.length].id, tr, val); }
+      }));
+      KH._dirty = true; khVSR(); khToast('Yapıştırıldı');
+    };
+    if (KH.clipboard) { doIt(KH.clipboard.data); return; }
+    navigator.clipboard.readText().then(t => { if (t) doIt(t.split('\n').map(r => r.split('\t'))); }).catch(() => {});
+  }
+
+  function khCut() {
+    khCopy();
+    const { r1, c1, r2, c2 } = KH.sel;
+    const minR = Math.min(r1,r2), maxR = Math.max(r1,r2);
+    const minC = Math.min(c1,c2), maxC = Math.max(c1,c2);
+    for (let r = minR; r <= maxR; r++) for (let c = minC; c <= maxC; c++) {
+      if (c < KH_FIXED.length) KH.paramData[r][c] = '';
+      else khMValSet(KH_MODELS[c - KH_FIXED.length].id, r, '');
+    }
+    KH._dirty = true; khVSR();
+  }
+
+  function khDel() {
+    const { r1, c1, r2, c2 } = KH.sel; if (r1 < 0) return;
+    const minR = Math.min(r1,r2), maxR = Math.max(r1,r2);
+    const minC = Math.min(c1,c2), maxC = Math.max(c1,c2);
+    for (let r = minR; r <= maxR; r++) for (let c = minC; c <= maxC; c++) {
+      if (c < KH_FIXED.length) KH.paramData[r][c] = '';
+      else khMValSet(KH_MODELS[c - KH_FIXED.length].id, r, '');
+    }
+    KH._dirty = true; khVSR();
+  }
+
+  function khSelAll() { KH.showSel = true; KH.sel = { r1: 0, c1: 0, r2: KH.TOTAL_ROWS-1, c2: khTC()-1 }; khSelUI(); }
+
+  // ── Filter / Sort ─────────────────────────────────────────────
+  function khSF(ci, val) {
+    if (val) KH.filters[ci] = val; else delete KH.filters[ci];
+    KH.sel = { r1:-1, c1:-1, r2:-1, c2:-1 };
+    khBuildFR(); KH.vsStart = 0; KH.vsEnd = 60;
+    const w = document.getElementById('kh-scroll'); if (w) w.scrollTop = 0;
+    khBuildHeader(); khVSR();
+  }
+
+  // ── Filter modal ────────────────────────────────────
+  function khOpenFilter(ci) {
+    const overlay = document.getElementById('kh-filter-modal');
+    const colName = ci < KH_FIXED.length ? KH_FIXED[ci] : KH_MODELS[ci - KH_FIXED.length].label;
+    const cur = KH.filters[ci] || '';
+    overlay.innerHTML = `<div class="khfm-box" onclick="event.stopPropagation()">
+      <div class="khfm-title">Filtre — ${colName}</div>
+      <input id="khfm-inp" class="khfm-input" type="text" placeholder="Filtre değeri girin..." value="${khEsc(cur)}" autofocus>
+      <div class="khfm-btns">
+        <button class="khfm-clear" onclick="khClearFilter(${ci})">Temizle</button>
+        <button class="khfm-ok" onclick="khApplyFilter(${ci})">Uygula</button>
+      </div>
+    </div>`;
+    overlay.style.display = 'flex';
+    setTimeout(() => { const inp = document.getElementById('khfm-inp'); if (inp) { inp.focus(); inp.select(); inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') khApplyFilter(ci); if (ev.key === 'Escape') khCloseFilter(); }); } }, 30);
+  }
+
+  function khApplyFilter(ci) {
+    const inp = document.getElementById('khfm-inp');
+    if (inp) khSF(ci, inp.value.trim());
+    khCloseFilter();
+  }
+
+  function khClearFilter(ci) {
+    khSF(ci, '');
+    khCloseFilter();
+  }
+
+  function khCloseFilter() {
+    const overlay = document.getElementById('kh-filter-modal');
+    if (overlay) { overlay.style.display = 'none'; overlay.innerHTML = ''; }
+  }
+
+  function khTS(ci) {
+    if (KH.sortState.col === ci) KH.sortState.asc = !KH.sortState.asc;
+    else { KH.sortState.col = ci; KH.sortState.asc = true; }
+    khBuildFR(); khBuildHeader(); khVSR();
+  }
+
+  // ── Add row (insert above selected row) ────────────────────
+  function khAddRow() {
+    if (KH.sel.r1 < 0) {
+      khToast('Önce bir satır seçin — yeni satır seçili satırın üstüne eklenir', 3000);
+      return;
+    }
+    const insertAt = Math.min(KH.sel.r1, KH.sel.r2);
+    KH.TOTAL_ROWS++;
+    KH.paramData.splice(insertAt, 0, new Array(KH_FIXED.length).fill(''));
+    // Shift assignment row indices for rows at or after insertAt
+    for (const [mid, obj] of Object.entries(KH.assignments)) {
+      const newObj = {};
+      for (const [ri, v] of Object.entries(obj)) {
+        const n = +ri;
+        newObj[n >= insertAt ? n + 1 : n] = v;
+      }
+      KH.assignments[mid] = newObj;
+    }
+    KH.sel = { r1: insertAt, c1: KH.sel.c1, r2: insertAt, c2: KH.sel.c2 };
+    khBuildFR(); khVSR();
+    khScrollTo(insertAt);
+    khToast('Satır eklendi ✓');
+  }
+
+  // ── Scroll cell into view ─────────────────────────────────────
+  function khScrollTo(ri) {
+    const w = document.getElementById('kh-scroll'); if (!w) return;
+    const top = ri * KH.ROW_H;
+    if (top < w.scrollTop) w.scrollTop = top;
+    else if (top + KH.ROW_H > w.scrollTop + w.clientHeight) w.scrollTop = top + KH.ROW_H - w.clientHeight;
+  }
+
+  // ── Keyboard ─────────────────────────────────────────────────
+  function khKeyDown(e) {
+    if (currentPage !== 'kalite-havuzu') return;
+    // Close filter modal on Escape
+    const modal = document.getElementById('kh-filter-modal');
+    if (modal && modal.style.display !== 'none') { if (e.key === 'Escape') khCloseFilter(); return; }
+    // Don't intercept keystrokes typed into filter inputs or other non-edit inputs
+    const ae = document.activeElement;
+    if (ae && ae !== KH.editEl && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT' || ae.tagName === 'TEXTAREA')) return;
+    if (KH.editCell) return;
+    const cmd = e.ctrlKey || e.metaKey;
+    if (cmd && e.key === 'c') { khCopy(); e.preventDefault(); return; }
+    if (cmd && e.key === 'v') { khPaste(); e.preventDefault(); return; }
+    if (cmd && e.key === 'x') { khCut(); e.preventDefault(); return; }
+    if (cmd && e.key === 'a') { khSelAll(); e.preventDefault(); return; }
+    if (cmd && e.key === 's') { khSave(); e.preventDefault(); return; }
+    if (e.key === 'F2' && KH.sel.r1 >= 0 && KH.sel.r1 === KH.sel.r2 && KH.sel.c1 === KH.sel.c2) {
+      const cell = document.querySelector(`.khc[data-ri="${KH.sel.r1}"][data-ci="${KH.sel.c1}"]`);
+      if (cell) { khDD({ currentTarget: cell, stopPropagation: () => {} }, KH.sel.r1, KH.sel.c1); }
+      e.preventDefault(); return;
+    }
+    if (e.key === 'Delete' || e.key === 'Backspace') { if (KH.sel.r1 >= 0) { khDel(); e.preventDefault(); } return; }
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+      const s = KH.sel; if (s.r1 < 0) return;
+      let r = s.r1, c = s.c1;
+      if (e.key === 'ArrowUp') r = Math.max(0, r-1);
+      if (e.key === 'ArrowDown') r = Math.min(KH.TOTAL_ROWS-1, r+1);
+      if (e.key === 'ArrowLeft') c = Math.max(0, c-1);
+      if (e.key === 'ArrowRight') c = Math.min(khTC()-1, c+1);
+      if (e.shiftKey) { KH.sel.r2 = r; KH.sel.c2 = c; } else KH.sel = { r1:r, c1:c, r2:r, c2:c };
+      KH.showSel = true;
+      khScrollTo(r); khSelUI(); e.preventDefault(); return;
+    }
+    if (!cmd && e.key.length === 1 && KH.sel.r1 >= 0 && KH.sel.r1 === KH.sel.r2 && KH.sel.c1 === KH.sel.c2) {
+      const { r1: selR, c1: selC } = KH.sel;
+      const cell = document.querySelector(`.khc[data-ri="${selR}"][data-ci="${selC}"]`);
+      if (cell) {
+        if (selC < KH_FIXED.length) KH.paramData[selR][selC] = '';
+        else khMValSet(KH_MODELS[selC - KH_FIXED.length].id, selR, '');
+        const k = e.key;
+        khDD({ currentTarget: cell, stopPropagation: () => {} }, selR, selC);
+        setTimeout(() => { if (KH.editEl) { KH.editEl.value = k; KH.editEl.setSelectionRange(1,1); } }, 0);
+      }
+    }
+  }
+
+  document.addEventListener('keydown', khKeyDown);
+  document.addEventListener('mouseup', () => { KH.mousedown = false; });
+  document.addEventListener('mousedown', (e) => {
+    if (!e.target.closest('.khc') && !e.target.closest('.khrn') && !e.target.closest('.khei')) khCE();
+  });
+
+  function renderPage() {
+    const p = pageContents[currentPage];
+    
+    if (currentPage === 'kalite-havuzu') {
+      document.getElementById('page-content').innerHTML = `
+        <style>
+          /* -- Master Matrix Table ------------------------------- */
+          .kho { display:flex; flex-direction:column; height:calc(100vh - 112px); background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 1px 6px rgba(0,0,0,0.06); overflow:hidden; }
+          .khbar { display:flex; align-items:center; gap:8px; padding:9px 14px; border-bottom:1px solid #e5e7eb; flex-wrap:wrap; flex-shrink:0; }
+          .khbtn { display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:background .15s; }
+          .khbr { background:#dc2626;color:#fff; } .khbr:hover { background:#b91c1c; }
+          .khbg { background:#f3f4f6;color:#374151; } .khbg:hover { background:#e5e7eb; }
+          .khbgr { background:#16a34a;color:#fff; } .khbgr:hover { background:#15803d; }
+          .kh-scroll { flex:1; overflow:auto; min-height:0; }
+          .khtbl { border-collapse:collapse; table-layout:fixed; }
+          .khtbl thead { position:sticky; top:0; z-index:12; }
+          .khth { background:#dc2626; color:#fff; font-size:11px; font-weight:700; text-align:center; user-select:none; padding:7px 10px; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.15); }
+          .khth-fr { min-width:46px; width:46px; background:#dc2626; position:sticky; left:0; z-index:15; padding:7px 4px; }
+          .khxth { min-width:90px; white-space:nowrap; }
+          .khth-inner { display:inline-flex; align-items:center; justify-content:center; gap:5px; }
+          .khsb { background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.75);font-size:10px;padding:0 1px;flex-shrink:0;line-height:1; }
+          .khsb:hover { color:#fff; }
+          .khfb { background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.4);border-radius:3px;color:#fff;cursor:pointer;font-size:9px;padding:1px 4px;flex-shrink:0;font-family:inherit;line-height:1.4; }
+          .khfb:hover { background:rgba(255,255,255,0.35); }
+          .khfb-on { background:rgba(255,255,200,0.5);border-color:#fde68a;color:#92400e; }
+          /* Filter modal */
+          .khfm-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:1000;display:flex;align-items:center;justify-content:center; }
+          .khfm-box { background:#fff;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:20px 22px;min-width:260px;max-width:340px;width:100%; }
+          .khfm-title { font-size:13px;font-weight:700;color:#111827;margin-bottom:12px; }
+          .khfm-input { width:100%;border:1.5px solid #d1d5db;border-radius:6px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box; }
+          .khfm-input:focus { border-color:#dc2626; }
+          .khfm-btns { display:flex;gap:8px;margin-top:14px;justify-content:flex-end; }
+          .khfm-ok { background:#dc2626;color:#fff;border:none;border-radius:6px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit; }
+          .khfm-ok:hover { background:#b91c1c; }
+          .khfm-clear { background:#f3f4f6;color:#374151;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit; }
+          .khfm-clear:hover { background:#e5e7eb; }
+          .khr { background:#fff; } .khr:nth-child(even) { background:#fafafa; } .khr:hover { background:#fef2f2; }
+          .khra { background:#fff3f3 !important; }
+          .khrn { width:46px;min-width:46px;text-align:center;font-size:10px;color:#9ca3af;background:#f9fafb;border-right:1px solid #e5e7eb;border-bottom:1px solid #f0f0f0;padding:0;height:38px;line-height:38px;cursor:pointer;user-select:none;position:sticky;left:0;z-index:5; }
+          .khrn-fr { position:sticky;left:0;z-index:5; }
+          .khrns { background:#fee2e2 !important;color:#dc2626;font-weight:700; }
+          .khc { border-bottom:1px solid #f0f0f0;border-right:1px solid #f0f0f0;padding:0;min-width:90px;height:38px;cursor:cell;position:relative;vertical-align:middle; }
+          .khxc { min-width:76px;text-align:center;cursor:pointer; }
+          .khcv { padding:3px 7px;font-size:12px;color:#1f2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:32px; }
+          .khei { position:absolute;inset:0;width:100%;height:100%;border:2px solid #dc2626;outline:none;padding:3px 7px;font-size:12px;font-family:inherit;background:#fff;box-sizing:border-box;z-index:10; }
+          .khs { background:#fca5a5 !important; outline:2px solid #dc2626; outline-offset:-1px; }
+          .khxon { background:#dcfce7 !important; }
+          .khxon.khs { background:#a7f3d0 !important; }
+          .khst { padding:5px 14px;border-top:1px solid #e5e7eb;font-size:10px;color:#6b7280;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#f9fafb;gap:8px; }
+          #kh-toast { position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:7px 18px;border-radius:8px;font-size:12px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9999; }
+        </style>
+        <div class="kho page-fade">
+          <div class="khbar">
+            <button class="khbtn khbr" onclick="khSave()">Kaydet (Ctrl+S)</button>
+            <button class="khbtn khbr" onclick="khImportJSON()">📥 JSON Yükle</button>
+            <button class="khbtn khbr" onclick="khExportJSON()">JSON İndir</button>
+            <button class="khbtn khbgr" onclick="khAddRow()">+ Satır Ekle</button>
+            <span id="kh-sync-st" style="font-size:11px;font-weight:700;padding:0 8px;"></span>
+            <span style="margin-left:auto;font-size:10px;color:#9ca3af;font-weight:600;">
+              Ctrl+C Kopyala &nbsp;|&nbsp; Ctrl+V Yapıştır &nbsp;|&nbsp; Ctrl+X Kes &nbsp;|&nbsp; Ctrl+A Tümü &nbsp;|&nbsp; Del Sil &nbsp;|&nbsp; Çift tık / F2: düzenle
+            </span>
+          </div>
+          <div class="kh-scroll" id="kh-scroll" onscroll="khOnScroll()">
+            <table class="khtbl">
+              <thead id="kh-thead"></thead>
+              <tbody id="kh-tbody"></tbody>
+            </table>
+          </div>
+          <div class="khst">
+            <span id="kh-sc"></span>
+            <span>Satırlar = Kalite Parametreleri &nbsp;|&nbsp; Sütunlar = Makine Modelleri &nbsp;|&nbsp; Hücreye çift tıkla: düzenle</span>
+          </div>
+        </div>
+        <div id="kh-filter-modal" class="khfm-overlay" style="display:none;" onclick="if(event.target===this)khCloseFilter()"></div>
+        <div id="kh-toast"></div>
+      `;
+      KH._ready = false; // force re-init on load
+      khRenderPage();
+      return;
+    }
+
+    if (currentPage === 'kalite-formu') {
+      // Build 100 rows of empty data if not already initialized
+      if (!window.kfData) {
+        window.kfData = [];
+        for (let r = 0; r < 100; r++) window.kfData.push(['','','','','','']);
+      }
+      window.kfEdit = null;
+
+      function kfEsc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+      function kfBuildRows() {
+        let html = '';
+        for (let ri = 0; ri < window.kfData.length; ri++) {
+          const row = window.kfData[ri];
+          html += `<tr class="kf-row" data-ri="${ri}">`;
+          html += `<td class="kf-rn">${ri + 1}</td>`;
+          for (let ci = 0; ci < 6; ci++) {
+            html += `<td class="kf-cell" data-ri="${ri}" data-ci="${ci}" ondblclick="kfDblClick(event,${ri},${ci})"><div class="kf-cv">${kfEsc(row[ci])}</div></td>`;
+          }
+          html += `</tr>`;
+        }
+        return html;
+      }
+
+      window.kfDblClick = function(e, ri, ci) {
+        kfCommit();
+        const cell = e.currentTarget;
+        const val = window.kfData[ri][ci] || '';
+        window.kfEdit = { ri, ci, el: cell };
+        cell.innerHTML = `<input class="kf-input" type="text" value="${kfEsc(val)}">`;
+        const inp = cell.querySelector('input');
+        inp.focus(); inp.select();
+        inp.addEventListener('keydown', ev => {
+          if (ev.key === 'Enter') { kfCommit(); ev.preventDefault(); }
+          if (ev.key === 'Escape') {
+            const { ri: r, ci: c, el } = window.kfEdit;
+            el.innerHTML = `<div class="kf-cv">${kfEsc(window.kfData[r][c]||'')}</div>`;
+            window.kfEdit = null; ev.preventDefault();
+          }
+          if (ev.key === 'Tab') {
+            kfCommit();
+            const nc = ci + (ev.shiftKey ? -1 : 1);
+            if (nc >= 0 && nc < 6) {
+              setTimeout(() => {
+                const next = document.querySelector(`.kf-cell[data-ri="${ri}"][data-ci="${nc}"]`);
+                if (next) kfDblClick({ currentTarget: next }, ri, nc);
+              }, 10);
+            }
+            ev.preventDefault();
+          }
+        });
+        inp.addEventListener('blur', () => setTimeout(kfCommit, 80));
+        e.stopPropagation();
+      };
+
+      window.kfCommit = function() {
+        if (!window.kfEdit) return;
+        const { ri, ci, el } = window.kfEdit;
+        const inp = el.querySelector('input');
+        if (!inp) return;
+        window.kfData[ri][ci] = inp.value;
+        el.innerHTML = `<div class="kf-cv">${kfEsc(inp.value)}</div>`;
+        window.kfEdit = null;
+      };
+
+      window.kfAddRow = function() {
+        window.kfData.push(['','','','','','']);
+        document.getElementById('kf-tbody').innerHTML = kfBuildRows();
+      };
+
+      document.getElementById('page-content').innerHTML = `
+        <style>
+          .kf-page { display:flex; flex-direction:column; height:calc(100vh - 112px); gap:14px; }
+          .kf-bar { background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 1px 4px rgba(0,0,0,0.05); padding:10px 14px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; flex-shrink:0; }
+          .kf-tbl-wrap { background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 1px 4px rgba(0,0,0,0.05); overflow:auto; flex:1; min-height:0; }
+          .kf-tbl { width:100%; border-collapse:collapse; table-layout:fixed; }
+          .kf-tbl thead { position:sticky; top:0; z-index:10; }
+          .kf-tbl th { background:#dc2626; color:#fff; font-size:11px; font-weight:700; letter-spacing:0.05em; text-align:center; padding:10px 8px; border-right:1px solid rgba(255,255,255,0.2); white-space:nowrap; }
+          .kf-tbl th:first-child { width:46px; min-width:46px; background:#b91c1c; }
+          .kf-rn { width:46px; min-width:46px; text-align:center; font-size:10px; color:#9ca3af; background:#f9fafb; border-right:1px solid #e5e7eb; border-bottom:1px solid #f0f0f0; padding:0; height:36px; line-height:36px; user-select:none; position:sticky; left:0; }
+          .kf-row { background:#fff; } .kf-row:nth-child(even) { background:#fafafa; } .kf-row:hover { background:#fef2f2; }
+          .kf-cell { border-bottom:1px solid #f0f0f0; border-right:1px solid #f0f0f0; height:36px; padding:0; cursor:cell; position:relative; vertical-align:middle; }
+          .kf-cv { padding:4px 9px; font-size:12px; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:28px; }
+          .kf-input { position:absolute; inset:0; width:100%; height:100%; border:2px solid #dc2626; outline:none; padding:4px 9px; font-size:12px; font-family:inherit; background:#fff; box-sizing:border-box; z-index:10; }
+        </style>
+        <div class="kf-page page-fade">
+          <div class="kf-bar">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+              <button onclick="handleFormAction('save')" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
+                <i data-lucide="save" class="w-4 h-4"></i> Kaydet
+              </button>
+              <button onclick="handleFormAction('save-as')" class="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
+                <i data-lucide="copy" class="w-4 h-4"></i> Farklı Kaydet
+              </button>
+              <button onclick="handleFormAction('load')" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
+                <i data-lucide="upload" class="w-4 h-4"></i> Yükle
+              </button>
+              <button onclick="handleFormAction('models')" class="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
+                <i data-lucide="package" class="w-4 h-4"></i> Modeller
+              </button>
+              <button onclick="handleFormAction('notes')" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
+                <i data-lucide="sticky-note" class="w-4 h-4"></i> Not
+              </button>
+              <button onclick="kfAddRow()" class="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-600 transition">
+                + Satır Ekle
+              </button>
+            </div>
+            <div style="position:relative;">
+              <button onclick="toggleModelDropdown()" class="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
+                <i data-lucide="filter" class="w-4 h-4"></i> Model Seç
+                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" id="model-chevron"></i>
+              </button>
+              <div id="model-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-96 overflow-y-auto">
+                <div class="p-2">
+                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide">LYM Serisi</div>
+                  <button onclick="selectModel('lym-950')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">LYM 950</button>
+                  <button onclick="selectModel('lym-1150')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">LYM 1150</button>
+                  <button onclick="selectModel('lym-1350')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">LYM 1350</button>
+                  <button onclick="selectModel('lym-1500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">LYM 1500</button>
+                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">VDL Serisi</div>
+                  <button onclick="selectModel('vdl-2500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 2500</button>
+                  <button onclick="selectModel('vdl-3500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 3500</button>
+                  <button onclick="selectModel('vdl-4250')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 4250</button>
+                  <button onclick="selectModel('vdl-5500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 5500</button>
+                  <button onclick="selectModel('vdl-6500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 6500</button>
+                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">KBN Serisi</div>
+                  <button onclick="selectModel('kbn-1b-1650')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 1B 1650</button>
+                  <button onclick="selectModel('kbn-1b-1850')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 1B 1850</button>
+                  <button onclick="selectModel('kbn-1b-2050')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 1B 2050</button>
+                  <button onclick="selectModel('kbn-2b-1650')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 2B 1650</button>
+                  <button onclick="selectModel('kbn-2b-1850')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 2B 1850</button>
+                  <button onclick="selectModel('kbn-2b-2050')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 2B 2050</button>
+                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">RTS Serisi</div>
+                  <button onclick="selectModel('rts-346-2b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">RTS 346 2B</button>
+                  <button onclick="selectModel('rts-346-4b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">RTS 346 4B</button>
+                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">PYT Serisi</div>
+                  <button onclick="selectModel('pyt-40')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">PYT 40</button>
+                  <button onclick="selectModel('pyt-90')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">PYT 90</button>
+                  <button onclick="selectModel('pyt-750')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">PYT 750</button>
+                  <button onclick="selectModel('pyt-800')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">PYT 800</button>
+                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">MST Serisi</div>
+                  <button onclick="selectModel('mst-pro-02')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">MST PRO 02</button>
+                  <button onclick="selectModel('mts-lvb-60')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">MTS LVB 60</button>
+                  <button onclick="selectModel('mst-lvb-100')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">MST LVB 100</button>
+                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">ULT Serisi</div>
+                  <button onclick="selectModel('ult-m40')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M40</button>
+                  <button onclick="selectModel('ult-m60')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M60</button>
+                  <button onclick="selectModel('ult-m80')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M80</button>
+                  <button onclick="selectModel('ult-m100')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M100</button>
+                  <button onclick="selectModel('ult-m140')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M140</button>
+                  <button onclick="selectModel('ult-m400-1b-l')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M400 1B L</button>
+                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">KNV Serisi</div>
+                  <button onclick="selectModel('knv-30-3000-2b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KNV 30 3000 2B</button>
+                  <button onclick="selectModel('knv-60-4250-1b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KNV 60 4250 1B</button>
+                  <button onclick="selectModel('knv-60-6000-2b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KNV 60 6000 2B</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="kf-tbl-wrap">
+            <table class="kf-tbl">
+              <thead>
+                <tr>
+                  <th style="width:46px;">#</th>
+                  <th style="width:110px;">KOD</th>
+                  <th style="width:260px;">AÇIKLAMA</th>
+                  <th style="width:130px;">GRUP</th>
+                  <th style="width:120px;">SONUÇ</th>
+                  <th style="width:130px;">DURUM</th>
+                  <th style="width:160px;">REFERANS</th>
+                </tr>
+              </thead>
+              <tbody id="kf-tbody">
+                ${kfBuildRows()}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    } else {
+      const isModelPage = typeof KH_MODELS !== 'undefined' && KH_MODELS.some(m => m.id === currentPage);
+
+      if (isModelPage) {
+        if (!window.mpData) window.mpData = {};
+        if (!window.mpData[currentPage]) {
+          window.mpData[currentPage] = [];
+          for (let r = 0; r < 100; r++) window.mpData[currentPage].push(new Array(7).fill(''));
+        }
+        const _mpId = currentPage;
+        const _mpCols = ['KOD', 'ALAN TÜRÜ', 'UZUNLUK', 'DESİMAL', 'AÇIKLAMA', 'GRUP', 'GRUP KODU'];
+        const _mpW   = [80, 100, 90, 85, 270, 70, 90];
+
+        function _mpEsc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+        function _mpRows() {
+          const data = window.mpData[_mpId];
+          let html = '';
+          for (let ri = 0; ri < data.length; ri++) {
+            html += `<tr class="mp-row" data-ri="${ri}">`;
+            html += `<td class="mp-rn">${ri + 1}</td>`;
+            for (let ci = 0; ci < 7; ci++) {
+              html += `<td class="mp-cell"><div class="mp-cv">${_mpEsc(data[ri][ci])}</div></td>`;
+            }
+            html += `</tr>`;
+          }
+          return html;
+        }
+
+        document.getElementById('page-content').innerHTML = `
+          <style>
+            .mp-wrap { display:flex; flex-direction:column; height:calc(100vh - 112px); gap:14px; }
+            .mp-bar { background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 1px 4px rgba(0,0,0,0.05); padding:10px 14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex-shrink:0; }
+            .mp-tbl-wrap { background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 1px 4px rgba(0,0,0,0.05); overflow:auto; flex:1; min-height:0; }
+            .mp-tbl { width:100%; border-collapse:collapse; table-layout:fixed; }
+            .mp-tbl thead { position:sticky; top:0; z-index:10; }
+            .mp-tbl th { background:#dc2626; color:#fff; font-size:11px; font-weight:700; text-align:center; padding:10px 8px; border-right:1px solid rgba(255,255,255,0.2); white-space:nowrap; }
+            .mp-tbl th:first-child { width:46px; min-width:46px; background:#dc2626; }
+            .mp-rn { width:46px; min-width:46px; text-align:center; font-size:10px; color:#9ca3af; background:#f9fafb; border-right:1px solid #e5e7eb; border-bottom:1px solid #f0f0f0; padding:0; height:38px; line-height:38px; user-select:none; position:sticky; left:0; }
+            .mp-row { background:#fff; } .mp-row:nth-child(even) { background:#fafafa; }
+            .mp-cell { border-bottom:1px solid #f0f0f0; border-right:1px solid #f0f0f0; height:38px; padding:0; cursor:default; vertical-align:middle; user-select:text; }
+            .mp-cv { padding:4px 9px; font-size:12px; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:30px; }
+          </style>
+          <div class="mp-wrap page-fade">
+            <div class="mp-bar">
+              <span style="font-size:15px;font-weight:800;color:#111827;">${p.title}</span>
+              <span style="font-size:11px;color:#9ca3af;font-weight:600;">Salt okunur — veriler Kalite Havuzundan çekilir</span>
+            </div>
+            <div class="mp-tbl-wrap">
+              <table class="mp-tbl">
+                <thead><tr>
+                  <th style="width:46px;">#</th>
+                  ${_mpCols.map((col, ci) => `<th style="min-width:${_mpW[ci]}px;">${col}</th>`).join('')}
+                </tr></thead>
+                <tbody id="mp-tbody">${_mpRows()}</tbody>
+              </table>
+            </div>
+          </div>
+        `;
+        lucide.createIcons();
+
+      } else {
+        document.getElementById('page-content').innerHTML = `
+          <div class="page-fade">
+            <h1 class="text-3xl font-800 text-gray-900">${p.title}</h1>
+            <p class="text-gray-500 mt-2">${p.desc}</p>
+            <div class="mt-8 bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
+              <div class="flex items-center gap-3 text-gray-400">
+                <i data-lucide="clipboard-list" class="w-8 h-8"></i>
+                <span class="text-lg font-600">Bu sayfa henüz yapılandırılmadı.</span>
+              </div>
+            </div>
+          </div>
+        `;
+        lucide.createIcons();
+      }
+    }
+  }
+
+  function updateNav() {
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      const isActive = btn.dataset.page === currentPage;
+      btn.className = `nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all ${isActive ? 'bg-red-50 text-red-700' : 'text-gray-600 hover:bg-gray-100'}`;
+    });
+  }
+
+  function toggleSeries(series) {
+    seriesStates[series] = !seriesStates[series];
+    const modelsDiv = document.getElementById(`${series}-models`);
+    const chevron = document.querySelector(`.series-chevron-${series}`);
+    
+    if (seriesStates[series]) {
+      modelsDiv.style.display = 'block';
+      chevron.style.transform = 'rotate(0deg)';
+    } else {
+      modelsDiv.style.display = 'none';
+      chevron.style.transform = 'rotate(-90deg)';
+    }
+  }
+
+  function toggleSidebar() {
+    sidebarOpen = !sidebarOpen;
+    const sb = document.getElementById('sidebar');
+    sb.style.transform = sidebarOpen ? 'translateX(0)' : 'translateX(-100%)';
+    sb.style.position = sidebarOpen ? 'relative' : 'absolute';
+    sb.style.height = '100%';
+  }
+
+  function openLogin() { document.getElementById('login-modal').classList.remove('hidden'); document.getElementById('login-modal').classList.add('flex'); }
+  function closeLogin() { document.getElementById('login-modal').classList.add('hidden'); document.getElementById('login-modal').classList.remove('flex'); }
+  function handleLogin(e) { e.preventDefault(); closeLogin(); }
+
+  function handleFormAction(action) {
+    switch(action) {
+      case 'save':
+        console.log('Kaydet clicked');
+        break;
+      case 'save-as':
+        console.log('Farklı Kaydet clicked');
+        break;
+      case 'load':
+        console.log('Yükle clicked');
+        break;
+      case 'models':
+        console.log('Modeller clicked');
+        break;
+      case 'notes':
+        console.log('Not clicked');
+        break;
+    }
+  }
+
+  function toggleModelDropdown() {
+    const dropdown = document.getElementById('model-dropdown');
+    const chevron = document.getElementById('model-chevron');
+    dropdown.classList.toggle('hidden');
+    chevron.style.transform = dropdown.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+
+  function selectModel(modelId) {
+    navigate(modelId);
+    const dropdown = document.getElementById('model-dropdown');
+    dropdown.classList.add('hidden');
+    const chevron = document.getElementById('model-chevron');
+    chevron.style.transform = 'rotate(0deg)';
+  }
+
+  // Init
+  const defaultConfig = {
+    brand_title: 'DOLFIN',
+    brand_subtitle: 'Endüstriyel Yıkama Makineleri',
+    background_color: '#f9fafb',
+    primary_color: '#dc2626',
+    text_color: '#111827',
+    surface_color: '#ffffff',
+    secondary_color: '#6b7280',
+    font_family: 'Outfit',
+    font_size: 16
+  };
+
+  function applyConfig(config) {
+    document.getElementById('brand-title').textContent = config.brand_title || defaultConfig.brand_title;
+    document.getElementById('brand-subtitle').textContent = config.brand_subtitle || defaultConfig.brand_subtitle;
+  }
+
+  window.elementSdk.init({
+    defaultConfig,
+    onConfigChange: async (config) => { applyConfig(config); },
+    mapToCapabilities: (config) => ({
+      recolorables: [
+        { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+        { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+        { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+        { get: () => config.primary_color || defaultConfig.primary_color, set: (v) => { config.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); } },
+        { get: () => config.secondary_color || defaultConfig.secondary_color, set: (v) => { config.secondary_color = v; window.elementSdk.setConfig({ secondary_color: v }); } },
+      ],
+      borderables: [],
+      fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+      fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } },
+    }),
+    mapToEditPanelValues: (config) => new Map([
+      ['brand_title', config.brand_title || defaultConfig.brand_title],
+      ['brand_subtitle', config.brand_subtitle || defaultConfig.brand_subtitle],
+    ])
+  });
+
+  navigate('kalite-formu');
+  lucide.createIcons();
+
+  // ── PWA: Service Worker kaydı ──────────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => {
+          console.log('[KaliteX] Service Worker aktif:', reg.scope);
+          // Arkaplan sync desteği varsa kaydet (ileride Supabase sync için)
+          if ('sync' in reg) {
+            reg.sync.register('sync-forms').catch(() => {});
+          }
+        })
+        .catch(err => console.warn('[KaliteX] SW kaydı başarısız:', err));
+    });
+  }
+</script>
+</body>
+</html>

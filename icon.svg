@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Kırmızı arka plan, yuvarlak köşeler -->
+  <rect width="512" height="512" rx="90" fill="#dc2626"/>
+  <!-- Beyaz "D" harfi — DOLFIN markası -->
+  <text
+    x="256"
+    y="370"
+    font-family="Arial Black, Arial, sans-serif"
+    font-size="340"
+    font-weight="900"
+    text-anchor="middle"
+    fill="#ffffff"
+    letter-spacing="-10">D</text>
+  <!-- Alt çizgi — Kalite vurgusu -->
+  <rect x="100" y="420" width="312" height="18" rx="9" fill="rgba(255,255,255,0.45)"/>
+</svg>
