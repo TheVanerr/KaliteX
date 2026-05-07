@@ -376,6 +376,73 @@
     inp.click();
   }
 
+  // CSV sütun adı → KH_MODELS ID eşleşme tablosu
+  const KH_CSV_MAP = {
+    'LYM950':'lym-950','LYM1150':'lym-1150','LYM1350':'lym-1350','LYM1500':'lym-1500',
+    'VDL2500':'vdl-2500','VDL3500':'vdl-3500','VDL4250':'vdl-4250','VDL5500':'vdl-5500','VDL6500':'vdl-6500',
+    'KBN1B1650':'kbn-1b-1650','KBN1B1850':'kbn-1b-1850','KBN1B2050':'kbn-1b-2050',
+    'KBN2B1650':'kbn-2b-1650','KBN2B1850':'kbn-2b-1850','KBN2B2050':'kbn-2b-2050',
+    'ULT40':'ult-m40','ULT60':'ult-m60','ULT80':'ult-m80','ULT100':'ult-m100','ULT140':'ult-m140',
+    'PYT40':'pyt-40','PYT90':'pyt-90','PYT750':'pyt-750','PYT800':'pyt-800',
+    'MSTPRO02':'mst-pro-02','LVB60':'mts-lvb-60','LVB100':'mst-lvb-100',
+    'RTS2B':'rts-346-2b','RTS4B':'rts-346-4b','ULT400':'ult-m400-1b-l',
+  };
+
+  function khImportCSV() {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.csv,.txt';
+    inp.onchange = () => {
+      const f = inp.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = e => {
+        try {
+          const text = e.target.result;
+          const allLines = text.split(/\r?\n/);
+          // Başlık satırını bul (KOD ile başlayanı ara)
+          let headerIdx = -1;
+          for (let i = 0; i < Math.min(5, allLines.length); i++) {
+            if (allLines[i].split(';')[0].trim().toUpperCase() === 'KOD') { headerIdx = i; break; }
+          }
+          if (headerIdx < 0) { alert('Başlık satırı (KOD) bulunamadı.'); return; }
+          const headers = allLines[headerIdx].split(';').map(h => h.trim());
+          // Model sütun indekslerini belirle
+          const modelCols = {}; // colIdx -> mid
+          headers.forEach((h, ci) => { if (KH_CSV_MAP[h]) modelCols[ci] = KH_CSV_MAP[h]; });
+          // Veriyi sıfırla
+          KH.paramData = [];
+          KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
+          KH.TOTAL_ROWS = 500;
+          for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
+          // Satırları parse et
+          let rowIdx = 0;
+          for (let li = headerIdx + 1; li < allLines.length && rowIdx < KH.TOTAL_ROWS; li++) {
+            const ln = allLines[li];
+            if (!ln.trim()) continue;
+            const cols = ln.split(';');
+            const kod = cols[0] ? cols[0].trim() : '';
+            if (!kod || !kod.match(/^K\d/)) continue;
+            KH.paramData[rowIdx][0] = kod;
+            KH.paramData[rowIdx][1] = cols[1] ? cols[1].trim() : '';
+            KH.paramData[rowIdx][2] = cols[2] ? cols[2].trim() : '';
+            KH.paramData[rowIdx][3] = cols[3] ? cols[3].trim() : '';
+            KH.paramData[rowIdx][4] = cols[4] ? cols[4].trim() : '';
+            KH.paramData[rowIdx][5] = cols[5] ? cols[5].trim() : '';
+            KH.paramData[rowIdx][6] = cols[6] ? cols[6].trim() : '';
+            // Model atamaları
+            Object.entries(modelCols).forEach(([ci, mid]) => {
+              const v = cols[ci] ? cols[ci].trim().toUpperCase() : '';
+              if (v === 'X') KH.assignments[mid][rowIdx] = 'X';
+            });
+            rowIdx++;
+          }
+          khBuildFR(); khVSR(); khSave();
+          khToast(`CSV yüklendi: ${rowIdx} parametre ✓`, 2500);
+        } catch(err) { alert('CSV okuma hatası: ' + err.message); }
+      };
+      rd.readAsText(f, 'UTF-8');
+    };
+    inp.click();
+  }
+
   // ── Model data accessor (for model pages) ───────────────────
   function khGetModelParams(modelId) {
     const vals = KH.assignments[modelId] || {};
@@ -446,13 +513,14 @@
         const v = KH.paramData[ri][ci] || '';
         const s = rSel && ci >= minC && ci <= maxC;
         const w5 = ci === 4 ? ' style="min-width:270px;"' : '';
-        html += `<td class="khc${s?' khs':''}" data-ri="${ri}" data-ci="${ci}" onmousedown="khCD(event,${ri},${ci})" onmouseover="khCO(event,${ri},${ci})" ondblclick="khDD(event,${ri},${ci})"${w5}><div class="khcv">${khEsc(v)}</div></td>`;
+        const ctr = (ci === 0 || ci === 1) ? ' khcv-c' : '';
+        html += `<td class="khc${s?' khs':''}" data-ri="${ri}" data-ci="${ci}" onmousedown="khCD(event,${ri},${ci})" onmouseover="khCO(event,${ri},${ci})" ondblclick="khDD(event,${ri},${ci})"${w5}><div class="khcv${ctr}">${khEsc(v)}</div></td>`;
       }
       for (let mi = 0; mi < KH_MODELS.length; mi++) {
         const ci = KH_FIXED.length + mi;
         const xv = khMVal(KH_MODELS[mi].id, ri);
         const xs = rSel && ci >= minC && ci <= maxC;
-        html += `<td class="khc${xs?' khs':''}" data-ri="${ri}" data-ci="${ci}" onmousedown="khCD(event,${ri},${ci})" onmouseover="khCO(event,${ri},${ci})" ondblclick="khDD(event,${ri},${ci})"><div class="khcv">${khEsc(xv)}</div></td>`;
+        html += `<td class="khc${xs?' khs':''}" data-ri="${ri}" data-ci="${ci}" onmousedown="khCD(event,${ri},${ci})" onmouseover="khCO(event,${ri},${ci})" ondblclick="khDD(event,${ri},${ci})"><div class="khcv khcv-c">${khEsc(xv)}</div></td>`;
       }
       html += `<td style="min-width:30px;border:none;"></td></tr>`;
     }
@@ -817,6 +885,7 @@
           .khc { border-bottom:1px solid #f0f0f0;border-right:1px solid #f0f0f0;padding:0;min-width:90px;height:38px;cursor:cell;position:relative;vertical-align:middle; }
           .khxc { min-width:76px;text-align:center;cursor:pointer; }
           .khcv { padding:3px 7px;font-size:12px;color:#1f2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:32px; }
+          .khcv-c { text-align:center; }
           .khei { position:absolute;inset:0;width:100%;height:100%;border:2px solid #dc2626;outline:none;padding:3px 7px;font-size:12px;font-family:inherit;background:#fff;box-sizing:border-box;z-index:10; }
           .khs { background:#fca5a5 !important; outline:2px solid #dc2626; outline-offset:-1px; }
           .khxon { background:#dcfce7 !important; }
@@ -827,6 +896,7 @@
         <div class="kho page-fade">
           <div class="khbar">
             <button class="khbtn khbr" onclick="khSave()">Kaydet (Ctrl+S)</button>
+            <button class="khbtn khbr" onclick="khImportCSV()">📂 CSV Yükle</button>
             <button class="khbtn khbr" onclick="khImportJSON()">📥 JSON Yükle</button>
             <button class="khbtn khbr" onclick="khExportJSON()">JSON İndir</button>
             <button class="khbtn khbgr" onclick="khAddRow()">+ Satır Ekle</button>
