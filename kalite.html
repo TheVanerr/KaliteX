@@ -26,7 +26,46 @@
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
  </head>
  <body class="h-full">
-  <div id="app" class="h-full w-full flex bg-gray-50 overflow-hidden"><!-- Sidebar -->
+
+  <!-- ── GİRİŞ EKRANI ─────────────────────────────────────────────────────── -->
+  <div id="splash" onclick="splashClick()" class="fixed inset-0 z-[100] flex flex-col items-center justify-center cursor-pointer select-none" style="background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%)">
+    <div style="text-align:center;">
+      <div style="font-size:clamp(4rem,12vw,9rem);font-weight:900;color:#fff;letter-spacing:-2px;line-height:1;">DOLFIN</div>
+      <div style="font-size:clamp(0.75rem,2.5vw,1.15rem);font-weight:600;color:rgba(255,255,255,0.75);letter-spacing:0.25em;text-transform:uppercase;margin-top:0.5rem;">Endüstriyel Yıkama Makineleri</div>
+    </div>
+    <div style="position:absolute;bottom:2.5rem;color:rgba(255,255,255,0.5);font-size:0.85rem;font-weight:500;">Giriş yapmak için ekrana dokun</div>
+  </div>
+
+  <!-- ── GİRİŞ MODAL ──────────────────────────────────────────────────────── -->
+  <div id="auth-modal" class="fixed inset-0 z-[110] hidden items-center justify-center" style="background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);">
+    <div class="bg-white rounded-2xl shadow-2xl w-full mx-4" style="max-width:360px;padding:2rem;">
+      <div style="text-align:center;margin-bottom:1.5rem;">
+        <div style="font-size:2rem;font-weight:900;color:#dc2626;letter-spacing:-1px;">DOLFIN</div>
+        <div style="font-size:0.75rem;color:#6b7280;margin-top:0.25rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;">Kalite Kontrol Sistemi</div>
+      </div>
+      <div id="auth-err" style="display:none;background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;padding:0.6rem 0.8rem;font-size:0.8rem;margin-bottom:1rem;font-weight:600;"></div>
+      <form id="auth-form" onsubmit="authSubmit(event)">
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.35rem;">E-posta</label>
+          <input id="auth-email" type="email" required autocomplete="email" placeholder="ornek@firma.com"
+            style="width:100%;border:1px solid #d1d5db;border-radius:8px;padding:0.65rem 0.9rem;font-size:0.9rem;outline:none;box-sizing:border-box;"
+            onfocus="this.style.borderColor='#dc2626'" onblur="this.style.borderColor='#d1d5db'">
+        </div>
+        <div style="margin-bottom:1.5rem;">
+          <label style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.35rem;">Şifre</label>
+          <input id="auth-pass" type="password" required autocomplete="current-password" placeholder="••••••••"
+            style="width:100%;border:1px solid #d1d5db;border-radius:8px;padding:0.65rem 0.9rem;font-size:0.9rem;outline:none;box-sizing:border-box;"
+            onfocus="this.style.borderColor='#dc2626'" onblur="this.style.borderColor='#d1d5db'">
+        </div>
+        <button type="submit" id="auth-btn"
+          style="width:100%;background:#dc2626;color:#fff;font-weight:700;padding:0.75rem;border-radius:8px;border:none;font-size:0.95rem;cursor:pointer;transition:background 0.2s;">
+          Giriş Yap
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div id="app" class="h-full w-full flex bg-gray-50 overflow-hidden" style="display:none!important;"><!-- Sidebar -->
    <aside id="sidebar" class="sidebar-transition w-64 bg-white border-r border-gray-200 flex flex-col h-full shrink-0 z-30">
     <div class="p-5 border-b border-gray-100">
      <div class="flex flex-col items-center">
@@ -58,26 +97,15 @@
     </nav>
    </aside><!-- Main Content -->
    <div class="flex-1 flex flex-col h-full overflow-hidden"><!-- Top Bar -->
-    <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0"><button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-gray-100 transition"> <i data-lucide="menu" class="w-5 h-5 text-gray-600"></i> </button> <button onclick="openLogin()" class="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition"> <i data-lucide="user" class="w-4 h-4"></i> Kullanıcı Girişi </button>
+    <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0">
+      <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-gray-100 transition"> <i data-lucide="menu" class="w-5 h-5 text-gray-600"></i> </button>
+      <div class="flex items-center gap-3">
+        <span id="header-user" style="font-size:0.8rem;font-weight:600;color:#6b7280;"></span>
+        <button onclick="authSignOut()" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition"> <i data-lucide="log-out" class="w-4 h-4"></i> Çıkış </button>
+      </div>
     </header><!-- Page Content -->
     <main id="page-content" class="flex-1 overflow-y-auto p-6 page-fade">
     </main>
-   </div>
-  </div><!-- Login Modal -->
-  <div id="login-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
-   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative"><button onclick="closeLogin()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
-    <div class="text-center mb-6">
-     <div class="text-2xl font-800 text-red-600">
-      DOLFIN
-     </div>
-     <p class="text-sm text-gray-500 mt-1">Kalite Kontrol Sistemi</p>
-    </div>
-    <form onsubmit="handleLogin(event)" class="space-y-4">
-     <div><label for="username" class="block text-sm font-600 text-gray-700 mb-1">Kullanıcı Adı</label> <input id="username" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none" placeholder="Kullanıcı adınızı girin">
-     </div>
-     <div><label for="password" class="block text-sm font-600 text-gray-700 mb-1">�?ifre</label> <input id="password" type="password" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none" placeholder="�?ifrenizi girin">
-     </div><button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-600 py-2.5 rounded-lg transition text-sm">Giriş Yap</button>
-    </form>
    </div>
   </div>
   <script>
@@ -184,8 +212,10 @@
   // ── Supabase config ──────────────────────────────────────────────────────────
   const SB_URL = 'https://rhrhueocmcjtntkyyack.supabase.co';
   const SB_KEY = 'sb_publishable_T0ZpujhmI_kBuuT4M6U1Gw_BCdweMf-';
+  let SB_TOKEN = null;
   function sbH(extra) {
-    return Object.assign({ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' }, extra || {});
+    const token = SB_TOKEN || SB_KEY;
+    return Object.assign({ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, extra || {});
   }
   async function sbGet(tbl, qs) {
     const r = await fetch(SB_URL + '/rest/v1/' + tbl + (qs ? '?' + qs : ''), { headers: sbH() });
@@ -1112,9 +1142,60 @@
     sb.style.height = '100%';
   }
 
-  function openLogin() { document.getElementById('login-modal').classList.remove('hidden'); document.getElementById('login-modal').classList.add('flex'); }
-  function closeLogin() { document.getElementById('login-modal').classList.add('hidden'); document.getElementById('login-modal').classList.remove('flex'); }
-  function handleLogin(e) { e.preventDefault(); closeLogin(); }
+  // ── Auth (Supabase) ────────────────────────────────────────────────────────
+  function splashClick() {
+    const m = document.getElementById('auth-modal');
+    m.style.display = 'flex';
+    setTimeout(() => document.getElementById('auth-email').focus(), 100);
+  }
+
+  async function authSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('auth-btn');
+    const err = document.getElementById('auth-err');
+    const email = document.getElementById('auth-email').value.trim();
+    const pass  = document.getElementById('auth-pass').value;
+    btn.textContent = 'Giriş yapılıyor...'; btn.disabled = true; err.style.display = 'none';
+    try {
+      const res = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+        method: 'POST',
+        headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error_description || data.msg || 'Giriş başarısız');
+      // Oturum aç
+      SB_TOKEN = data.access_token;
+      const userName = data.user?.email?.split('@')[0] || data.user?.email || 'Kullanıcı';
+      document.getElementById('header-user').textContent = userName;
+      document.getElementById('auth-modal').style.display = 'none';
+      document.getElementById('splash').style.display = 'none';
+      const app = document.getElementById('app');
+      app.style.removeProperty('display');
+      app.style.display = 'flex';
+      lucide.createIcons();
+      await khInit(); khBuildHeader(); khBuildFR(); khVSR();
+      renderPage(currentPage);
+    } catch(ex) {
+      err.textContent = ex.message; err.style.display = 'block';
+    } finally {
+      btn.textContent = 'Giriş Yap'; btn.disabled = false;
+    }
+  }
+
+  function authSignOut() {
+    SB_TOKEN = null;
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('auth-modal').style.display = 'none';
+    document.getElementById('splash').style.display = 'flex';
+    document.getElementById('auth-pass').value = '';
+    document.getElementById('auth-err').style.display = 'none';
+    KH._ready = false;
+  }
+
+  function openLogin() {}
+  function closeLogin() {}
+  function handleLogin(e) { e.preventDefault(); }
 
   function handleFormAction(action) {
     switch(action) {
@@ -1190,8 +1271,8 @@
     ])
   });
 
-  navigate('kalite-formu');
-  lucide.createIcons();
+  // navigate ve lucide artık login sonrası authSubmit içinde çağrılıyor
+  lucide.createIcons(); // splash ekranındaki ikonlar için
 
   // ── PWA: Service Worker kaydı ──────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
