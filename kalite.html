@@ -304,10 +304,28 @@
     khToast('Veri bulunamadı. Lütfen 📂 CSV Yükle butonunu kullanın.', 4000);
   }
 
+  async function sbGetAll(tbl, qs, pageSize = 1000) {
+    // Supabase PostgREST sunucu limiti 1000 — Range header ile sayfalama yaparak tümünü çek
+    let all = [], offset = 0;
+    while (true) {
+      const rangeEnd = offset + pageSize - 1;
+      const r = await fetch(SB_URL + '/rest/v1/' + tbl + (qs ? '?' + qs : ''), {
+        headers: sbH({ 'Range': `${offset}-${rangeEnd}`, 'Range-Unit': 'items' })
+      });
+      if (!r.ok) throw new Error(await r.text());
+      const chunk = await r.json();
+      if (!chunk.length) break;
+      all = all.concat(chunk);
+      if (chunk.length < pageSize) break; // son sayfa
+      offset += pageSize;
+    }
+    return all;
+  }
+
   async function khLoadFromSupabase() {
     const [params, atamaList] = await Promise.all([
-      sbGet('kalite_parametreleri', 'order=id.asc&limit=2000'),
-      sbGet('model_atama', 'select=model_id,parametre_kod&limit=20000')
+      sbGetAll('kalite_parametreleri', 'order=id.asc'),
+      sbGetAll('model_atama', 'select=model_id,parametre_kod')
     ]);
     const kodIdx = {};
     params.forEach((p, i) => {
@@ -319,6 +337,7 @@
       const ri = kodIdx[a.parametre_kod];
       if (ri !== undefined && KH.assignments[a.model_id] !== undefined) KH.assignments[a.model_id][ri] = 'X';
     });
+    console.log(`[KaliteX] Supabase yuklendi: ${params.length} parametre, ${atamaList.length} atama`);
   }
 
   let _khSyncing = false;
