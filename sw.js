@@ -1,4 +1,4 @@
-// KaliteX Service Worker — v6
+// KaliteX Service Worker — v7
 // Strateji:
 //   - Uygulama dosyaları (HTML, SVG): Cache-first
 //   - CDN (Tailwind, Lucide, Fonts): Cache-first, ilk görüldüğünde dinamik olarak cache'le
@@ -6,7 +6,7 @@
 //   - Supabase REST API: Network-first, offline'da cache'den dön
 //   - Font dosyaları (.woff2): Görüldükçe cache'le (opaque response da dahil)
 
-const CACHE = 'kalitex-v6';
+const CACHE = 'kalitex-v7';
 
 const LOCAL_ASSETS = [
   './',

@@ -210,6 +210,7 @@
   ];
 
   // ── Supabase config ──────────────────────────────────────────────────────────
+  const KH_DATA_VERSION = 'v3'; // Bunu artırınca tüm cihazlarda localStorage temizlenir
   const SB_URL = 'https://rhrhueocmcjtntkyyack.supabase.co';
   const SB_KEY = 'sb_publishable_T0ZpujhmI_kBuuT4M6U1Gw_BCdweMf-';
   let SB_TOKEN = null;
@@ -294,6 +295,13 @@
 
     // 1. localStorage — hızlı yükle ve UI'ı göster
     let localLoaded = false;
+    const savedVer = localStorage.getItem('dataX_version');
+    if (savedVer !== KH_DATA_VERSION) {
+      // Eski versiyon — temizle, Supabase'den çek
+      console.log(`[KaliteX] localStorage versiyonu eski (${savedVer} → ${KH_DATA_VERSION}), temizleniyor`);
+      localStorage.removeItem('dataX');
+      localStorage.removeItem('dataX_version');
+    }
     const saved = localStorage.getItem('dataX');
     if (saved) {
       try {
@@ -433,6 +441,7 @@
 
   function khSaveLocal() {
     localStorage.setItem('dataX', JSON.stringify(khToJSON()));
+    localStorage.setItem('dataX_version', KH_DATA_VERSION);
   }
 
   function khSave() {
