@@ -304,19 +304,20 @@
   async function khSyncToSupabase() {
     khSyncStatus('syncing');
     try {
-      // Parametreler — upsert (merge)
+      // 1. Parametreler — önce sil, sonra temiz insert
+      await sbDel('kalite_parametreleri', 'kod=not.is.null');
       const params = KH.paramData.filter(r => r[0]).map(r => ({
         kod: r[0], alan_turu: r[1]||'', uzunluk: r[2]||'', desimal: r[3]||'', aciklama: r[4]||'', grup: r[5]||'', grup_kodu: r[6]||''
       }));
-      for (let i = 0; i < params.length; i += 500)
-        await sbPost('kalite_parametreleri', params.slice(i, i+500), 'resolution=merge-duplicates,return=minimal');
-      // Model atamaları — sil + yeniden ekle
+      for (let i = 0; i < params.length; i += 100)
+        await sbPost('kalite_parametreleri', params.slice(i, i+100), 'return=minimal');
+      // 2. Model atamaları — sil + yeniden ekle
       await sbDel('model_atama', 'model_id=not.is.null');
       const atamaRows = [];
       for (const [mid, obj] of Object.entries(KH.assignments))
         for (const ri of Object.keys(obj)) { const kod = KH.paramData[Number(ri)]?.[0]; if (kod) atamaRows.push({ model_id: mid, parametre_kod: kod }); }
-      for (let i = 0; i < atamaRows.length; i += 500)
-        await sbPost('model_atama', atamaRows.slice(i, i+500), 'return=minimal');
+      for (let i = 0; i < atamaRows.length; i += 200)
+        await sbPost('model_atama', atamaRows.slice(i, i+200), 'return=minimal');
       khSyncStatus('ok');
     } catch(e) {
       khSyncStatus('error');
