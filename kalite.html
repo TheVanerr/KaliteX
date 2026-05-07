@@ -275,7 +275,12 @@
     KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
     // 1. Supabase (online)
     if (navigator.onLine) {
-      try { await khLoadFromSupabase(); khSaveLocal(); khSyncStatus('ok'); return; } catch(e) { console.warn('[KaliteX] Supabase yüklenemedi:', e); }
+      try {
+        await khLoadFromSupabase();
+        const loaded = KH.paramData.some(r => r[0]); // en az 1 satır geldi mi?
+        if (loaded) { khSaveLocal(); khSyncStatus('ok'); return; }
+        console.warn('[KaliteX] Supabase\'dan veri gelmedi, fallback\'a geçiliyor');
+      } catch(e) { console.warn('[KaliteX] Supabase yüklenemedi:', e); }
     }
     // 2. localStorage (offline fallback)
     const saved = localStorage.getItem('dataX');
@@ -304,15 +309,17 @@
   async function khSyncToSupabase() {
     khSyncStatus('syncing');
     try {
-      // 1. Parametreler — önce sil, sonra temiz insert
+      // 1. Önce model_atama sil (FK bağımlılığı nedeniyle önce bu)
+      await sbDel('model_atama', 'model_id=not.is.null');
+      // 2. Sonra parametreleri sil
       await sbDel('kalite_parametreleri', 'kod=not.is.null');
+      // 3. Parametreleri temiz insert et
       const params = KH.paramData.filter(r => r[0]).map(r => ({
         kod: r[0], alan_turu: r[1]||'', uzunluk: r[2]||'', desimal: r[3]||'', aciklama: r[4]||'', grup: r[5]||'', grup_kodu: r[6]||''
       }));
       for (let i = 0; i < params.length; i += 100)
         await sbPost('kalite_parametreleri', params.slice(i, i+100), 'return=minimal');
-      // 2. Model atamaları — sil + yeniden ekle
-      await sbDel('model_atama', 'model_id=not.is.null');
+      // 4. Model atamalarını insert et
       const atamaRows = [];
       for (const [mid, obj] of Object.entries(KH.assignments))
         for (const ri of Object.keys(obj)) { const kod = KH.paramData[Number(ri)]?.[0]; if (kod) atamaRows.push({ model_id: mid, parametre_kod: kod }); }
@@ -321,7 +328,7 @@
       khSyncStatus('ok');
     } catch(e) {
       khSyncStatus('error');
-      console.error('[KaliteX] Supabase sync hatası:', e);
+      console.error('[KaliteX] Supabase sync hatası:', e.message || e);
     }
   }
 
