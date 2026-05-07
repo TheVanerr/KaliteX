@@ -380,12 +380,11 @@
   }
 
   let _khSyncing = false;
-  async function khSyncToSupabase() {
+  async function khSyncToSupabase(force) {
     if (_khSyncing) { console.warn('[KaliteX] Sync zaten çalışıyor, atlandı'); return; }
-    _khSyncing = true;
-    khSyncStatus('syncing');
 
-    // Sync başlamadan önce mevcut veriyi snapshot al (KH memory değişmez)
+    // ── GÜVENLİK KONTROLÜ: bellekteki veri Supabase'dekinden az mı? ──────────
+    // Bu kontrol, eksik veriyle Supabase'in silinmesini önler.
     const params = KH.paramData.filter(r => r[0]).map(r => ({
       kod: r[0], alan_turu: r[1]||'', uzunluk: r[2]||'', desimal: r[3]||'', aciklama: r[4]||'', grup: r[5]||'', grup_kodu: r[6]||''
     }));
@@ -393,15 +392,38 @@
     for (const [mid, obj] of Object.entries(KH.assignments))
       for (const ri of Object.keys(obj)) { const kod = KH.paramData[Number(ri)]?.[0]; if (kod) atamaRows.push({ model_id: mid, parametre_kod: kod }); }
 
+    if (!force) {
+      try {
+        const sbCount = await khGetSupabaseAsamaCount();
+        if (sbCount !== null && atamaRows.length < sbCount) {
+          // Bellekteki veri Supabase'den AZ → yazma, sadece uyar
+          khSyncStatus('error');
+          const msg = `⛔ Güvenlik: Bellekte ${atamaRows.length} atama var, Supabase'de ${sbCount} atama var.\n\nYazmak bellekteki EKSİK veriyi Supabase'e kaydeder ve Supabase'deki veriyi siler!\n\nDevam etmek istiyorsanız "Kalite Havuzu → ⟳ Supabase'den Yenile" ile önce tam veriyi çekin.`;
+          console.error('[KaliteX]', msg);
+          khToast('⛔ Supabase koruması aktif — eksik veri yazılmadı!', 5000);
+          _khSyncing = false;
+          return;
+        }
+      } catch(e) {
+        console.warn('[KaliteX] Güvenlik kontrolü yapılamadı, sync atlandı:', e.message);
+        khSyncStatus('error');
+        khToast('⚠️ Supabase bağlantı hatası, sync atlandı', 3000);
+        _khSyncing = false;
+        return;
+      }
+    }
+
+    _khSyncing = true;
+    khSyncStatus('syncing');
     try {
       // 1. Önce model_atama sil (FK bağımlılığı nedeniyle önce bu)
       await sbDel('model_atama', 'model_id=not.is.null');
       // 2. Sonra parametreleri sil
       await sbDel('kalite_parametreleri', 'kod=not.is.null');
-      // 3. Parametreleri temiz insert et (snapshot'tan)
+      // 3. Parametreleri temiz insert et
       for (let i = 0; i < params.length; i += 100)
         await sbPost('kalite_parametreleri', params.slice(i, i+100), 'return=minimal');
-      // 4. Model atamalarını insert et (snapshot'tan)
+      // 4. Model atamalarını insert et
       for (let i = 0; i < atamaRows.length; i += 200)
         await sbPost('model_atama', atamaRows.slice(i, i+200), 'return=minimal');
       khSyncStatus('ok');
@@ -409,6 +431,7 @@
     } catch(e) {
       khSyncStatus('error');
       console.error('[KaliteX] Supabase sync hatası:', e.message || e);
+      khToast('⚠️ Supabase yazma hatası: ' + (e.message||e), 4000);
     } finally {
       _khSyncing = false;
     }
@@ -446,9 +469,15 @@
 
   function khSave() {
     khSaveLocal();
-    khToast('Kaydedildi ✓', 1400);
-    if (navigator.onLine) khSyncToSupabase();
-    else khSyncStatus('offline');
+    khToast('Yerel kaydedildi ✓', 1400);
+    if (navigator.onLine) {
+      const localAtama = khLocalAsamaCount();
+      if (!confirm(`Supabase\'e ${localAtama} atama kaydedilecek.\n\nBu işlem önceki Supabase verisini üzerine yazar.\nDevam etmek istiyor musunuz?`)) {
+        khToast('Supabase sync iptal edildi.', 2000);
+        return;
+      }
+      khSyncToSupabase(false);
+    } else khSyncStatus('offline');
   }
 
   function khExportJSON() {
@@ -1636,7 +1665,7 @@
       khSyncStatus('ok');
       KH._ready = true;
       khBuildFR(); khBuildHeader(); khVSR();
-      khToast('Supabase\'den yülendi ✓', 2000);
+      khToast('Supabase\'den yüklendi ✓ — artık Kaydet ile Supabase\'e yazabilirsiniz.', 3000);
     } catch(e) {
       khSyncStatus('error');
       khToast('Hata: ' + (e.message||e), 4000);
