@@ -14,7 +14,7 @@
   <link rel="apple-touch-icon" href="./icon.svg">
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <script src="/_sdk/element_sdk.js"></script>
+
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Outfit', sans-serif; }
@@ -23,7 +23,7 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   </style>
   <style>body { box-sizing: border-box; }</style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+
  </head>
  <body class="h-full">
 
@@ -1250,28 +1250,7 @@
     document.getElementById('brand-subtitle').textContent = config.brand_subtitle || defaultConfig.brand_subtitle;
   }
 
-  window.elementSdk.init({
-    defaultConfig,
-    onConfigChange: async (config) => { applyConfig(config); },
-    mapToCapabilities: (config) => ({
-      recolorables: [
-        { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
-        { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
-        { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
-        { get: () => config.primary_color || defaultConfig.primary_color, set: (v) => { config.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); } },
-        { get: () => config.secondary_color || defaultConfig.secondary_color, set: (v) => { config.secondary_color = v; window.elementSdk.setConfig({ secondary_color: v }); } },
-      ],
-      borderables: [],
-      fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
-      fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } },
-    }),
-    mapToEditPanelValues: (config) => new Map([
-      ['brand_title', config.brand_title || defaultConfig.brand_title],
-      ['brand_subtitle', config.brand_subtitle || defaultConfig.brand_subtitle],
-    ])
-  });
-
-  // navigate ve lucide artık login sonrası authSubmit içinde çağrılıyor
+  applyConfig(defaultConfig);
   lucide.createIcons(); // splash ekranındaki ikonlar için
 
   // ── PWA: Service Worker kaydı ──────────────────────────────────────────────
