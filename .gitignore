@@ -1,0 +1,23 @@
+# Excel dosyaları
+*.xlsm
+*.xlsx
+~$*
+
+# Ham kaynak veri (büyük dosya, uygulamada kullanılmıyor)
+veriX.json
+
+# Yerel veri dosyaları (Supabase kaynak, repoda tutulmuyor)
+dataX.json
+
+# Büyük CSV kaynak dosyası (hassas üretim verisi)
+kalitex.csv
+*.csv
+
+# Yerel araç scriptleri (sadece PC'de kullanılır)
+KaliteX-Baslat.bat
+_convert.ps1
+*.ps1
+
+# OS
+Thumbs.db
+.DS_Store
