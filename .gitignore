@@ -6,6 +6,9 @@
 # Ham kaynak veri (büyük dosya, uygulamada kullanılmıyor)
 veriX.json
 
+# Yerel veri dosyaları (Supabase kaynak, repoda tutulmuyor)
+dataX.json
+
 # Büyük CSV kaynak dosyası (hassas üretim verisi)
 kalitex.csv
 *.csv

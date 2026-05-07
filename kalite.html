@@ -285,8 +285,9 @@
     // 2. localStorage (offline fallback)
     const saved = localStorage.getItem('dataX');
     if (saved) { try { khLoadJSON(JSON.parse(saved)); khSyncStatus('offline'); return; } catch(e) {} }
-    // 3. dataX.json (ilk kurulum)
-    try { const res = await fetch('./dataX.json'); if (res.ok) { khLoadJSON(await res.json()); khSyncStatus('offline'); } } catch(e) {}
+    // Veri yok — kullanıcıdan CSV yüklenmesini bekle
+    khSyncStatus('offline');
+    khToast('Veri bulunamadı. Lütfen 📂 CSV Yükle butonunu kullanın.', 4000);
   }
 
   async function khLoadFromSupabase() {
