@@ -1,12 +1,10 @@
-// KaliteX Service Worker — v8
+// KaliteX Service Worker — v9
 // Strateji:
-//   - kalite.html: Network-first (her zaman güncel kod gelir, offline fallback cache'den)
-//   - Diğer uygulama dosyaları (SVG, manifest): Cache-first
-//   - CDN (Tailwind, Lucide, Fonts): Cache-first, ilk görüldüğünde dinamik olarak cache'le
-//   - Supabase auth: Her zaman network
+//   - kalite.html + manifest.json + ikonlar: Network-first (her zaman güncel gelir)
+//   - CDN (Tailwind, Lucide, Fonts): Cache-first
 //   - Supabase REST API: Network-first, offline'da cache'den dön
 
-const CACHE = 'kalitex-v8';
+const CACHE = 'kalitex-v9';
 
 const LOCAL_ASSETS = [
   './',
@@ -76,8 +74,9 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // kalite.html — network-first: güncel kodu getir, offline'da cache'den dön
-  if (url.endsWith('/kalite.html') || url.endsWith('/KaliteX/') || url.endsWith('/KaliteX')) {
+  // kalite.html, manifest ve ikonlar — network-first: her zaman güncel gelsin
+  if (url.endsWith('/kalite.html') || url.endsWith('/KaliteX/') || url.endsWith('/KaliteX')
+      || url.endsWith('/manifest.json') || url.endsWith('/icon-192.png') || url.endsWith('/icon-512.png') || url.endsWith('/icon.svg')) {
     event.respondWith(
       fetch(request)
         .then(res => {
