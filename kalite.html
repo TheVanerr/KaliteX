@@ -321,29 +321,38 @@
     });
   }
 
+  let _khSyncing = false;
   async function khSyncToSupabase() {
+    if (_khSyncing) { console.warn('[KaliteX] Sync zaten çalışıyor, atlandı'); return; }
+    _khSyncing = true;
     khSyncStatus('syncing');
+
+    // Sync başlamadan önce mevcut veriyi snapshot al (KH memory değişmez)
+    const params = KH.paramData.filter(r => r[0]).map(r => ({
+      kod: r[0], alan_turu: r[1]||'', uzunluk: r[2]||'', desimal: r[3]||'', aciklama: r[4]||'', grup: r[5]||'', grup_kodu: r[6]||''
+    }));
+    const atamaRows = [];
+    for (const [mid, obj] of Object.entries(KH.assignments))
+      for (const ri of Object.keys(obj)) { const kod = KH.paramData[Number(ri)]?.[0]; if (kod) atamaRows.push({ model_id: mid, parametre_kod: kod }); }
+
     try {
       // 1. Önce model_atama sil (FK bağımlılığı nedeniyle önce bu)
       await sbDel('model_atama', 'model_id=not.is.null');
       // 2. Sonra parametreleri sil
       await sbDel('kalite_parametreleri', 'kod=not.is.null');
-      // 3. Parametreleri temiz insert et
-      const params = KH.paramData.filter(r => r[0]).map(r => ({
-        kod: r[0], alan_turu: r[1]||'', uzunluk: r[2]||'', desimal: r[3]||'', aciklama: r[4]||'', grup: r[5]||'', grup_kodu: r[6]||''
-      }));
+      // 3. Parametreleri temiz insert et (snapshot'tan)
       for (let i = 0; i < params.length; i += 100)
         await sbPost('kalite_parametreleri', params.slice(i, i+100), 'return=minimal');
-      // 4. Model atamalarını insert et
-      const atamaRows = [];
-      for (const [mid, obj] of Object.entries(KH.assignments))
-        for (const ri of Object.keys(obj)) { const kod = KH.paramData[Number(ri)]?.[0]; if (kod) atamaRows.push({ model_id: mid, parametre_kod: kod }); }
+      // 4. Model atamalarını insert et (snapshot'tan)
       for (let i = 0; i < atamaRows.length; i += 200)
         await sbPost('model_atama', atamaRows.slice(i, i+200), 'return=minimal');
       khSyncStatus('ok');
+      console.log(`[KaliteX] Sync tamamlandi: ${params.length} parametre, ${atamaRows.length} atama`);
     } catch(e) {
       khSyncStatus('error');
       console.error('[KaliteX] Supabase sync hatası:', e.message || e);
+    } finally {
+      _khSyncing = false;
     }
   }
 
