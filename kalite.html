@@ -364,7 +364,7 @@
   async function khLoadFromSupabase() {
     const [params, atamaList] = await Promise.all([
       sbGetAll('kalite_parametreleri', 'order=id.asc'),
-      sbGetAll('model_atama', 'select=model_id,parametre_kod')
+      sbGetAll('model_atama', 'select=model_id,parametre_kod&order=model_id,parametre_kod')
     ]);
     const kodIdx = {};
     params.forEach((p, i) => {

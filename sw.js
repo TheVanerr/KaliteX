@@ -1,12 +1,12 @@
-// KaliteX Service Worker — v7
+// KaliteX Service Worker — v8
 // Strateji:
-//   - Uygulama dosyaları (HTML, SVG): Cache-first
+//   - kalite.html: Network-first (her zaman güncel kod gelir, offline fallback cache'den)
+//   - Diğer uygulama dosyaları (SVG, manifest): Cache-first
 //   - CDN (Tailwind, Lucide, Fonts): Cache-first, ilk görüldüğünde dinamik olarak cache'le
-//   - Supabase auth: Her zaman network (login gerektirir)
+//   - Supabase auth: Her zaman network
 //   - Supabase REST API: Network-first, offline'da cache'den dön
-//   - Font dosyaları (.woff2): Görüldükçe cache'le (opaque response da dahil)
 
-const CACHE = 'kalitex-v7';
+const CACHE = 'kalitex-v8';
 
 const LOCAL_ASSETS = [
   './',
@@ -74,7 +74,23 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Diğer her şey (uygulama dosyaları + CDN + fontlar): cache-first, dinamik cache
+  // kalite.html — network-first: güncel kodu getir, offline'da cache'den dön
+  if (url.endsWith('/kalite.html') || url.endsWith('/KaliteX/') || url.endsWith('/KaliteX')) {
+    event.respondWith(
+      fetch(request)
+        .then(res => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE).then(c => c.put(request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match('./kalite.html'))
+    );
+    return;
+  }
+
+  // Diğer her şey (SVG, manifest, CDN, fontlar): cache-first, dinamik cache
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
