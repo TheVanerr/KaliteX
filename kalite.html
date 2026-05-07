@@ -513,7 +513,7 @@
         const v = KH.paramData[ri][ci] || '';
         const s = rSel && ci >= minC && ci <= maxC;
         const w5 = ci === 4 ? ' style="min-width:270px;"' : '';
-        const ctr = (ci === 0 || ci === 1) ? ' khcv-c' : '';
+        const ctr = (ci === 0 || ci === 1 || ci === 2 || ci === 3 || ci === 5 || ci === 6) ? ' khcv-c' : '';
         html += `<td class="khc${s?' khs':''}" data-ri="${ri}" data-ci="${ci}" onmousedown="khCD(event,${ri},${ci})" onmouseover="khCO(event,${ri},${ci})" ondblclick="khDD(event,${ri},${ci})"${w5}><div class="khcv${ctr}">${khEsc(v)}</div></td>`;
       }
       for (let mi = 0; mi < KH_MODELS.length; mi++) {
