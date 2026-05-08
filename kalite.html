@@ -1342,7 +1342,7 @@
       if (isModelPage) {
         const _mpId   = currentPage;
         const _mpCols = ['KOD', 'ALAN TÜRÜ', 'UZUNLUK', 'DESİMAL', 'AÇIKLAMA', 'GRUP', 'GRUP KODU'];
-        const _mpW    = [70, 80, 65, 65, null, 60, 75]; // null = esnek (kalan alan)
+        const _mpW    = ['9%', '11%', '8%', '8%', '38%', '13%', '13%'];
         // Ortalanacak sütunlar (AÇIKLAMA hariç hepsi)
         const _mpCtr  = [true, true, true, true, false, true, true];
 
@@ -1371,7 +1371,7 @@
             .mp-wrap { display:flex; flex-direction:column; height:calc(100vh - 112px); gap:14px; }
             .mp-bar { background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 1px 4px rgba(0,0,0,0.05); padding:10px 14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex-shrink:0; }
             .mp-tbl-wrap { background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 1px 4px rgba(0,0,0,0.05); overflow:auto; flex:1; min-height:0; }
-            .mp-tbl { width:100%; border-collapse:collapse; table-layout:auto; }
+            .mp-tbl { width:100%; border-collapse:collapse; table-layout:fixed; }
             .mp-tbl thead { position:sticky; top:0; z-index:10; }
             .mp-tbl th { background:#dc2626; color:#fff; font-size:11px; font-weight:700; text-align:center; padding:10px 8px; border-right:1px solid rgba(255,255,255,0.2); white-space:nowrap; }
             .mp-tbl th:first-child { width:46px; min-width:46px; background:#dc2626; }
@@ -1391,7 +1391,7 @@
               <table class="mp-tbl">
                 <thead><tr>
                   <th style="width:46px;">#</th>
-                  ${_mpCols.map((col, ci) => `<th style="${_mpW[ci] ? 'width:'+_mpW[ci]+'px;min-width:'+_mpW[ci]+'px;white-space:nowrap;' : 'min-width:200px;'}">${col}</th>`).join('')}
+                  ${_mpCols.map((col, ci) => `<th style="width:${_mpW[ci]};white-space:nowrap;overflow:hidden;">${col}</th>`).join('')}
                 </tr></thead>
                 <tbody id="mp-tbody">${_mpRows()}</tbody>
               </table>
