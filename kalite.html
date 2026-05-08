@@ -25,6 +25,16 @@
   <style>
     body { box-sizing: border-box; overscroll-behavior: none; }
     html { overscroll-behavior: none; }
+    /* KF Header buton stilleri */
+    .kfhb { display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:7px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;touch-action:manipulation;transition:opacity .15s; }
+    .kfhb:hover { opacity:.85; }
+    .kfhb-red { background:#dc2626;color:#fff; }
+    .kfhb-org { background:#ea580c;color:#fff; }
+    .kfhb-blu { background:#2563eb;color:#fff; }
+    .kfhb-grn { background:#16a34a;color:#fff; }
+    .kfhb-tel { background:#0d9488;color:#fff; }
+    /* Sidebar açıkken label'ları gizle */
+    .sidebar-open .kfhb-lbl { display:none; }
   </style>
 
  </head>
@@ -62,9 +72,68 @@
     </nav>
    </aside><!-- Main Content -->
    <div class="flex-1 flex flex-col h-full overflow-hidden"><!-- Top Bar -->
-    <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0">
-      <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-gray-100 transition"> <i data-lucide="menu" class="w-5 h-5 text-gray-600"></i> </button>
-      <div class="flex items-center gap-2">
+    <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0" style="gap:8px;">
+      <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-gray-100 transition shrink-0"> <i data-lucide="menu" class="w-5 h-5 text-gray-600"></i> </button>
+      <!-- KF Header Bar: sadece kalite-formu sayfasında görünür -->
+      <div id="kf-header-bar" style="display:none;flex:1;overflow:hidden;" class="flex items-center gap-1">
+        <button onclick="handleFormAction('save')" class="kfhb kfhb-red" title="Kaydet"><i data-lucide="save" class="w-4 h-4"></i><span class="kfhb-lbl">Kaydet</span></button>
+        <button onclick="handleFormAction('save-as')" class="kfhb kfhb-org" title="Farklı Kaydet"><i data-lucide="copy" class="w-4 h-4"></i><span class="kfhb-lbl">Farklı</span></button>
+        <button onclick="handleFormAction('load')" class="kfhb kfhb-blu" title="Yükle"><i data-lucide="upload" class="w-4 h-4"></i><span class="kfhb-lbl">Yükle</span></button>
+        <button onclick="handleFormAction('notes')" class="kfhb kfhb-grn" title="Not"><i data-lucide="sticky-note" class="w-4 h-4"></i><span class="kfhb-lbl">Not</span></button>
+        <div style="position:relative;">
+          <button id="model-select-btn" onclick="toggleModelDropdown()" class="kfhb kfhb-tel" title="Model Seç">
+            <i data-lucide="filter" class="w-4 h-4"></i><span class="kfhb-lbl" id="model-select-label">Model</span>
+            <i data-lucide="chevron-down" class="w-3 h-3" id="model-chevron"></i>
+          </button>
+          <div id="model-dropdown" class="hidden absolute left-0 mt-2 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-96 overflow-y-auto">
+            <div class="p-2">
+              <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide">LYM Serisi</div>
+              <button onclick="selectModel('lym-950')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">LYM 950</button>
+              <button onclick="selectModel('lym-1150')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">LYM 1150</button>
+              <button onclick="selectModel('lym-1350')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">LYM 1350</button>
+              <button onclick="selectModel('lym-1500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">LYM 1500</button>
+              <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">VDL Serisi</div>
+              <button onclick="selectModel('vdl-2500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 2500</button>
+              <button onclick="selectModel('vdl-3500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 3500</button>
+              <button onclick="selectModel('vdl-4250')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 4250</button>
+              <button onclick="selectModel('vdl-5500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 5500</button>
+              <button onclick="selectModel('vdl-6500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 6500</button>
+              <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">KBN Serisi</div>
+              <button onclick="selectModel('kbn-1b-1650')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 1B 1650</button>
+              <button onclick="selectModel('kbn-1b-1850')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 1B 1850</button>
+              <button onclick="selectModel('kbn-1b-2050')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 1B 2050</button>
+              <button onclick="selectModel('kbn-2b-1650')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 2B 1650</button>
+              <button onclick="selectModel('kbn-2b-1850')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 2B 1850</button>
+              <button onclick="selectModel('kbn-2b-2050')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 2B 2050</button>
+              <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">RTS Serisi</div>
+              <button onclick="selectModel('rts-346-2b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">RTS 346 2B</button>
+              <button onclick="selectModel('rts-346-4b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">RTS 346 4B</button>
+              <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">PYT Serisi</div>
+              <button onclick="selectModel('pyt-40')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">PYT 40</button>
+              <button onclick="selectModel('pyt-90')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">PYT 90</button>
+              <button onclick="selectModel('pyt-750')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">PYT 750</button>
+              <button onclick="selectModel('pyt-800')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">PYT 800</button>
+              <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">MST Serisi</div>
+              <button onclick="selectModel('mst-pro-02')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">MST PRO 02</button>
+              <button onclick="selectModel('mts-lvb-60')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">MTS LVB 60</button>
+              <button onclick="selectModel('mst-lvb-100')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">MST LVB 100</button>
+              <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">ULT Serisi</div>
+              <button onclick="selectModel('ult-m40')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M40</button>
+              <button onclick="selectModel('ult-m60')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M60</button>
+              <button onclick="selectModel('ult-m80')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M80</button>
+              <button onclick="selectModel('ult-m100')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M100</button>
+              <button onclick="selectModel('ult-m140')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M140</button>
+              <button onclick="selectModel('ult-m400-1b-l')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M400 1B L</button>
+              <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">KNV Serisi</div>
+              <button onclick="selectModel('knv-30-3000-2b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KNV 30 3000 2B</button>
+              <button onclick="selectModel('knv-60-4250-1b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KNV 60 4250 1B</button>
+              <button onclick="selectModel('knv-60-6000-2b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KNV 60 6000 2B</button>
+            </div>
+          </div>
+        </div>
+        <span id="kf-save-name" style="display:none;font-size:11px;font-weight:700;color:#16a34a;padding:3px 8px;background:#f0fdf4;border-radius:6px;border:1.5px solid #bbf7d0;white-space:nowrap;"></span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
         <button onclick="location.reload()" title="Uygulamayı Yenile" style="padding:6px 10px;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;color:#6b7280;font-size:18px;cursor:pointer;line-height:1;touch-action:manipulation;" onmouseenter="this.style.background='#f3f4f6'" onmouseleave="this.style.background='#f9fafb'">⟳</button>
         <div id="auth-ui" class="flex items-center gap-3"></div>
       </div>
@@ -994,6 +1063,13 @@
   });
 
   function renderPage() {
+    // KF header bar'ı sadece kalite-formu sayfasında göster
+    const kfhb = document.getElementById('kf-header-bar');
+    if (kfhb) kfhb.style.display = (currentPage === 'kalite-formu') ? 'flex' : 'none';
+    // KF sayfasında padding kaldır, diğer sayfalarda p-6 ekle
+    const pc = document.getElementById('page-content');
+    if (pc) pc.className = (currentPage === 'kalite-formu') ? 'flex-1 overflow-hidden' : 'flex-1 overflow-y-auto p-6 page-fade';
+
     const p = pageContents[currentPage];
     
     if (currentPage === 'kalite-havuzu') {
@@ -1183,7 +1259,7 @@
 
       document.getElementById('page-content').innerHTML = `
         <style>
-          .kf-page { display:flex; flex-direction:column; height:calc(100vh - 112px); gap:14px; }
+          .kf-page { display:flex; flex-direction:column; height:calc(100vh - 56px); }
           .kf-bar { background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 1px 4px rgba(0,0,0,0.05); padding:10px 14px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; flex-shrink:0; }
           .kf-tbl-wrap { background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 1px 4px rgba(0,0,0,0.05); overflow:auto; flex:1; min-height:0; }
           .kf-tbl { width:100%; border-collapse:collapse; table-layout:fixed; }
@@ -1244,74 +1320,6 @@
           .kfkb-space{flex:4!important;font-size:11px;letter-spacing:.06em;}
         </style>
         <div class="kf-page page-fade">
-          <div class="kf-bar">
-            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-              <button onclick="handleFormAction('save')" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
-                <i data-lucide="save" class="w-4 h-4"></i> Kaydet
-              </button>
-              <button onclick="handleFormAction('save-as')" class="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
-                <i data-lucide="copy" class="w-4 h-4"></i> Farklı Kaydet
-              </button>
-              <button onclick="handleFormAction('load')" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
-                <i data-lucide="upload" class="w-4 h-4"></i> Yükle
-              </button>
-              <button onclick="handleFormAction('notes')" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
-                <i data-lucide="sticky-note" class="w-4 h-4"></i> Not
-              </button>
-              <span id="kf-save-name" style="display:none;font-size:12px;font-weight:700;color:#16a34a;padding:4px 12px;background:#f0fdf4;border-radius:8px;border:1.5px solid #bbf7d0;letter-spacing:0.02em;"></span>
-            </div>
-            <div style="position:relative;">
-              <button id="model-select-btn" onclick="toggleModelDropdown()" class="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
-                <i data-lucide="filter" class="w-4 h-4"></i> <span id="model-select-label">Model Seç</span>
-                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" id="model-chevron"></i>
-              </button>
-              <div id="model-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-96 overflow-y-auto">
-                <div class="p-2">
-                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide">LYM Serisi</div>
-                  <button onclick="selectModel('lym-950')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">LYM 950</button>
-                  <button onclick="selectModel('lym-1150')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">LYM 1150</button>
-                  <button onclick="selectModel('lym-1350')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">LYM 1350</button>
-                  <button onclick="selectModel('lym-1500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">LYM 1500</button>
-                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">VDL Serisi</div>
-                  <button onclick="selectModel('vdl-2500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 2500</button>
-                  <button onclick="selectModel('vdl-3500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 3500</button>
-                  <button onclick="selectModel('vdl-4250')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 4250</button>
-                  <button onclick="selectModel('vdl-5500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 5500</button>
-                  <button onclick="selectModel('vdl-6500')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">VDL 6500</button>
-                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">KBN Serisi</div>
-                  <button onclick="selectModel('kbn-1b-1650')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 1B 1650</button>
-                  <button onclick="selectModel('kbn-1b-1850')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 1B 1850</button>
-                  <button onclick="selectModel('kbn-1b-2050')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 1B 2050</button>
-                  <button onclick="selectModel('kbn-2b-1650')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 2B 1650</button>
-                  <button onclick="selectModel('kbn-2b-1850')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 2B 1850</button>
-                  <button onclick="selectModel('kbn-2b-2050')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KBN 2B 2050</button>
-                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">RTS Serisi</div>
-                  <button onclick="selectModel('rts-346-2b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">RTS 346 2B</button>
-                  <button onclick="selectModel('rts-346-4b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">RTS 346 4B</button>
-                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">PYT Serisi</div>
-                  <button onclick="selectModel('pyt-40')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">PYT 40</button>
-                  <button onclick="selectModel('pyt-90')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">PYT 90</button>
-                  <button onclick="selectModel('pyt-750')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">PYT 750</button>
-                  <button onclick="selectModel('pyt-800')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">PYT 800</button>
-                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">MST Serisi</div>
-                  <button onclick="selectModel('mst-pro-02')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">MST PRO 02</button>
-                  <button onclick="selectModel('mts-lvb-60')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">MTS LVB 60</button>
-                  <button onclick="selectModel('mst-lvb-100')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">MST LVB 100</button>
-                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">ULT Serisi</div>
-                  <button onclick="selectModel('ult-m40')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M40</button>
-                  <button onclick="selectModel('ult-m60')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M60</button>
-                  <button onclick="selectModel('ult-m80')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M80</button>
-                  <button onclick="selectModel('ult-m100')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M100</button>
-                  <button onclick="selectModel('ult-m140')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M140</button>
-                  <button onclick="selectModel('ult-m400-1b-l')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">ULT M400 1B L</button>
-                  <div class="px-3 py-2 text-xs font-700 text-gray-500 uppercase tracking-wide mt-2">KNV Serisi</div>
-                  <button onclick="selectModel('knv-30-3000-2b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KNV 30 3000 2B</button>
-                  <button onclick="selectModel('knv-60-4250-1b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KNV 60 4250 1B</button>
-                  <button onclick="selectModel('knv-60-6000-2b')" class="w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 transition">KNV 60 6000 2B</button>
-                </div>
-              </div>
-            </div>
-          </div>
           <div class="kf-tbl-wrap">
             <table class="kf-tbl">
               <thead>
@@ -1445,6 +1453,7 @@
     sb.style.transform = sidebarOpen ? 'translateX(0)' : 'translateX(-100%)';
     sb.style.position = sidebarOpen ? 'relative' : 'absolute';
     sb.style.height = '100%';
+    document.body.classList.toggle('sidebar-open', sidebarOpen);
   }
 
   // ── Auth — Google OAuth ──────────────────────────────────────────────────
