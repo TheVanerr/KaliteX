@@ -1113,7 +1113,7 @@
                   const ops = ['','Doğan AÇİKEL','Yakup ŞAHİN','Hakan GÜL'];
                   const o2 = v => `<option value="${v}"${raw===v?' selected':''}>${v||'—'}</option>`;
                   html += `<td class="kf-cell kf-sonuc-t" data-ri="${ri}" data-ci="${ci}"><select class="kf-sel" onchange="kfSonucSet(${ri},this.value)">${ops.map(o2).join('')}</select></td>`;
-                } else if (kod0 === 'K9014') {
+                } else if (kod0 === 'K9013') {
                   html += `<td class="kf-cell kf-cell-ro" data-ri="${ri}" data-ci="${ci}"><div class="kf-cv kf-cv-c" style="font-weight:700;color:#dc2626;">${kfEsc(raw)}</div></td>`;
                 } else {
                   html += `<td class="kf-cell kf-sonuc-tn" data-ri="${ri}" data-ci="${ci}" onclick="kfKbOpen(${ri},'TN')"><div class="kf-cv kf-cv-c${!raw?' kf-ph':''}">${kfEsc(raw)||'—'}</div></td>`;
@@ -1556,8 +1556,8 @@
     // Mevcut cevapları (sütun 3-5) koru, model verisini (sütun 0-2) yükle
     window.kfData = params.map((r, i) => {
       const old = (window.kfData || [])[i] || [];
-      // K9014 → her zaman FATİH GÜRAL, değiştirilemez
-      const sonuc = (r.kod||'').toUpperCase().trim() === 'K9014' ? 'FATİH GÜRAL' : (old[3]||'');
+      // K9013 → her zaman FATİH GÜRAL, değiştirilemez
+      const sonuc = (r.kod||'').toUpperCase().trim() === 'K9013' ? 'FATİH GÜRAL' : (old[3]||'');
       return [r.kod, r.aciklama, r.grup, sonuc, old[4]||'', old[5]||'', 1, r.alanTuru||''];
     });
     // Model adı etiketi
