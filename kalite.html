@@ -1677,36 +1677,13 @@
   }
 
   // ── Kalite Havuzu Kaydet / Yükle ─────────────────────────────────────────────
-  async function khForceReload() {
-    if (!navigator.onLine) { khToast('Offline — Supabase\'e bağlanılamıyor', 3000); return; }
-    if (!confirm('localStorage temizlenecek ve Supabase\'den tüm veriler yeniden çekilecek. Emin misiniz?')) return;
-    localStorage.removeItem('dataX');
-    localStorage.removeItem('dataX_version');
-    KH._ready = false;
-    KH.paramData = [];
-    for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
-    KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
-    khSyncStatus('syncing');
-    khToast('Supabase\'den yükleniyor...', 5000);
-    try {
-      await khLoadFromSupabase();
-      khSaveLocal();
-      khSyncStatus('ok');
-      KH._ready = true;
-      khBuildFR(); khBuildHeader(); khVSR();
-      khToast('Supabase\'den yüklendi ✓ — artık Kaydet ile Supabase\'e yazabilirsiniz.', 3000);
-    } catch(e) {
-      khSyncStatus('error');
-      khToast('Hata: ' + (e.message||e), 4000);
-    }
-  }
-
   // ── Kalite Havuzu Force Reload ───────────────────────────────────────────────
   async function khForceReload() {
     if (!navigator.onLine) { khToast('Offline — Supabase\'e bağlanılamıyor', 3000); return; }
     if (!confirm('localStorage temizlenecek ve Supabase\'den tüm veriler yeniden çekilecek. Emin misiniz?')) return;
     localStorage.removeItem('dataX');
     localStorage.removeItem('dataX_version');
+    localStorage.removeItem('dataX_sync_version'); // versiyon önbelleğini de temizle
     KH._ready = false;
     KH.paramData = [];
     for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
@@ -1719,6 +1696,7 @@
       khSyncStatus('ok');
       KH._ready = true;
       khBuildFR(); khBuildHeader(); khVSR();
+      renderPage(currentPage);
       khToast('Supabase\'den yüklendi ✓', 2000);
     } catch(e) {
       khSyncStatus('error');
