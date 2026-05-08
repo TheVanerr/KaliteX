@@ -27,44 +27,6 @@
  </head>
  <body class="h-full">
 
-  <!-- ── GİRİŞ EKRANI ─────────────────────────────────────────────────────── -->
-  <div id="splash" onclick="splashClick()" class="fixed inset-0 z-[100] flex flex-col items-center justify-center cursor-pointer select-none" style="background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%)">
-    <div style="text-align:center;">
-      <div style="font-size:clamp(4rem,12vw,9rem);font-weight:900;color:#fff;letter-spacing:-2px;line-height:1;">DOLFIN</div>
-      <div style="font-size:clamp(0.75rem,2.5vw,1.15rem);font-weight:600;color:rgba(255,255,255,0.75);letter-spacing:0.25em;text-transform:uppercase;margin-top:0.5rem;">Endüstriyel Yıkama Makineleri</div>
-    </div>
-    <div style="position:absolute;bottom:2.5rem;color:rgba(255,255,255,0.5);font-size:0.85rem;font-weight:500;">Giriş yapmak için ekrana dokun</div>
-  </div>
-
-  <!-- ── GİRİŞ MODAL ──────────────────────────────────────────────────────── -->
-  <div id="auth-modal" class="fixed inset-0 z-[110] hidden items-center justify-center" style="background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);">
-    <div class="bg-white rounded-2xl shadow-2xl w-full mx-4" style="max-width:360px;padding:2rem;">
-      <div style="text-align:center;margin-bottom:1.5rem;">
-        <div style="font-size:2rem;font-weight:900;color:#dc2626;letter-spacing:-1px;">DOLFIN</div>
-        <div style="font-size:0.75rem;color:#6b7280;margin-top:0.25rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;">Kalite Kontrol Sistemi</div>
-      </div>
-      <div id="auth-err" style="display:none;background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;padding:0.6rem 0.8rem;font-size:0.8rem;margin-bottom:1rem;font-weight:600;"></div>
-      <form id="auth-form" onsubmit="authSubmit(event)">
-        <div style="margin-bottom:1rem;">
-          <label style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.35rem;">E-posta</label>
-          <input id="auth-email" type="email" required autocomplete="email" placeholder="ornek@firma.com"
-            style="width:100%;border:1px solid #d1d5db;border-radius:8px;padding:0.65rem 0.9rem;font-size:0.9rem;outline:none;box-sizing:border-box;"
-            onfocus="this.style.borderColor='#dc2626'" onblur="this.style.borderColor='#d1d5db'">
-        </div>
-        <div style="margin-bottom:1.5rem;">
-          <label style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.35rem;">Şifre</label>
-          <input id="auth-pass" type="password" required autocomplete="current-password" placeholder="••••••••"
-            style="width:100%;border:1px solid #d1d5db;border-radius:8px;padding:0.65rem 0.9rem;font-size:0.9rem;outline:none;box-sizing:border-box;"
-            onfocus="this.style.borderColor='#dc2626'" onblur="this.style.borderColor='#d1d5db'">
-        </div>
-        <button type="submit" id="auth-btn"
-          style="width:100%;background:#dc2626;color:#fff;font-weight:700;padding:0.75rem;border-radius:8px;border:none;font-size:0.95rem;cursor:pointer;transition:background 0.2s;">
-          Giriş Yap
-        </button>
-      </form>
-    </div>
-  </div>
-
   <div id="app" class="h-full w-full flex bg-gray-50 overflow-hidden" style="display:none!important;"><!-- Sidebar -->
    <aside id="sidebar" class="sidebar-transition w-64 bg-white border-r border-gray-200 flex flex-col h-full shrink-0 z-30">
     <div class="p-5 border-b border-gray-100">
@@ -99,10 +61,7 @@
    <div class="flex-1 flex flex-col h-full overflow-hidden"><!-- Top Bar -->
     <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0">
       <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-gray-100 transition"> <i data-lucide="menu" class="w-5 h-5 text-gray-600"></i> </button>
-      <div class="flex items-center gap-3">
-        <span id="header-user" style="font-size:0.8rem;font-weight:600;color:#6b7280;"></span>
-        <button onclick="authSignOut()" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition"> <i data-lucide="log-out" class="w-4 h-4"></i> Çıkış </button>
-      </div>
+      <div id="auth-ui" class="flex items-center gap-3"></div>
     </header><!-- Page Content -->
     <main id="page-content" class="flex-1 overflow-y-auto p-6 page-fade">
     </main>
@@ -213,7 +172,11 @@
   const KH_DATA_VERSION = 'v3'; // Bunu artırınca tüm cihazlarda localStorage temizlenir
   const SB_URL = 'https://rhrhueocmcjtntkyyack.supabase.co';
   const SB_KEY = 'sb_publishable_T0ZpujhmI_kBuuT4M6U1Gw_BCdweMf-';
+  // ── Düzenleyici listesi: Bu listedeki Google hesapları düzenleme yapabilir ──
+  const ALLOWED_EDITORS = ['fatihgural80@gmail.com', 'fatihgural_2001@hotmail.com'];
   let SB_TOKEN = null;
+  let currentUser = null; // { email, name } — giriş yapan editör
+  function isEditor() { return !!currentUser; }
   function sbH(extra) {
     const token = SB_TOKEN || SB_KEY;
     return Object.assign({ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, extra || {});
@@ -787,6 +750,7 @@
 
   // ── Edit ─────────────────────────────────────────────────────
   function khDD(e, ri, ci) {
+    if (!isEditor()) return; // Salt okunur modda hücre düzenleme engellendi
     khCE();
     const cell = e.currentTarget;
     const val = ci < KH_FIXED.length ? (KH.paramData[ri][ci] || '') : khMVal(KH_MODELS[ci - KH_FIXED.length].id, ri);
@@ -983,13 +947,15 @@
     if (cmd && e.key === 'v') { khPaste(); e.preventDefault(); return; }
     if (cmd && e.key === 'x') { khCut(); e.preventDefault(); return; }
     if (cmd && e.key === 'a') { khSelAll(); e.preventDefault(); return; }
-    if (cmd && e.key === 's') { khSave(); e.preventDefault(); return; }
+    if (cmd && e.key === 's') { if (isEditor()) khSave(); e.preventDefault(); return; }
     if (e.key === 'F2' && KH.sel.r1 >= 0 && KH.sel.r1 === KH.sel.r2 && KH.sel.c1 === KH.sel.c2) {
-      const cell = document.querySelector(`.khc[data-ri="${KH.sel.r1}"][data-ci="${KH.sel.c1}"]`);
-      if (cell) { khDD({ currentTarget: cell, stopPropagation: () => {} }, KH.sel.r1, KH.sel.c1); }
+      if (isEditor()) {
+        const cell = document.querySelector(`.khc[data-ri="${KH.sel.r1}"][data-ci="${KH.sel.c1}"]`);
+        if (cell) { khDD({ currentTarget: cell, stopPropagation: () => {} }, KH.sel.r1, KH.sel.c1); }
+      }
       e.preventDefault(); return;
     }
-    if (e.key === 'Delete' || e.key === 'Backspace') { if (KH.sel.r1 >= 0) { khDel(); e.preventDefault(); } return; }
+    if (e.key === 'Delete' || e.key === 'Backspace') { if (isEditor() && KH.sel.r1 >= 0) { khDel(); e.preventDefault(); } return; }
     if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
       const s = KH.sel; if (s.r1 < 0) return;
       let r = s.r1, c = s.c1;
@@ -1002,6 +968,7 @@
       khScrollTo(r); khSelUI(); e.preventDefault(); return;
     }
     if (!cmd && e.key.length === 1 && KH.sel.r1 >= 0 && KH.sel.r1 === KH.sel.r2 && KH.sel.c1 === KH.sel.c2) {
+      if (!isEditor()) return; // Salt okunur modda klavye ile düzenleme engellendi
       const { r1: selR, c1: selC } = KH.sel;
       const cell = document.querySelector(`.khc[data-ri="${selR}"][data-ci="${selC}"]`);
       if (cell) {
@@ -1074,11 +1041,11 @@
         </style>
         <div class="kho page-fade">
           <div class="khbar">
-            <button class="khbtn khbr" onclick="khSave()">Kaydet (Ctrl+S)</button>
-            <button class="khbtn khbr" onclick="khImportCSV()">📂 CSV Yükle</button>
-            <button class="khbtn khbr" onclick="khImportJSON()">📥 JSON Yükle</button>
+            <button class="khbtn khbr kh-editor-only" onclick="khSave()">Kaydet (Ctrl+S)</button>
+            <button class="khbtn khbr kh-editor-only" onclick="khImportCSV()">📂 CSV Yükle</button>
+            <button class="khbtn khbr kh-editor-only" onclick="khImportJSON()">📥 JSON Yükle</button>
             <button class="khbtn khbr" onclick="khExportJSON()">JSON İndir</button>
-            <button class="khbtn khbgr" onclick="khAddRow()">+ Satır Ekle</button>
+            <button class="khbtn khbgr kh-editor-only" onclick="khAddRow()">+ Satır Ekle</button>
             <button class="khbtn" style="background:#7c3aed;color:#fff;" onclick="khForceReload()" title="localStorage temizle, Supabase'den sıfırdan çek">&#8635; Supabase'den Yenile</button>
             <span id="kh-sync-st" style="font-size:11px;font-weight:700;padding:0 8px;"></span>
             <span style="margin-left:auto;font-size:10px;color:#9ca3af;font-weight:600;">
@@ -1469,67 +1436,72 @@
     sb.style.height = '100%';
   }
 
-  // ── Auth (Supabase) ────────────────────────────────────────────────────────
-  function splashClick() {
-    const m = document.getElementById('auth-modal');
-    m.style.display = 'flex';
-    setTimeout(() => document.getElementById('auth-email').focus(), 100);
+  // ── Auth — Google OAuth ──────────────────────────────────────────────────
+  function authLoginWithGoogle() {
+    const redirectTo = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'kalite.html';
+    window.location.href = SB_URL + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(redirectTo);
   }
 
-  async function authSubmit(e) {
-    e.preventDefault();
-    const btn = document.getElementById('auth-btn');
-    const err = document.getElementById('auth-err');
-    const email = document.getElementById('auth-email').value.trim();
-    const pass  = document.getElementById('auth-pass').value;
-    btn.textContent = 'Giriş yapılıyor...'; btn.disabled = true; err.style.display = 'none';
+  async function authCheckCallback() {
+    // OAuth sonrası URL'de #access_token=... var mı?
+    const hash = window.location.hash;
+    if (!hash.includes('access_token=')) return;
+    const params = new URLSearchParams(hash.slice(1));
+    const token = params.get('access_token');
+    if (!token) return;
+    history.replaceState(null, '', window.location.pathname); // # temizle
     try {
-      const res = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
-        method: 'POST',
-        headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pass })
+      const res = await fetch(SB_URL + '/auth/v1/user', {
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token }
       });
+      if (!res.ok) return;
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error_description || data.msg || 'Giriş başarısız');
-      // Oturum aç
-      SB_TOKEN = data.access_token;
-      const userName = data.user?.email?.split('@')[0] || data.user?.email || 'Kullanıcı';
-      // Session'ı localStorage'a kaydet (sayfa yenilemede kaybolmasın)
-      localStorage.setItem('kx_session', JSON.stringify({
-        access_token: data.access_token,
-        email: data.user?.email || '',
-        user_name: userName,
-        expires_at: Math.floor(Date.now() / 1000) + (data.expires_in || 3600)
-      }));
-      authShowApp(userName);
-    } catch(ex) {
-      err.textContent = ex.message; err.style.display = 'block';
-    } finally {
-      btn.textContent = 'Giriş Yap'; btn.disabled = false;
-    }
+      const email = (data.email || '').toLowerCase();
+      if (ALLOWED_EDITORS.some(e => e.toLowerCase() === email)) {
+        SB_TOKEN = token;
+        currentUser = { email: data.email, name: data.user_metadata?.name || data.email.split('@')[0] };
+        localStorage.setItem('kx_editor_session', JSON.stringify({
+          token, email: data.email, name: currentUser.name,
+          expires_at: Math.floor(Date.now() / 1000) + 3600
+        }));
+      } else {
+        khToast('⛔ ' + data.email + ' düzenleyici listesinde değil.', 4000);
+      }
+    } catch(e) { console.warn('[KaliteX] OAuth callback hatası:', e); }
+  }
+
+  function authCheckSession() {
+    try {
+      const raw = localStorage.getItem('kx_editor_session');
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s.token && s.expires_at > Math.floor(Date.now() / 1000)) {
+        SB_TOKEN = s.token;
+        currentUser = { email: s.email, name: s.name };
+      } else {
+        localStorage.removeItem('kx_editor_session');
+      }
+    } catch(e) {}
   }
 
   function authSignOut() {
     SB_TOKEN = null;
-    localStorage.removeItem('kx_session');
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('auth-modal').style.display = 'none';
-    document.getElementById('splash').style.display = 'flex';
-    document.getElementById('auth-pass').value = '';
-    document.getElementById('auth-err').style.display = 'none';
-    KH._ready = false;
+    currentUser = null;
+    localStorage.removeItem('kx_editor_session');
+    authUpdateUI();
+    khToast('Çıkış yapıldı.', 1500);
   }
 
-  async function authShowApp(userName) {
-    document.getElementById('header-user').textContent = userName;
-    document.getElementById('auth-modal').style.display = 'none';
-    document.getElementById('splash').style.display = 'none';
-    const app = document.getElementById('app');
-    app.style.removeProperty('display');
-    app.style.display = 'flex';
+  function authUpdateUI() {
+    const el = document.getElementById('auth-ui');
+    if (!el) return;
+    if (currentUser) {
+      el.innerHTML = `<span style="font-size:0.8rem;font-weight:600;color:#6b7280;">✏️ ${currentUser.name}</span><button onclick="authSignOut()" style="display:flex;align-items:center;gap:6px;background:#dc2626;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">Çıkış</button>`;
+    } else {
+      el.innerHTML = `<span style="font-size:0.75rem;color:#9ca3af;font-weight:600;">🔒 Salt Okunur</span><button onclick="authLoginWithGoogle()" style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #d1d5db;color:#374151;padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.1);"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Düzenleyici Girişi</button>`;
+    }
+    document.querySelectorAll('.kh-editor-only').forEach(b => { b.style.display = currentUser ? '' : 'none'; });
     lucide.createIcons();
-    await khInit(); khBuildHeader(); khBuildFR(); khVSR();
-    renderPage(currentPage);
   }
 
   function openLogin() {}
@@ -1874,24 +1846,19 @@
   }
 
   applyConfig(defaultConfig);
-  lucide.createIcons(); // splash ekranındaki ikonlar için
+  lucide.createIcons();
 
-  // ── Sayfa açılınca kaydedilmiş session kontrolü ─────────────────────────────
+  // ── Uygulama başlatma: site direk açılır, editör session/OAuth kontrol edilir ─
   (async () => {
-    try {
-      const raw = localStorage.getItem('kx_session');
-      if (raw) {
-        const session = JSON.parse(raw);
-        const now = Math.floor(Date.now() / 1000);
-        if (session.access_token && session.expires_at > now) {
-          // Geçerli session var — login ekranını atla
-          SB_TOKEN = session.access_token;
-          await authShowApp(session.user_name || session.email?.split('@')[0] || 'Kullanıcı');
-          return;
-        }
-      }
-    } catch(e) {}
-    // Session yoksa ya da süre dolmuşsa splash ekranında kal
+    authCheckSession();          // localStorage'dan editör oturumu yükle
+    await authCheckCallback();  // Google OAuth geri dönüşü varsa işle
+    const app = document.getElementById('app');
+    app.style.removeProperty('display');
+    app.style.display = 'flex';
+    authUpdateUI();              // header butonlarını ayarla
+    await khInit(); khBuildHeader(); khBuildFR(); khVSR();
+    renderPage(currentPage);
+    lucide.createIcons();
   })();
 
   // ── PWA: Service Worker kaydı ──────────────────────────────────────────────
