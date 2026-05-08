@@ -1314,6 +1314,15 @@
           .kfm-del{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit;}
           .kfm-del:hover{background:#fee2e2;}
           .kfm-empty{text-align:center;color:#9ca3af;font-size:13px;padding:24px 0;}
+          .kfm-group{border:1.5px solid #e5e7eb;border-radius:10px;overflow:hidden;}
+          .kfm-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:#f3f4f6;cursor:pointer;user-select:none;gap:8px;}
+          .kfm-group-hdr:hover{background:#e5e7eb;}
+          .kfm-group-name{font-size:12px;font-weight:800;color:#111827;letter-spacing:.02em;}
+          .kfm-group-count{font-size:10px;font-weight:700;color:#6b7280;background:#e5e7eb;border-radius:20px;padding:1px 7px;}
+          .kfm-group-chevron{font-size:12px;color:#6b7280;transition:transform .18s;}
+          .kfm-group-body{display:flex;flex-direction:column;gap:0;border-top:1.5px solid #e5e7eb;}
+          .kfm-group-body .kfm-item{border-radius:0;border:none;border-bottom:1px solid #f0f0f0;}
+          .kfm-group-body .kfm-item:last-child{border-bottom:none;}
           /* Sonuç sütunu özel tipler */
           .kf-sel{width:100%;height:100%;border:none;background:transparent;font-family:inherit;font-size:12px;font-weight:600;color:#1f2937;cursor:pointer;padding:0 6px;outline:none;text-align:center;}
           .kf-sel:focus{outline:2px solid #dc2626;outline-offset:-2px;border-radius:3px;}
@@ -1825,13 +1834,43 @@
     if (!forms.length) {
       list = '<div class="kfm-empty">Kay&#305;tl&#305; form bulunamad&#305;.</div>';
     } else {
+      // Modele göre gruplay
+      const groups = {}; // modelId -> { label, forms[] }
       [...forms].reverse().forEach(f => {
-        const dt = new Date(f.savedAt);
-        const ds = dt.toLocaleDateString('tr-TR') + ' ' + dt.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
-        list += `<div class="kfm-item" onclick="kfDoLoad('${f.id}')"><div class="kfm-item-info"><div class="kfm-item-name">${kfHEsc(f.name)}</div><div class="kfm-item-meta">${kfHEsc(f.modelLabel||'\u2014')} &nbsp;\u00b7&nbsp; ${ds}</div></div><button class="kfm-del" onclick="event.stopPropagation();kfDeleteForm('${f.id}')">Sil</button></div>`;
+        const key = f.modelId || '__none__';
+        if (!groups[key]) groups[key] = { label: f.modelLabel || 'Model Belirtilmemiş', forms: [] };
+        groups[key].forms.push(f);
+      });
+      // KH_MODELS sırasına göre sırala, bilinmeyenler sona
+      const modelOrder = (typeof KH_MODELS !== 'undefined') ? KH_MODELS.map(m => m.id) : [];
+      const sortedKeys = Object.keys(groups).sort((a, b) => {
+        if (a === '__none__') return 1;
+        if (b === '__none__') return -1;
+        const ai = modelOrder.indexOf(a), bi = modelOrder.indexOf(b);
+        if (ai === -1 && bi === -1) return 0;
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+      sortedKeys.forEach((key, gi) => {
+        const g = groups[key];
+        const gid = 'kfmg_' + gi;
+        let items = '';
+        g.forms.forEach(f => {
+          const dt = new Date(f.savedAt);
+          const ds = dt.toLocaleDateString('tr-TR') + ' ' + dt.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
+          items += `<div class="kfm-item" onclick="kfDoLoad('${f.id}')"><div class="kfm-item-info"><div class="kfm-item-name">${kfHEsc(f.name)}</div><div class="kfm-item-meta">${ds}</div></div><button class="kfm-del" onclick="event.stopPropagation();kfDeleteForm('${f.id}')">Sil</button></div>`;
+        });
+        list += `<div class="kfm-group">
+          <div class="kfm-group-hdr" onclick="(function(el){var b=el.nextElementSibling;var c=el.querySelector('.kfm-group-chevron');var open=b.style.display!=='none';b.style.display=open?'none':'flex';c.style.transform=open?'rotate(-90deg)':'rotate(0deg)';})(this)">
+            <span class="kfm-group-name">${kfHEsc(g.label)}</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span class="kfm-group-count">${g.forms.length}</span><span class="kfm-group-chevron">▾</span></span>
+          </div>
+          <div class="kfm-group-body" style="display:flex;">${items}</div>
+        </div>`;
       });
     }
-    box.innerHTML = `<div class="kfm-title">&#128194; Kay&#305;tl&#305; Formlar <span style="font-size:11px;font-weight:600;color:#6b7280;">(${forms.length})</span></div><div class="kfm-list">${list}</div><div class="kfm-btns"><button class="kfm-cancel" onclick="kfModalClose()">Kapat</button></div>`;
+    box.innerHTML = `<div class="kfm-title">&#128194; Kay&#305;tl&#305; Formlar <span style="font-size:11px;font-weight:600;color:#6b7280;">(${forms.length})</span></div><div class="kfm-list" style="gap:8px;">${list}</div><div class="kfm-btns"><button class="kfm-cancel" onclick="kfModalClose()">Kapat</button></div>`;
     overlay.style.display = 'flex';
   }
 
