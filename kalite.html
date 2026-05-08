@@ -1214,7 +1214,7 @@
           .kf-kb-disp{background:#1f2937;color:#f9fafb;font-size:17px;font-weight:700;text-align:right;padding:10px 14px;font-family:monospace;min-height:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.03em;}
           .kf-kb-keys{padding:7px;display:flex;flex-direction:column;gap:4px;background:#f3f4f6;}
           .kfkb-row{display:flex;gap:3px;}
-          .kfkb-btn{flex:1;background:#fff;border:1px solid #e5e7eb;border-radius:7px;font-size:14px;font-weight:600;color:#1f2937;cursor:pointer;font-family:inherit;height:42px;min-width:0;transition:background .12s,transform .08s;padding:0;}
+          .kfkb-btn{flex:1;background:#fff;border:1px solid #e5e7eb;border-radius:7px;font-size:14px;font-weight:600;color:#1f2937;cursor:pointer;font-family:inherit;height:42px;min-width:0;transition:background .12s,transform .08s;padding:0;touch-action:manipulation;}
           .kfkb-btn:hover{background:#f3f4f6;}
           .kfkb-btn:active{background:#e5e7eb;transform:scale(0.93);}
           .kfkb-sp{background:#fef9c3;color:#854d0e;border-color:#fde68a;}
@@ -1561,7 +1561,17 @@
   window.kfKb = { ri: -1, type: null, val: '', shift: false };
 
   window.kfSonucSet = function(ri, val) {
-    if (window.kfData && window.kfData[ri]) window.kfData[ri][3] = val;
+    if (window.kfData && window.kfData[ri]) {
+      window.kfData[ri][3] = val;
+      // Referans geçmişi: seçim değiştikçe yanına yaz
+      if (val) {
+        const cur = window.kfData[ri][5] || '';
+        window.kfData[ri][5] = cur ? cur + ' / ' + val : val;
+        // Tabloda Referans hücresini güncelle
+        const refCell = document.querySelector(`#kf-tbody .kf-row[data-ri="${ri}"] .kf-cell[data-ci="5"] .kf-cv`);
+        if (refCell) refCell.textContent = window.kfData[ri][5];
+      }
+    }
   };
 
   window.kfKbOpen = function(ri, type) {
@@ -1628,7 +1638,7 @@
     const TR = {'ı':'I','i':'İ','ğ':'Ğ','ü':'Ü','ş':'Ş','ö':'Ö','ç':'Ç'};
     let keys = '';
     if (isN) {
-      [['7','8','9','BS'],['4','5','6','C'],['1','2','3','PM'],['DOT','0','','OK']].forEach(row => {
+      [['7','8','9','BS'],['4','5','6','C'],['1','2','3',''],['DOT','0','','OK']].forEach(row => {
         keys += '<div class="kfkb-row">';
         const lab = {'BS':'⌫','C':'C','PM':'±','DOT':'.','OK':'✓'};
         const sp  = new Set(['BS','C','PM']);
