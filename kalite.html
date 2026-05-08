@@ -1324,19 +1324,18 @@
           .kfm-group-body .kfm-item{border-radius:0;border:none;border-bottom:1px solid #f0f0f0;}
           .kfm-group-body .kfm-item:last-child{border-bottom:none;}
           /* Form adı özel klavye */
-          .kfm-kb{background:#f3f4f6;border-radius:10px;padding:7px;display:flex;flex-direction:column;gap:4px;margin-top:6px;margin-bottom:14px;touch-action:manipulation;}
-          .kfm-kb-disp{background:#1f2937;color:#f9fafb;font-size:15px;font-weight:700;border-radius:7px;padding:9px 13px;margin-bottom:6px;min-height:40px;word-break:break-all;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+          .kfm-kb{background:#f3f4f6;border-radius:10px;padding:9px;display:flex;flex-direction:column;gap:5px;margin-top:6px;margin-bottom:14px;touch-action:manipulation;}
+          .kfm-kb-disp{background:#1f2937;color:#f9fafb;font-size:16px;font-weight:700;border-radius:7px;padding:10px 14px;margin-bottom:7px;min-height:44px;word-break:break-all;display:flex;align-items:center;justify-content:space-between;gap:8px;}
           .kfm-kb-disp-txt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
           .kfm-kb-disp-cnt{font-size:10px;color:#9ca3af;font-weight:400;flex-shrink:0;}
-          .kfm-kb-row{display:flex;gap:3px;}
-          .kfm-kbk{flex:1;min-width:0;background:#fff;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-weight:600;color:#1f2937;cursor:pointer;font-family:inherit;height:40px;padding:0;touch-action:manipulation;transition:background .1s,transform .07s;}
+          .kfm-kb-row{display:flex;gap:4px;}
+          .kfm-kbk{flex:1;min-width:0;background:#fff;border:1px solid #e5e7eb;border-radius:7px;font-size:16px;font-weight:700;color:#1f2937;cursor:pointer;font-family:inherit;height:50px;padding:0;touch-action:manipulation;transition:background .1s,transform .07s;}
           .kfm-kbk:hover{background:#f9fafb;}
           .kfm-kbk:active{background:#e5e7eb;transform:scale(0.92);}
-          .kfm-kbk-sp{background:#fef9c3;color:#854d0e;border-color:#fde68a;}
+          .kfm-kbk-sp{background:#fef9c3;color:#854d0e;border-color:#fde68a;font-size:14px;}
           .kfm-kbk-sp:hover{background:#fef08a;}
-          .kfm-kbk-ok{background:#dc2626!important;color:#fff!important;border-color:#dc2626!important;font-size:12px;}
+          .kfm-kbk-ok{background:#dc2626!important;color:#fff!important;border-color:#dc2626!important;font-size:14px;}
           .kfm-kbk-ok:hover{background:#b91c1c!important;}
-          .kfm-kbk-shift-on{background:#dc2626!important;color:#fff!important;border-color:#dc2626!important;}
           /* Sonuç sütunu özel tipler */
           .kf-sel{width:100%;height:100%;border:none;background:transparent;font-family:inherit;font-size:12px;font-weight:600;color:#1f2937;cursor:pointer;padding:0 6px;outline:none;text-align:center;}
           .kf-sel:focus{outline:2px solid #dc2626;outline-offset:-2px;border-radius:3px;}
@@ -1805,44 +1804,27 @@
   }
 
   // ── Form Adı Özel Klavye ───────────────────────────────────────────────
-  const _fnkb = { val: '', shift: false, maxlen: 60 };
+  const _fnkb = { val: '', maxlen: 60 };
   const _TR_UP = {'i':'İ','ı':'I','ğ':'Ğ','ü':'Ü','ş':'Ş','ö':'Ö','ç':'Ç'};
 
   function fnkbRender() {
-    const kb = _fnkb;
-    const sh = kb.shift;
     const disp = document.getElementById('kfmkb-disp');
     const cnt  = document.getElementById('kfmkb-cnt');
-    if (disp) disp.textContent = kb.val || '—';
-    if (cnt)  cnt.textContent  = kb.val.length + '/60';
-    // Satır 3 shift butonu rengini güncelle
-    const shBtn = document.getElementById('kfmkb-shift');
-    if (shBtn) { shBtn.className = 'kfm-kbk kfm-kbk-sp' + (sh ? ' kfm-kbk-shift-on' : ''); }
-    // Harf butonlarını güncelle
-    document.querySelectorAll('[data-fnkb]').forEach(b => {
-      const k = b.dataset.fnkb;
-      if (k === 'SHIFT' || k === 'BS' || k === 'SP' || k === 'OK' || k === '-' || /^\d$/.test(k)) return;
-      b.textContent = sh ? (_TR_UP[k] || k.toUpperCase()) : k;
-    });
+    if (disp) disp.textContent = _fnkb.val || '—';
+    if (cnt)  cnt.textContent  = _fnkb.val.length + '/60';
   }
 
   function fnkbType(k) {
     const kb = _fnkb;
     if (k === 'BS') { kb.val = kb.val.slice(0,-1); }
     else if (k === 'SP') { if (kb.val.length < kb.maxlen) kb.val += ' '; }
-    else if (k === 'SHIFT') { kb.shift = !kb.shift; }
     else if (k === 'OK') { fnkbConfirm(); return; }
     else {
       if (kb.val.length >= kb.maxlen) return;
-      if (k === '-') { kb.val += '-'; }
-      else {
-        const ch = kb.shift ? (_TR_UP[k] || k.toUpperCase()) : k;
-        kb.val += ch;
-        if (kb.shift) kb.shift = false;
-      }
+      // Her zaman büyük harf
+      kb.val += (_TR_UP[k] || k.toUpperCase());
     }
     fnkbRender();
-    // input hidden değerini eşitle
     const inp = document.getElementById('kfm-name-inp');
     if (inp) inp.value = kb.val;
   }
@@ -1863,34 +1845,27 @@
     if (!overlay || !box) return;
     window._fnkbForceNew = forceNew;
     _fnkb.val = window.kfCurrentSaveName || '';
-    _fnkb.shift = false;
     const rows = [
-      ['q','w','e','r','t','y','u','ı','o','p','ğ','ü'],
-      ['a','s','d','f','g','h','j','k','l','ş','i'],
-      ['z','x','c','v','b','n','m','ö','ç']
+      ['Q','W','E','R','T','Y','U','İ','O','P','Ğ','Ü'],
+      ['A','S','D','F','G','H','J','K','L','Ş','I'],
+      ['Z','X','C','V','B','N','M','Ö','Ç']
     ];
     const numRow = ['1','2','3','4','5','6','7','8','9','0','-'];
     let kbHtml = `<div class="kfm-kb">
       <div class="kfm-kb-disp"><span class="kfm-kb-disp-txt" id="kfmkb-disp">${_fnkb.val||'—'}</span><span class="kfm-kb-disp-cnt" id="kfmkb-cnt">${_fnkb.val.length}/60</span></div>`;
+    // Rakam + tire satırı (en üste)
+    kbHtml += '<div class="kfm-kb-row">';
+    numRow.forEach(k => { kbHtml += `<button class="kfm-kbk" onclick="fnkbType('${k}')">${k}</button>`; });
+    kbHtml += '</div>';
     // Harf satırları
     rows.forEach((row, ri) => {
       kbHtml += '<div class="kfm-kb-row">';
-      if (ri === 2) kbHtml += `<button id="kfmkb-shift" class="kfm-kbk kfm-kbk-sp" style="min-width:44px;flex:1.5;" onclick="fnkbType('SHIFT')" data-fnkb="SHIFT">⇧</button>`;
-      row.forEach(k => {
-        const d = _fnkb.shift ? (_TR_UP[k]||k.toUpperCase()) : k;
-        kbHtml += `<button class="kfm-kbk" onclick="fnkbType('${k}')" data-fnkb="${k}">${d}</button>`;
-      });
-      if (ri === 2) kbHtml += `<button class="kfm-kbk kfm-kbk-sp" style="min-width:44px;flex:1.5;" onclick="fnkbType('BS')" data-fnkb="BS">⌫</button>`;
+      row.forEach(k => { kbHtml += `<button class="kfm-kbk" onclick="fnkbType('${k}')">${k}</button>`; });
+      if (ri === 2) kbHtml += `<button class="kfm-kbk kfm-kbk-sp" style="min-width:50px;flex:1.5;" onclick="fnkbType('BS')">⌫</button>`;
       kbHtml += '</div>';
     });
-    // Rakam + tire satırı
-    kbHtml += '<div class="kfm-kb-row">';
-    numRow.forEach(k => {
-      kbHtml += `<button class="kfm-kbk" onclick="fnkbType('${k}')" data-fnkb="${k}">${k}</button>`;
-    });
-    kbHtml += '</div>';
-    // Boşluk + Tamam
-    kbHtml += `<div class="kfm-kb-row"><button class="kfm-kbk" style="flex:4;font-size:11px;letter-spacing:.05em;" onclick="fnkbType('SP')" data-fnkb="SP">BOŞLUK</button><button class="kfm-kbk kfm-kbk-ok" style="min-width:80px;flex:2;" onclick="fnkbType('OK')" data-fnkb="OK">✓ Kaydet</button></div>`;
+    // Boşluk + Kaydet
+    kbHtml += `<div class="kfm-kb-row"><button class="kfm-kbk kfm-kbk-sp" style="flex:4;" onclick="fnkbType('SP')">BOŞLUK</button><button class="kfm-kbk kfm-kbk-ok" style="min-width:90px;flex:2;" onclick="fnkbType('OK')">✓ Kaydet</button></div>`;
     kbHtml += '</div>';
     box.innerHTML = `
       <div class="kfm-title">💾 Formu Kaydet</div>
