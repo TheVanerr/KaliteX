@@ -35,6 +35,10 @@
     .kfhb-tel { background:#0d9488;color:#fff; }
     /* Sidebar açıkken label'ları gizle */
     .sidebar-open .kfhb-lbl { display:none; }
+    /* Kayıt adı: sidebar açıkken sadece seri no */
+    #kf-save-name .kfsn-short { display:none; }
+    .sidebar-open #kf-save-name .kfsn-full { display:none; }
+    .sidebar-open #kf-save-name .kfsn-short { display:inline; }
   </style>
 
  </head>
@@ -131,7 +135,7 @@
             </div>
           </div>
         </div>
-        <span id="kf-save-name" style="display:none;font-size:11px;font-weight:700;color:#16a34a;padding:3px 8px;background:#f0fdf4;border-radius:6px;border:1.5px solid #bbf7d0;white-space:nowrap;"></span>
+        <span id="kf-save-name" style="display:none;font-size:12px;font-weight:700;color:#16a34a;padding:5px 10px;background:#f0fdf4;border-radius:7px;border:1.5px solid #bbf7d0;white-space:nowrap;align-items:center;"></span>
       </div>
       <!-- Model sayfası başlık barı -->
       <div id="page-info-bar" style="display:none;flex:1;" class="flex items-center gap-2">
@@ -1872,6 +1876,14 @@
     if (o) o.style.display = 'none';
   }
 
+  function kfSetSaveName(name) {
+    const slbl = document.getElementById('kf-save-name');
+    if (!slbl) return;
+    const short = name.split('-')[0].trim();
+    slbl.innerHTML = `<span class="kfsn-full">💾 ${kfHEsc(name)}</span><span class="kfsn-short">💾 ${kfHEsc(short)}</span>`;
+    slbl.style.display = 'inline-flex';
+  }
+
   // ── Form Adı Özel Klavye ───────────────────────────────────────────────
   const _fnkb = { val: '', maxlen: 60 };
   const _TR_UP = {'i':'İ','ı':'I','ğ':'Ğ','ü':'Ü','ş':'Ş','ö':'Ö','ç':'Ç'};
@@ -1958,7 +1970,7 @@
     kfSvForms(forms);
     window.kfCurrentSaveId = id; window.kfCurrentSaveName = name;
     const slbl = document.getElementById('kf-save-name');
-    if (slbl) { slbl.textContent = '\uD83D\uDCBE ' + name; slbl.style.display = 'inline-block'; }
+    if (slbl) kfSetSaveName(name);
     kfModalClose();
     kfToast('Form kaydedildi \u2713');
     // Supabase'e gönder (arka planda, editor ise)
@@ -2029,7 +2041,7 @@
     const selLbl = document.getElementById('model-select-label');
     if (selLbl) selLbl.textContent = f.modelLabel || 'Model Seç';
     const slbl = document.getElementById('kf-save-name');
-    if (slbl) { slbl.textContent = '\uD83D\uDCBE ' + f.name; slbl.style.display = 'inline-block'; }
+    if (slbl) kfSetSaveName(f.name);
     const tbody = document.getElementById('kf-tbody');
     if (tbody && typeof window.kfBuildRows === 'function') tbody.innerHTML = window.kfBuildRows();
     kfModalClose();
