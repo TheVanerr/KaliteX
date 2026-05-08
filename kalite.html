@@ -236,8 +236,10 @@
     if (!r.ok) throw new Error(await r.text());
   }
   // UPSERT: var olan satırı güncelle, yoksa ekle — hiçbir şey silinmez!
-  async function sbUpsert(tbl, data) {
-    const r = await fetch(SB_URL + '/rest/v1/' + tbl, {
+  // onConflict: çakışma çözümünde kullanılacak sütun(lar), örn: "kod" veya "model_id,parametre_kod"
+  async function sbUpsert(tbl, data, onConflict) {
+    const qs = onConflict ? '?on_conflict=' + onConflict : '';
+    const r = await fetch(SB_URL + '/rest/v1/' + tbl + qs, {
       method: 'POST',
       headers: sbH({ 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
       body: JSON.stringify(data)
@@ -459,7 +461,7 @@
 
       // ── ADIM 2: Parametreleri UPSERT et (sil YOK — var olanı güncelle, yok ise ekle) ──
       for (let i = 0; i < params.length; i += 100)
-        await sbUpsert('kalite_parametreleri', params.slice(i, i + 100));
+        await sbUpsert('kalite_parametreleri', params.slice(i, i + 100), 'kod');
 
       // ── ADIM 3: Local'de silinmiş parametreleri Supabase'den de sil ──────────
       if (localKodlar.length > 0)
@@ -469,7 +471,7 @@
 
       // ── ADIM 4: Model atamalarını UPSERT et ──────────────────────────────────
       for (let i = 0; i < atamaRows.length; i += 200)
-        await sbUpsert('model_atama', atamaRows.slice(i, i + 200));
+        await sbUpsert('model_atama', atamaRows.slice(i, i + 200), 'model_id,parametre_kod');
 
       // ── ADIM 5: Her model için kaldırılmış X işaretlerini temizle ────────────
       for (const [mid, aktifKodlar] of Object.entries(atamaByModel)) {
