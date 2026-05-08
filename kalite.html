@@ -1043,8 +1043,6 @@
           <div class="khbar">
             <button class="khbtn khbr kh-editor-only" onclick="khSave()">Kaydet (Ctrl+S)</button>
             <button class="khbtn khbr kh-editor-only" onclick="khImportCSV()">📂 CSV Yükle</button>
-            <button class="khbtn khbr kh-editor-only" onclick="khImportJSON()">📥 JSON Yükle</button>
-            <button class="khbtn khbr" onclick="khExportJSON()">JSON İndir</button>
             <button class="khbtn khbgr kh-editor-only" onclick="khAddRow()">+ Satır Ekle</button>
             <button class="khbtn" style="background:#7c3aed;color:#fff;" onclick="khForceReload()" title="localStorage temizle, Supabase'den sıfırdan çek">&#8635; Supabase'den Yenile</button>
             <span id="kh-sync-st" style="font-size:11px;font-weight:700;padding:0 8px;"></span>
@@ -1237,21 +1235,14 @@
               <button onclick="handleFormAction('load')" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
                 <i data-lucide="upload" class="w-4 h-4"></i> Yükle
               </button>
-              <button onclick="handleFormAction('models')" class="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
-                <i data-lucide="package" class="w-4 h-4"></i> Modeller
-              </button>
               <button onclick="handleFormAction('notes')" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
                 <i data-lucide="sticky-note" class="w-4 h-4"></i> Not
               </button>
-              <button onclick="kfAddRow()" class="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-600 transition">
-                + Satır Ekle
-              </button>
-              <span id="kf-model-label" style="display:none;font-size:13px;font-weight:700;color:#dc2626;padding:5px 14px;background:#fef2f2;border-radius:8px;border:1.5px solid #fecaca;letter-spacing:0.02em;"></span>
               <span id="kf-save-name" style="display:none;font-size:12px;font-weight:700;color:#16a34a;padding:4px 12px;background:#f0fdf4;border-radius:8px;border:1.5px solid #bbf7d0;letter-spacing:0.02em;"></span>
             </div>
             <div style="position:relative;">
-              <button onclick="toggleModelDropdown()" class="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
-                <i data-lucide="filter" class="w-4 h-4"></i> Model Seç
+              <button id="model-select-btn" onclick="toggleModelDropdown()" class="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-600 transition">
+                <i data-lucide="filter" class="w-4 h-4"></i> <span id="model-select-label">Model Seç</span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" id="model-chevron"></i>
               </button>
               <div id="model-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-96 overflow-y-auto">
@@ -1551,8 +1542,9 @@
       return [r.kod, r.aciklama, r.grup, old[3]||'', old[4]||'', old[5]||'', 1, r.alanTuru||''];
     });
     // Model adı etiketi
-    const lbl = document.getElementById('kf-model-label');
-    if (lbl) { lbl.textContent = window.kfCurrentModelLabel; lbl.style.display = 'inline-block'; }
+    // Buton metnini seçilen model adına çevir
+    const selLbl = document.getElementById('model-select-label');
+    if (selLbl) selLbl.textContent = window.kfCurrentModelLabel;
     // Yeni model seçilince kayıt durumu sıfırla
     window.kfCurrentSaveId = null; window.kfCurrentSaveName = '';
     const slbl = document.getElementById('kf-save-name');
@@ -1783,8 +1775,8 @@
     window.kfCurrentSaveId = f.id; window.kfCurrentSaveName = f.name;
     window.kfCurrentModel = f.modelId; window.kfCurrentModelLabel = f.modelLabel;
     window.kfData = JSON.parse(JSON.stringify(f.data));
-    const lbl = document.getElementById('kf-model-label');
-    if (lbl) { lbl.textContent = f.modelLabel||''; lbl.style.display = f.modelLabel ? 'inline-block' : 'none'; }
+    const selLbl = document.getElementById('model-select-label');
+    if (selLbl) selLbl.textContent = f.modelLabel || 'Model Seç';
     const slbl = document.getElementById('kf-save-name');
     if (slbl) { slbl.textContent = '\uD83D\uDCBE ' + f.name; slbl.style.display = 'inline-block'; }
     const tbody = document.getElementById('kf-tbody');
