@@ -1791,6 +1791,75 @@
   function kfSvForms(f) { localStorage.setItem('kf_saved_forms', JSON.stringify(f)); }
   function kfGenId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
+  // ── Supabase form sync ───────────────────────────────────────────────────────
+  // Tek bir formu Supabase'e UPSERT'le (editor girişi gerekli)
+  async function kfSbUpsertForm(entry) {
+    if (!isEditor()) return;
+    try {
+      await sbUpsert('kf_forms', {
+        id: entry.id,
+        name: entry.name,
+        model_id: entry.modelId || '',
+        model_label: entry.modelLabel || '',
+        saved_at: entry.savedAt,
+        updated_at: new Date().toISOString(),
+        data: entry.data
+      }, 'id');
+    } catch(e) { console.warn('[KaliteX] kf_forms UPSERT hatası:', e.message||e); }
+  }
+
+  // Tek bir formu Supabase'den sil (editor girişi gerekli)
+  async function kfSbDeleteForm(id) {
+    if (!isEditor()) return;
+    try {
+      await sbDel('kf_forms', 'id=eq.' + encodeURIComponent(id));
+    } catch(e) { console.warn('[KaliteX] kf_forms DELETE hatası:', e.message||e); }
+  }
+
+  // Tüm formları Supabase'den çek, localStorage ile merge et
+  // Kural: her id için updated_at daha yeni olan kazanır
+  async function kfSbSync() {
+    if (!navigator.onLine) return;
+    try {
+      const rows = await sbGet('kf_forms', 'select=id,name,model_id,model_label,saved_at,updated_at,data&order=updated_at.desc');
+      const local = kfGetForms();
+      const merged = {};
+      // Önce local'ı al
+      local.forEach(f => { merged[f.id] = f; });
+      // Supabase'den gelenleri karşılaştır
+      rows.forEach(r => {
+        const sbEntry = {
+          id: r.id, name: r.name,
+          modelId: r.model_id, modelLabel: r.model_label,
+          savedAt: r.saved_at, updatedAt: r.updated_at,
+          data: r.data
+        };
+        const loc = merged[r.id];
+        if (!loc) {
+          merged[r.id] = sbEntry;
+        } else {
+          // updated_at daha yeni olanı al
+          const sbTime = new Date(r.updated_at || r.saved_at).getTime();
+          const locTime = new Date(loc.updatedAt || loc.savedAt).getTime();
+          if (sbTime > locTime) merged[r.id] = sbEntry;
+        }
+      });
+      // Local'de olup Supabase'de olmayan → editor ise Supabase'e gönder
+      if (isEditor()) {
+        const sbIds = new Set(rows.map(r => r.id));
+        for (const f of local) {
+          if (!sbIds.has(f.id)) await kfSbUpsertForm(f);
+        }
+      }
+      const finalList = Object.values(merged).sort((a,b) => new Date(b.savedAt)-new Date(a.savedAt));
+      kfSvForms(finalList);
+      return finalList;
+    } catch(e) {
+      console.warn('[KaliteX] kf_forms sync hatası:', e.message||e);
+      return null;
+    }
+  }
+
   function kfToast(msg) {
     const t = document.getElementById('kf-toast');
     if (!t) return;
@@ -1883,51 +1952,60 @@
     const forms = kfGetForms();
     const id = (!forceNew && window.kfCurrentSaveId) ? window.kfCurrentSaveId : kfGenId();
     const idx = forms.findIndex(f => f.id === id);
-    const entry = { id, name, modelId: window.kfCurrentModel||'', modelLabel: window.kfCurrentModelLabel||'', savedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(window.kfData||[])) };
-    if (idx >= 0) forms[idx] = entry; else forms.push(entry);
+    const now = new Date().toISOString();
+    const entry = { id, name, modelId: window.kfCurrentModel||'', modelLabel: window.kfCurrentModelLabel||'', savedAt: now, updatedAt: now, data: JSON.parse(JSON.stringify(window.kfData||[])) };
+    if (idx >= 0) { entry.savedAt = forms[idx].savedAt || now; forms[idx] = entry; } else forms.push(entry);
     kfSvForms(forms);
     window.kfCurrentSaveId = id; window.kfCurrentSaveName = name;
     const slbl = document.getElementById('kf-save-name');
     if (slbl) { slbl.textContent = '\uD83D\uDCBE ' + name; slbl.style.display = 'inline-block'; }
     kfModalClose();
     kfToast('Form kaydedildi \u2713');
+    // Supabase'e gönder (arka planda, editor ise)
+    if (navigator.onLine) kfSbUpsertForm(entry).catch(() => {});
   }
 
-  function kfShowLoadModal() {
+  async function kfShowLoadModal() {
     const overlay = document.getElementById('kf-modal-overlay');
     const box = document.getElementById('kf-modal-box');
     if (!overlay || !box) return;
-    const forms = kfGetForms();
+    // Önce modalı aç, yükleniyor göster
+    box.innerHTML = `<div class="kfm-title">&#128194; Kay&#305;tl&#305; Formlar</div><div class="kfm-empty" style="padding:32px 0;text-align:center;color:#9ca3af;">&#8635; Yükleniyor...</div>`;
+    overlay.style.display = 'flex';
+    // Supabase ile sync
+    let forms;
+    if (navigator.onLine) {
+      const synced = await kfSbSync();
+      forms = synced || kfGetForms();
+    } else {
+      forms = kfGetForms();
+    }
+    // Modalı render et
     let list = '';
     if (!forms.length) {
       list = '<div class="kfm-empty">Kay&#305;tl&#305; form bulunamad&#305;.</div>';
     } else {
-      // Modele göre gruplay
-      const groups = {}; // modelId -> { label, forms[] }
-      [...forms].reverse().forEach(f => {
+      const groups = {};
+      [...forms].sort((a,b) => new Date(b.savedAt)-new Date(a.savedAt)).forEach(f => {
         const key = f.modelId || '__none__';
         if (!groups[key]) groups[key] = { label: f.modelLabel || 'Model Belirtilmemiş', forms: [] };
         groups[key].forms.push(f);
       });
-      // KH_MODELS sırasına göre sırala, bilinmeyenler sona
       const modelOrder = (typeof KH_MODELS !== 'undefined') ? KH_MODELS.map(m => m.id) : [];
       const sortedKeys = Object.keys(groups).sort((a, b) => {
-        if (a === '__none__') return 1;
-        if (b === '__none__') return -1;
+        if (a === '__none__') return 1; if (b === '__none__') return -1;
         const ai = modelOrder.indexOf(a), bi = modelOrder.indexOf(b);
-        if (ai === -1 && bi === -1) return 0;
-        if (ai === -1) return 1;
-        if (bi === -1) return -1;
+        if (ai === -1 && bi === -1) return 0; if (ai === -1) return 1; if (bi === -1) return -1;
         return ai - bi;
       });
       sortedKeys.forEach((key, gi) => {
         const g = groups[key];
-        const gid = 'kfmg_' + gi;
         let items = '';
         g.forms.forEach(f => {
           const dt = new Date(f.savedAt);
           const ds = dt.toLocaleDateString('tr-TR') + ' ' + dt.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
-          items += `<div class="kfm-item" onclick="kfDoLoad('${f.id}')"><div class="kfm-item-info"><div class="kfm-item-name">${kfHEsc(f.name)}</div><div class="kfm-item-meta">${ds}</div></div><button class="kfm-del" onclick="event.stopPropagation();kfDeleteForm('${f.id}')">Sil</button></div>`;
+          const syncIcon = f.updatedAt ? '🌐' : '📴';
+          items += `<div class="kfm-item" onclick="kfDoLoad('${f.id}')"><div class="kfm-item-info"><div class="kfm-item-name">${kfHEsc(f.name)}</div><div class="kfm-item-meta">${syncIcon} ${ds}</div></div><button class="kfm-del" onclick="event.stopPropagation();kfDeleteForm('${f.id}')">Sil</button></div>`;
         });
         list += `<div class="kfm-group">
           <div class="kfm-group-hdr" onclick="(function(el){var b=el.nextElementSibling;var c=el.querySelector('.kfm-group-chevron');var open=b.style.display!=='none';b.style.display=open?'none':'flex';c.style.transform=open?'rotate(-90deg)':'rotate(0deg)';})(this)">
@@ -1939,7 +2017,6 @@
       });
     }
     box.innerHTML = `<div class="kfm-title">&#128194; Kay&#305;tl&#305; Formlar <span style="font-size:11px;font-weight:600;color:#6b7280;">(${forms.length})</span></div><div class="kfm-list" style="gap:8px;">${list}</div><div class="kfm-btns"><button class="kfm-cancel" onclick="kfModalClose()">Kapat</button></div>`;
-    overlay.style.display = 'flex';
   }
 
   function kfDoLoad(id) {
@@ -1959,7 +2036,7 @@
     kfToast(f.name + ' y\u00fcklendi \u2713');
   }
 
-  function kfDeleteForm(id) {
+  async function kfDeleteForm(id) {
     let forms = kfGetForms();
     forms = forms.filter(f => f.id !== id);
     kfSvForms(forms);
@@ -1968,8 +2045,18 @@
       const slbl = document.getElementById('kf-save-name');
       if (slbl) slbl.style.display = 'none';
     }
+    // Supabase'den de sil (arka planda)
+    if (navigator.onLine) kfSbDeleteForm(id).catch(() => {});
     kfShowLoadModal();
   }
+
+  // ── Online olunca otomatik form sync ──────────────────────────────────────
+  window.addEventListener('online', () => {
+    console.log('[KaliteX] İnternet bağlantısı geldi, form sync başlatılıyor...');
+    kfSbSync().then(result => {
+      if (result) kfToast('☁️ Formlar senkronize edildi ✓');
+    });
+  });
 
   // Init
   const defaultConfig = {
