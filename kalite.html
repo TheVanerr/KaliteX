@@ -1653,12 +1653,45 @@
     chevron.style.transform = dropdown.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
   }
 
+  // Formda doldurulmuş veri var mı?
+  function kfFormHasData() {
+    if (!window.kfData || !window.kfData.length) return false;
+    if (window.kfCurrentSaveId) return true; // Zaten kaydedilmiş = veri var
+    const n = window.kfNotes || {};
+    if ((n.aksilikler||[]).length || (n.revizeler||[]).length) return true;
+    return window.kfData.some(row => row[3] && String(row[3]).trim());
+  }
+
   function selectModel(modelId) {
     const dropdown = document.getElementById('model-dropdown');
     if (dropdown) dropdown.classList.add('hidden');
     const chevron = document.getElementById('model-chevron');
     if (chevron) chevron.style.transform = 'rotate(0deg)';
-    kfLoadModel(modelId);
+
+    // Aynı model veya henüz model seçilmemiş — direkt yükle
+    if (!window.kfCurrentModel || window.kfCurrentModel === modelId) {
+      kfLoadModel(modelId);
+      return;
+    }
+
+    // Formda doldurulmuş veri yoksa direkt geç
+    if (!kfFormHasData()) {
+      kfLoadModel(modelId);
+      return;
+    }
+
+    const targetLabel = (KH_MODELS.find(m => m.id === modelId) || {label: modelId}).label;
+
+    if (window.kfCurrentSaveId) {
+      // Zaten kaydedilmiş bir form — sessizce güncelle, sonra yeni modeli aç
+      kfDoSave(window.kfCurrentSaveName, false);
+      kfToast('✓ Kaydedildi — ' + targetLabel + ' formu açılıyor…');
+      kfLoadModel(modelId);
+    } else {
+      // İsimsiz/kaydedilmemiş form — önce isim sor, sonra yeni modeli aç
+      window._kfPendingModelId = modelId;
+      kfShowSaveModal(false);
+    }
   }
 
   function kfLoadModel(modelId) {
@@ -2306,6 +2339,14 @@
       return;
     }
     kfDoSave(name, window._fnkbForceNew);
+    // Model geçişi bekliyorsa kayıt bitti — şimdi yeni modeli yükle
+    if (window._kfPendingModelId) {
+      const target = window._kfPendingModelId;
+      window._kfPendingModelId = null;
+      const targetLabel = (KH_MODELS.find(m => m.id === target) || {label: target}).label;
+      kfToast('✓ Kaydedildi — ' + targetLabel + ' formu açılıyor…');
+      kfLoadModel(target);
+    }
   }
 
   function kfShowSaveModal(forceNew) {
