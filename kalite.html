@@ -1683,9 +1683,10 @@
     const targetLabel = (KH_MODELS.find(m => m.id === modelId) || {label: modelId}).label;
 
     if (window.kfCurrentSaveId) {
-      // Zaten kaydedilmiş bir form — sessizce güncelle, sonra yeni modeli aç
+      // Zaten kaydedilmiş bir form — sessizce güncelle, sonra yeni modeli temiz aç
       kfDoSave(window.kfCurrentSaveName, false);
       kfToast('✓ Kaydedildi — ' + targetLabel + ' formu açılıyor…');
+      window.kfData = []; // Eski cevapları taşıma
       kfLoadModel(modelId);
     } else {
       // İsimsiz/kaydedilmemiş form — önce isim sor, sonra yeni modeli aç
@@ -2339,12 +2340,13 @@
       return;
     }
     kfDoSave(name, window._fnkbForceNew);
-    // Model geçişi bekliyorsa kayıt bitti — şimdi yeni modeli yükle
+    // Model geçişi bekliyorsa kayıt bitti — şimdi yeni modeli temiz aç
     if (window._kfPendingModelId) {
       const target = window._kfPendingModelId;
       window._kfPendingModelId = null;
       const targetLabel = (KH_MODELS.find(m => m.id === target) || {label: target}).label;
       kfToast('✓ Kaydedildi — ' + targetLabel + ' formu açılıyor…');
+      window.kfData = []; // Eski cevapları taşıma
       kfLoadModel(target);
     }
   }
