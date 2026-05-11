@@ -14,6 +14,7 @@
   <link rel="apple-touch-icon" href="./icon-192.png">
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
   <style>
@@ -83,7 +84,7 @@
         <button onclick="handleFormAction('save')" class="kfhb kfhb-red" title="Kaydet"><i data-lucide="save" class="w-4 h-4"></i><span class="kfhb-lbl">Kaydet</span></button>
         <button onclick="handleFormAction('save-as')" class="kfhb kfhb-org" title="Farklı Kaydet"><i data-lucide="copy" class="w-4 h-4"></i><span class="kfhb-lbl">Farklı</span></button>
         <button onclick="handleFormAction('load')" class="kfhb kfhb-blu" title="Yükle"><i data-lucide="upload" class="w-4 h-4"></i><span class="kfhb-lbl">Yükle</span></button>
-        <button onclick="handleFormAction('notes')" class="kfhb kfhb-grn" title="Not"><i data-lucide="sticky-note" class="w-4 h-4"></i><span class="kfhb-lbl">Not</span></button>
+        <button onclick="handleFormAction('notes')" class="kfhb kfhb-grn" title="Not" style="position:relative;"><i data-lucide="sticky-note" class="w-4 h-4"></i><span class="kfhb-lbl">Not</span><span id="kf-note-badge" class="kfhb-note-badge"></span></button>
         <div style="position:relative;">
           <button id="model-select-btn" onclick="toggleModelDropdown()" class="kfhb kfhb-tel" title="Model Seç">
             <i data-lucide="filter" class="w-4 h-4"></i><span class="kfhb-lbl" id="model-select-label">Model</span>
@@ -148,6 +149,7 @@
         <button onclick="khImportCSV()" class="kfhb kfhb-org kh-editor-only" title="CSV Yükle"><i data-lucide="folder-open" class="w-4 h-4"></i><span class="kfhb-lbl">CSV Yükle</span></button>
         <button onclick="khAddRow()" class="kfhb kfhb-grn kh-editor-only" title="Satır Ekle"><i data-lucide="plus" class="w-4 h-4"></i><span class="kfhb-lbl">Satır Ekle</span></button>
         <button onclick="khForceReload()" class="kfhb kfhb-pur" title="Supabase'den Yenile"><i data-lucide="refresh-cw" class="w-4 h-4"></i><span class="kfhb-lbl">Yenile</span></button>
+        <button onclick="kxDriveBackup()" class="kfhb" title="Google Drive'a Yedekle" style="background:#fff;color:#374151;border:1.5px solid #e5e7eb;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M6.28 19l-4.03-6.97L5.66 7h12.68l3.41 5.03L17.72 19H6.28z" fill="#4285F4"/><path d="M15.73 19l3.41-5.97H5.66L2.25 19h13.48z" fill="#0F9D58"/><path d="M5.66 7l4.03 6.97h4.62L18.34 7H5.66z" fill="#FBBC05"/></svg><span class="kfhb-lbl">Yedekle</span></button>
         <span id="kh-sync-st" style="font-size:11px;font-weight:700;padding:0 4px;"></span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
@@ -264,6 +266,8 @@
   const KH_DATA_VERSION = 'v3'; // Bunu artırınca tüm cihazlarda localStorage temizlenir
   const SB_URL = 'https://rhrhueocmcjtntkyyack.supabase.co';
   const SB_KEY = 'sb_publishable_T0ZpujhmI_kBuuT4M6U1Gw_BCdweMf-';
+  // ── Google Drive Yedek — OAuth Client ID ──────────────────────────
+  const KX_GDRIVE_CLIENT_ID = '691548738009-55q8dipm3hoeb8qs60vd166ppmg14sqq.apps.googleusercontent.com';
   // ── Düzenleyici listesi: Bu listedeki Google hesapları düzenleme yapabilir ──
   const ALLOWED_EDITORS = ['fatihgural80@gmail.com', 'fatihgural_2001@hotmail.com'];
   let SB_TOKEN = null;
@@ -1318,6 +1322,39 @@
           .kfm-del{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit;}
           .kfm-del:hover{background:#fee2e2;}
           .kfm-empty{text-align:center;color:#9ca3af;font-size:13px;padding:24px 0;}
+          /* Not modalı */
+          .kfnm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9998;display:none;align-items:center;justify-content:center;}
+          .kfnm-box{background:#fff;border-radius:14px;padding:22px 24px;width:min(860px,97vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.25);}
+          .kfnm-title{font-size:15px;font-weight:800;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+          .kfnm-cols{display:flex;gap:14px;flex:1;min-height:0;margin-bottom:14px;}
+          .kfnm-col{flex:1;display:flex;flex-direction:column;gap:6px;}
+          .kfnm-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6b7280;}
+          .kfnm-lbl-red{color:#dc2626;}
+          .kfnm-lbl-blu{color:#2563eb;}
+          .kfnm-list{flex:1;min-height:160px;max-height:220px;overflow-y:auto;border:1.5px solid #e5e7eb;border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:3px;background:#fafafa;}
+          .kfnm-item{display:flex;align-items:flex-start;gap:6px;background:#fff;border:1px solid #f0f0f0;border-radius:6px;padding:6px 8px;}
+          .kfnm-item-num{min-width:18px;height:18px;background:#e5e7eb;border-radius:4px;font-size:10px;font-weight:700;color:#6b7280;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+          .kfnm-item-txt{flex:1;font-size:12px;color:#1f2937;line-height:1.5;word-break:break-word;padding-top:1px;}
+          .kfnm-item-del{background:none;border:none;cursor:pointer;color:#d1d5db;font-size:16px;line-height:1;padding:0 2px;flex-shrink:0;font-family:inherit;margin-top:-1px;}
+          .kfnm-item-del:hover{color:#dc2626;}
+          .kfnm-empty{color:#d1d5db;font-size:12px;text-align:center;padding:24px 0;font-style:italic;}
+          .kfnm-add-row{display:flex;gap:6px;margin-top:2px;}
+          .kfnm-inp{flex:1;border:1.5px solid #d1d5db;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;}
+          .kfnm-inp:focus{border-color:#dc2626;}
+          .kfnm-add-btn{border:none;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+          .kfnm-add-btn-r{background:#dc2626;color:#fff;} .kfnm-add-btn-r:hover{background:#b91c1c;}
+          .kfnm-add-btn-b{background:#2563eb;color:#fff;} .kfnm-add-btn-b:hover{background:#1d4ed8;}
+          .kfnm-mic{border:none;border-radius:7px;padding:7px 10px;font-size:15px;cursor:pointer;background:#f3f4f6;color:#6b7280;transition:background .15s,color .15s;flex-shrink:0;}
+          .kfnm-mic:hover{background:#e5e7eb;color:#374151;}
+          .kfnm-mic.listening{background:#fef2f2;color:#dc2626;animation:kfnm-pulse 0.8s ease-in-out infinite;}
+          @keyframes kfnm-pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.35);}50%{box-shadow:0 0 0 5px rgba(220,38,38,0);}}
+          .kfnm-btns{display:flex;gap:8px;justify-content:flex-end;padding-top:4px;}
+          .kfnm-ok{background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+          .kfnm-ok:hover{background:#15803d;}
+          .kfnm-cancel{background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+          .kfnm-cancel:hover{background:#e5e7eb;}
+          /* Not badge */
+          .kfhb-note-badge{position:absolute;top:3px;right:3px;width:7px;height:7px;background:#16a34a;border-radius:50%;display:none;}
           .kfm-group{border:1.5px solid #e5e7eb;border-radius:10px;overflow:hidden;}
           .kfm-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:#f3f4f6;cursor:pointer;user-select:none;gap:8px;}
           .kfm-group-hdr:hover{background:#e5e7eb;}
@@ -1386,6 +1423,7 @@
           </div>
           <div id="kf-kb" style="display:none;"></div>
           <div id="kf-modal-overlay" class="kfm-overlay" style="display:none;" onclick="if(event.target===this)kfModalClose()"><div id="kf-modal-box" class="kfm-box" onclick="event.stopPropagation()"></div></div>
+          <div id="kf-notes-overlay" class="kfnm-overlay" onclick="if(event.target===this)kfNotesClose()"><div class="kfnm-box" onclick="event.stopPropagation()"><div class="kfnm-title"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z'/><polyline points='15 3 15 9 21 9'/></svg> Form Notu</div><div class="kfnm-cols"><div class="kfnm-col"><div class="kfnm-lbl kfnm-lbl-red">⚠️ Aksilikler</div><div id="kfnm-list-a" class="kfnm-list"></div><div class="kfnm-add-row"><input id="kfnm-inp-a" class="kfnm-inp" placeholder="Aksiliği yaz, Enter veya Ekle..." onkeydown="if(event.key==='Enter'){event.preventDefault();kfNotesAdd('a');}"><button id="kfnm-mic-a" class="kfnm-mic" onclick="kfNotesMic('a')" title="Sesli yaz">🎤</button><button class="kfnm-add-btn kfnm-add-btn-r" onclick="kfNotesAdd('a')">+ Ekle</button></div></div><div class="kfnm-col"><div class="kfnm-lbl kfnm-lbl-blu">🔧 Revize Önerileri</div><div id="kfnm-list-r" class="kfnm-list"></div><div class="kfnm-add-row"><input id="kfnm-inp-r" class="kfnm-inp" placeholder="Öneriyi yaz, Enter veya Ekle..." onkeydown="if(event.key==='Enter'){event.preventDefault();kfNotesAdd('r');}"><button id="kfnm-mic-r" class="kfnm-mic" onclick="kfNotesMic('r')" title="Sesli yaz">🎤</button><button class="kfnm-add-btn kfnm-add-btn-b" onclick="kfNotesAdd('r')">+ Ekle</button></div></div></div><div class="kfnm-btns"><button class="kfnm-cancel" onclick="kfNotesClose()">Vazgeç</button><button class="kfnm-ok" onclick="kfNotesSave()">Kaydet</button></div></div></div>
           <div id="kf-toast" style="position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:7px 18px;border-radius:8px;font-size:12px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:10000;"></div>
         </div>
       `;
@@ -1494,6 +1532,16 @@
     sb.style.position = sidebarOpen ? 'relative' : 'absolute';
     sb.style.height = '100%';
     document.body.classList.toggle('sidebar-open', sidebarOpen);
+    // Sidebar açılınca tüm serileri kapat (kullanıcı manuel açsın)
+    if (sidebarOpen) {
+      Object.keys(seriesStates).forEach(series => {
+        seriesStates[series] = false;
+        const modelsDiv = document.getElementById(`${series}-models`);
+        const chevron = document.querySelector(`.series-chevron-${series}`);
+        if (modelsDiv) modelsDiv.style.display = 'none';
+        if (chevron) chevron.style.transform = 'rotate(-90deg)';
+      });
+    }
   }
 
   // ── Auth — Google OAuth ──────────────────────────────────────────────────
@@ -1580,6 +1628,9 @@
       case 'load':
         kfShowLoadModal();
         break;
+      case 'notes':
+        kfShowNotesModal();
+        break;
     }
   }
 
@@ -1628,10 +1679,12 @@
     // Buton metnini seçilen model adına çevir
     const selLbl = document.getElementById('model-select-label');
     if (selLbl) selLbl.textContent = window.kfCurrentModelLabel;
-    // Yeni model seçilince kayıt durumu sıfırla
+    // Yeni model seçilince kayıt durumu ve notları sıfırla
     window.kfCurrentSaveId = null; window.kfCurrentSaveName = '';
+    window.kfNotes = {aksilikler:[],revizeler:[]};
     const slbl = document.getElementById('kf-save-name');
     if (slbl) slbl.style.display = 'none';
+    kfNotesUpdateBadge();
     // Tabloyu yeniden oluştur
     if (typeof window.kfBuildRows === 'function') {
       const tbody = document.getElementById('kf-tbody');
@@ -1789,7 +1842,332 @@
     }
   }
 
+  // ── Kalite Formu Not Modalı ────────────────────────────────────────────────
+  // Veri formatı: { aksilikler: ['madde1','madde2',...], revizeler: ['madde1',...] }
+  let _kfnw = {aksilikler:[], revizeler:[]}; // modal açıkken çalışan kopya
+
+  function kfNotesNormalize(n) {
+    // Eski format uyumu: {aksilik:'metin', revize:'metin'} → diziye çevir
+    if (!n) return {aksilikler:[], revizeler:[]};
+    if (Array.isArray(n.aksilikler)) return {aksilikler:[...n.aksilikler], revizeler:[...(n.revizeler||[])]};
+    const toArr = s => (s||'').split('\n').map(x=>x.trim()).filter(Boolean);
+    return {aksilikler: toArr(n.aksilik), revizeler: toArr(n.revize)};
+  }
+
+  window.kfNotes = window.kfNotes || {aksilikler:[], revizeler:[]};
+
+  function kfNotesUpdateBadge() {
+    const badge = document.getElementById('kf-note-badge');
+    if (!badge) return;
+    const n = window.kfNotes || {};
+    const hasNote = (n.aksilikler||[]).length > 0 || (n.revizeler||[]).length > 0;
+    badge.style.display = hasNote ? 'block' : 'none';
+  }
+
+  function kfNotesRenderList(side) {
+    const el = document.getElementById(side === 'a' ? 'kfnm-list-a' : 'kfnm-list-r');
+    const arr = side === 'a' ? _kfnw.aksilikler : _kfnw.revizeler;
+    if (!el) return;
+    if (!arr.length) { el.innerHTML = '<div class="kfnm-empty">Henüz madde yok.</div>'; return; }
+    el.innerHTML = arr.map((txt, i) =>
+      `<div class="kfnm-item"><span class="kfnm-item-num">${i+1}</span><span class="kfnm-item-txt">${kfHEsc(txt)}</span><button class="kfnm-item-del" onclick="kfNotesDel('${side}',${i})" title="Sil">×</button></div>`
+    ).join('');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function kfNotesAdd(side) {
+    const inp = document.getElementById(side === 'a' ? 'kfnm-inp-a' : 'kfnm-inp-r');
+    if (!inp) return;
+    const val = inp.value.trim();
+    if (!val) { inp.style.borderColor='#dc2626'; setTimeout(()=>{ inp.style.borderColor=''; },600); return; }
+    if (side === 'a') _kfnw.aksilikler.push(val); else _kfnw.revizeler.push(val);
+    inp.value = ''; inp.focus();
+    kfNotesRenderList(side);
+  }
+
+  function kfNotesDel(side, idx) {
+    if (side === 'a') _kfnw.aksilikler.splice(idx,1); else _kfnw.revizeler.splice(idx,1);
+    kfNotesRenderList(side);
+  }
+
+  let _kfnmSR = null; // aktif SpeechRecognition instance
+  let _kfnmSRSide = null;
+
+  function kfNotesMic(side) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { kfToast('Bu tarayıcı sesli yazmayı desteklemiyor.'); return; }
+    // Aynı taraf zaten dinliyorsa durdur
+    if (_kfnmSR && _kfnmSRSide === side) { _kfnmSR.stop(); return; }
+    // Farklı taraf çalışıyorsa onu durdur
+    if (_kfnmSR) { _kfnmSR.abort(); }
+    const inp = document.getElementById(side === 'a' ? 'kfnm-inp-a' : 'kfnm-inp-r');
+    const btn = document.getElementById(side === 'a' ? 'kfnm-mic-a' : 'kfnm-mic-r');
+    const sr = new SR();
+    sr.lang = 'tr-TR';
+    sr.interimResults = true;
+    sr.maxAlternatives = 1;
+    _kfnmSR = sr; _kfnmSRSide = side;
+    // Mikrofon açılırken mevcut input içeriğini taban olarak sakla
+    const base = inp ? inp.value.trimEnd() : '';
+    let finalAccum = ''; // bu oturumda kesinleşen metin
+    sr.onstart = () => { if (btn) btn.classList.add('listening'); if (inp) inp.placeholder = '🎤 Dinleniyor...'; };
+    sr.onresult = (e) => {
+      let newFinal = '', interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) newFinal += t; else interim += t;
+      }
+      if (newFinal) finalAccum += (finalAccum && !finalAccum.endsWith(' ') ? ' ' : '') + newFinal.trim();
+      const display = (base + (base && finalAccum ? ' ' : '') + finalAccum + (interim ? ' ' + interim.trim() : '')).trimStart();
+      if (inp) inp.value = display;
+    };
+    sr.onend = () => {
+      _kfnmSR = null; _kfnmSRSide = null;
+      if (btn) btn.classList.remove('listening');
+      // Son interim varsa temizle — inp.value zaten finalAccum ile doğru
+      if (inp) { inp.placeholder = side === 'a' ? 'Aksiliği yaz, Enter veya Ekle...' : 'Öneriyi yaz, Enter veya Ekle...'; inp.focus(); }
+    };
+    sr.onerror = (e) => {
+      _kfnmSR = null; _kfnmSRSide = null;
+      if (btn) btn.classList.remove('listening');
+      if (e.error !== 'no-speech' && e.error !== 'aborted') kfToast('Mikrofon hatası: ' + e.error);
+    };
+    sr.start();
+  }
+
+  function kfShowNotesModal() {
+    const overlay = document.getElementById('kf-notes-overlay');
+    if (!overlay) return;
+    _kfnw = kfNotesNormalize(window.kfNotes);
+    overlay.style.display = 'flex';
+    kfNotesRenderList('a');
+    kfNotesRenderList('r');
+    const inp = document.getElementById('kfnm-inp-a');
+    if (inp) inp.focus();
+  }
+
+  function kfNotesClose() {
+    const overlay = document.getElementById('kf-notes-overlay');
+    if (overlay) overlay.style.display = 'none';
+  }
+
+  function kfNotesSave() {
+    window.kfNotes = {aksilikler:[..._kfnw.aksilikler], revizeler:[..._kfnw.revizeler]};
+    kfNotesClose();
+    kfNotesUpdateBadge();
+    kfToast('Not kaydedildi \u2713');
+  }
+
   // ── Kalite Formu Kaydet / Yükle ─────────────────────────────────────────────
+  // ── Google Drive / Google Sheets Yedek ───────────────────────────────
+  let _kxDriveToken = null;
+  let _kxTokenClient = null;
+
+  function kxDriveBackup() {
+    if (!window.google || !window.google.accounts) {
+      kfToast('Google kiti yükleniyor, birkaç saniye bekleyip tekrar deneyin.');
+      return;
+    }
+    if (!_kxTokenClient) {
+      _kxTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: KX_GDRIVE_CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive',
+        callback: async (resp) => {
+          if (resp.error) { kfToast('Google yetkilendirme hatası: ' + resp.error); return; }
+          _kxDriveToken = resp.access_token;
+          await kxDoExport(_kxDriveToken);
+        }
+      });
+    }
+    if (_kxDriveToken) { kxDoExport(_kxDriveToken); }
+    else { _kxTokenClient.requestAccessToken(); }
+  }
+
+  async function kxDoExport(token) {
+    const btn = document.querySelector('[onclick="kxDriveBackup()"]');
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+    kfToast('Yedekleniyor…');
+    try {
+      const SS_NAME = 'KaliteX Yedek';
+
+      // 1. "KaliteX Database" klasörünü bul veya oluştur
+      let folderId = null;
+      const folderRes = await fetch(
+        'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent("name='KaliteX Database' and mimeType='application/vnd.google-apps.folder' and trashed=false") + '&fields=files(id)',
+        { headers: { 'Authorization': 'Bearer ' + token } }
+      );
+      if (folderRes.status === 401) { _kxDriveToken = null; _kxTokenClient = null; kfToast('Oturum süresi doldu, tekrar deneyin.'); return; }
+      if (folderRes.ok) {
+        const fd = await folderRes.json();
+        if (fd.files && fd.files.length > 0) folderId = fd.files[0].id;
+      }
+      if (!folderId) {
+        const fRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: 'KaliteX Database', mimeType: 'application/vnd.google-apps.folder' })
+        });
+        if (!fRes.ok) throw new Error('Klasör oluşturulamadı: ' + fRes.status);
+        folderId = (await fRes.json()).id;
+      }
+
+      // 2. Klasörde "KaliteX Yedek" adında spreadsheet var mı?
+      let ssId = null;
+      let isExisting = false;
+      const ssSearchRes = await fetch(
+        'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(`name='${SS_NAME}' and '${folderId}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`) + '&fields=files(id)',
+        { headers: { 'Authorization': 'Bearer ' + token } }
+      );
+      if (ssSearchRes.ok) {
+        const ssd = await ssSearchRes.json();
+        if (ssd.files && ssd.files.length > 0) { ssId = ssd.files[0].id; isExisting = true; }
+      }
+
+      if (!isExisting) {
+        // 3a. Yeni spreadsheet oluştur
+        const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            properties: { title: SS_NAME },
+            sheets: [
+              { properties: { title: 'Formlar',       index: 0 } },
+              { properties: { title: 'Kalite Havuzu', index: 1 } }
+            ]
+          })
+        });
+        if (!createRes.ok) throw new Error('Spreadsheet oluşturulamadı: ' + createRes.status);
+        ssId = (await createRes.json()).spreadsheetId;
+        // Klasöre taşı
+        await fetch(`https://www.googleapis.com/drive/v3/files/${ssId}?addParents=${folderId}&removeParents=root&fields=id`, {
+          method: 'PATCH',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+      }
+
+      // 4. Spreadsheet metadata al — mevcut sheetleri öğren
+      const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}?fields=sheets.properties`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!metaRes.ok) throw new Error('Metadata alınamadı: ' + metaRes.status);
+      let sheetProps = (await metaRes.json()).sheets.map(s => s.properties);
+
+      // Eksik sheetleri ekle
+      const existing = sheetProps.map(s => s.title);
+      const toAdd = [];
+      if (!existing.includes('Formlar'))       toAdd.push({ addSheet: { properties: { title: 'Formlar',       index: 0 } } });
+      if (!existing.includes('Kalite Havuzu')) toAdd.push({ addSheet: { properties: { title: 'Kalite Havuzu', index: 1 } } });
+      if (toAdd.length) {
+        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}:batchUpdate`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requests: toAdd })
+        });
+        const m2 = await (await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}?fields=sheets.properties`, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        sheetProps = m2.sheets.map(s => s.properties);
+      }
+      const sheetIdFormlar = (sheetProps.find(s => s.title === 'Formlar')       || sheetProps[0]).sheetId;
+      const sheetIdKH      = (sheetProps.find(s => s.title === 'Kalite Havuzu') || sheetProps[1]).sheetId;
+
+      // 5. Mevcut ise önce temizle
+      if (isExisting) {
+        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}/values:batchClear`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ranges: ['Formlar', 'Kalite Havuzu'] })
+        });
+      }
+
+      // 6. Form verilerini hazırla
+      let forms = kfGetForms();
+      if (navigator.onLine) { const s = await kfSbSync(); if (s) forms = s; }
+      const formHeader = ['Form Adı', 'Model', 'Kaydedilme', 'Güncelleme', 'Aksilikler', 'Revize Önerileri', 'Parametre Kodu', 'Açıklama', 'Grup', 'Sonuç', 'Durum', 'Referans'];
+      const formRows = [formHeader];
+      if (!forms.length) {
+        formRows.push(['Kayıtlı form yok.', '', '', '', '', '', '', '', '', '', '', '']);
+      } else {
+        forms.forEach(f => {
+          const n = kfNotesNormalize(f.notes);
+          const aks = n.aksilikler.join(' | ');
+          const rev = n.revizeler.join(' | ');
+          const sd = f.savedAt ? new Date(f.savedAt).toLocaleString('tr-TR') : '';
+          const ud = f.updatedAt ? new Date(f.updatedAt).toLocaleString('tr-TR') : '';
+          const data = f.data || [];
+          if (!data.length) {
+            formRows.push([f.name, f.modelLabel || f.modelId || '', sd, ud, aks, rev, '', '', '', '', '', '']);
+          } else {
+            data.forEach((row, i) => {
+              formRows.push([
+                i === 0 ? f.name : '',
+                i === 0 ? (f.modelLabel || f.modelId || '') : '',
+                i === 0 ? sd : '',
+                i === 0 ? ud : '',
+                i === 0 ? aks : '',
+                i === 0 ? rev : '',
+                String(row[0] || ''), String(row[1] || ''), String(row[2] || ''),
+                String(row[3] || ''), String(row[4] || ''), String(row[5] || '')
+              ]);
+            });
+            formRows.push(['', '', '', '', '', '', '', '', '', '', '', '']);
+          }
+        });
+      }
+
+      // 7. Kalite Havuzu matrisini hazırla (KH_FIXED sütunları + tüm model sütunları)
+      const khHeader = [...KH_FIXED, ...KH_MODELS.map(m => m.label)];
+      const khRows = [khHeader];
+      for (let ri = 0; ri < KH.TOTAL_ROWS; ri++) {
+        const fixed = KH.paramData[ri] || new Array(KH_FIXED.length).fill('');
+        if (!fixed[0]) continue; // KOD boşsa satırı atla
+        const modelVals = KH_MODELS.map(m => khMVal(m.id, ri));
+        khRows.push([...fixed, ...modelVals]);
+      }
+
+      // 8. Verileri toplu yaz
+      const valRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}/values:batchUpdate`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          valueInputOption: 'RAW',
+          data: [
+            { range: 'Formlar!A1',       values: formRows },
+            { range: 'Kalite Havuzu!A1', values: khRows  }
+          ]
+        })
+      });
+      if (!valRes.ok) throw new Error('Veri yazılamadı: ' + valRes.status);
+
+      // 9. Başlık formatlaması
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}:batchUpdate`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requests: [
+          { repeatCell: {
+            range: { sheetId: sheetIdFormlar, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: formHeader.length },
+            cell: { userEnteredFormat: { backgroundColor: { red:0.133, green:0.133, blue:0.133 }, textFormat: { bold:true, foregroundColor:{ red:1, green:1, blue:1 } } } },
+            fields: 'userEnteredFormat(backgroundColor,textFormat)'
+          }},
+          { repeatCell: {
+            range: { sheetId: sheetIdKH, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: khHeader.length },
+            cell: { userEnteredFormat: { backgroundColor: { red:0.133, green:0.133, blue:0.133 }, textFormat: { bold:true, foregroundColor:{ red:1, green:1, blue:1 } } } },
+            fields: 'userEnteredFormat(backgroundColor,textFormat)'
+          }}
+        ]})
+      });
+
+      const now = new Date().toLocaleString('tr-TR');
+      kfToast((isExisting ? 'Güncellendi' : 'Yedeklendi') + ' ✓  ' + forms.length + ' form · ' + (khRows.length - 1) + ' parametre  —  ' + now);
+      setTimeout(() => window.open('https://docs.google.com/spreadsheets/d/' + ssId, '_blank'), 600);
+    } catch (e) {
+      _kxDriveToken = null;
+      kfToast('Yedekleme hatası: ' + (e.message || e));
+      console.error('[KaliteX] Drive export:', e);
+    } finally {
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+    }
+  }
+
   function kfHEsc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function kfGetForms() { try { return JSON.parse(localStorage.getItem('kf_saved_forms')||'[]'); } catch(e) { return []; } }
   function kfSvForms(f) { localStorage.setItem('kf_saved_forms', JSON.stringify(f)); }
@@ -1807,7 +2185,8 @@
         model_label: entry.modelLabel || '',
         saved_at: entry.savedAt,
         updated_at: new Date().toISOString(),
-        data: entry.data
+        data: entry.data,
+        notes: entry.notes || {aksilikler:[],revizeler:[]}
       }, 'id');
     } catch(e) { console.warn('[KaliteX] kf_forms UPSERT hatası:', e.message||e); }
   }
@@ -1836,7 +2215,8 @@
           id: r.id, name: r.name,
           modelId: r.model_id, modelLabel: r.model_label,
           savedAt: r.saved_at, updatedAt: r.updated_at,
-          data: r.data
+          data: r.data,
+          notes: r.notes || {aksilikler:[],revizeler:[]}
         };
         const loc = merged[r.id];
         if (!loc) {
@@ -1875,6 +2255,14 @@
     const o = document.getElementById('kf-modal-overlay');
     if (o) o.style.display = 'none';
   }
+
+  // Escape ile not modalını kapat
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const no = document.getElementById('kf-notes-overlay');
+      if (no && no.style.display === 'flex') { kfNotesClose(); e.stopPropagation(); }
+    }
+  }, true);
 
   function kfSetSaveName(name) {
     const slbl = document.getElementById('kf-save-name');
@@ -1965,7 +2353,7 @@
     const id = (!forceNew && window.kfCurrentSaveId) ? window.kfCurrentSaveId : kfGenId();
     const idx = forms.findIndex(f => f.id === id);
     const now = new Date().toISOString();
-    const entry = { id, name, modelId: window.kfCurrentModel||'', modelLabel: window.kfCurrentModelLabel||'', savedAt: now, updatedAt: now, data: JSON.parse(JSON.stringify(window.kfData||[])) };
+    const entry = { id, name, modelId: window.kfCurrentModel||'', modelLabel: window.kfCurrentModelLabel||'', savedAt: now, updatedAt: now, data: JSON.parse(JSON.stringify(window.kfData||[])), notes: JSON.parse(JSON.stringify(window.kfNotes||{aksilikler:[],revizeler:[]})) };
     if (idx >= 0) { entry.savedAt = forms[idx].savedAt || now; forms[idx] = entry; } else forms.push(entry);
     kfSvForms(forms);
     window.kfCurrentSaveId = id; window.kfCurrentSaveName = name;
@@ -2038,6 +2426,7 @@
     window.kfCurrentSaveId = f.id; window.kfCurrentSaveName = f.name;
     window.kfCurrentModel = f.modelId; window.kfCurrentModelLabel = f.modelLabel;
     window.kfData = JSON.parse(JSON.stringify(f.data));
+    window.kfNotes = kfNotesNormalize(f.notes);
     const selLbl = document.getElementById('model-select-label');
     if (selLbl) selLbl.textContent = f.modelLabel || 'Model Seç';
     const slbl = document.getElementById('kf-save-name');
@@ -2045,6 +2434,7 @@
     const tbody = document.getElementById('kf-tbody');
     if (tbody && typeof window.kfBuildRows === 'function') tbody.innerHTML = window.kfBuildRows();
     kfModalClose();
+    kfNotesUpdateBadge();
     kfToast(f.name + ' y\u00fcklendi \u2713');
   }
 
