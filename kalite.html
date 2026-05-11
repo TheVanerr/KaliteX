@@ -2021,14 +2021,23 @@
     const btn = document.querySelector('[onclick="kxDriveBackup()"]');
     if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
     kfToast('Yedekleniyor…');
+
+    function kxSanitizeSheet(name) {
+      return String(name || 'Form').replace(/[\\\/\?\*\[\]\:]/g, '-').substring(0, 100).trim() || 'Form';
+    }
+    function kxSheetRange(title, cell) {
+      return "'" + title.replace(/'/g, "''") + "'!" + cell;
+    }
+
     try {
       const SS_NAME = 'KaliteX Yedek';
+      const H = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
 
       // 1. "KaliteX Database" klasörünü bul veya oluştur
       let folderId = null;
       const folderRes = await fetch(
         'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent("name='KaliteX Database' and mimeType='application/vnd.google-apps.folder' and trashed=false") + '&fields=files(id)',
-        { headers: { 'Authorization': 'Bearer ' + token } }
+        { headers: H }
       );
       if (folderRes.status === 401) { _kxDriveToken = null; _kxTokenClient = null; kfToast('Oturum süresi doldu, tekrar deneyin.'); return; }
       if (folderRes.ok) {
@@ -2037,8 +2046,7 @@
       }
       if (!folderId) {
         const fRes = await fetch('https://www.googleapis.com/drive/v3/files', {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          method: 'POST', headers: H,
           body: JSON.stringify({ name: 'KaliteX Database', mimeType: 'application/vnd.google-apps.folder' })
         });
         if (!fRes.ok) throw new Error('Klasör oluşturulamadı: ' + fRes.status);
@@ -2050,7 +2058,7 @@
       let isExisting = false;
       const ssSearchRes = await fetch(
         'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(`name='${SS_NAME}' and '${folderId}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`) + '&fields=files(id)',
-        { headers: { 'Authorization': 'Bearer ' + token } }
+        { headers: H }
       );
       if (ssSearchRes.ok) {
         const ssd = await ssSearchRes.json();
@@ -2058,137 +2066,136 @@
       }
 
       if (!isExisting) {
-        // 3a. Yeni spreadsheet oluştur
         const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          method: 'POST', headers: H,
           body: JSON.stringify({
             properties: { title: SS_NAME },
-            sheets: [
-              { properties: { title: 'Formlar',       index: 0 } },
-              { properties: { title: 'Kalite Havuzu', index: 1 } }
-            ]
+            sheets: [{ properties: { title: 'Kalite Havuzu', index: 0 } }]
           })
         });
         if (!createRes.ok) throw new Error('Spreadsheet oluşturulamadı: ' + createRes.status);
         ssId = (await createRes.json()).spreadsheetId;
-        // Klasöre taşı
         await fetch(`https://www.googleapis.com/drive/v3/files/${ssId}?addParents=${folderId}&removeParents=root&fields=id`, {
-          method: 'PATCH',
-          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({})
+          method: 'PATCH', headers: H, body: JSON.stringify({})
         });
       }
 
-      // 4. Spreadsheet metadata al — mevcut sheetleri öğren
-      const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}?fields=sheets.properties`, {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      if (!metaRes.ok) throw new Error('Metadata alınamadı: ' + metaRes.status);
-      let sheetProps = (await metaRes.json()).sheets.map(s => s.properties);
-
-      // Eksik sheetleri ekle
-      const existing = sheetProps.map(s => s.title);
-      const toAdd = [];
-      if (!existing.includes('Formlar'))       toAdd.push({ addSheet: { properties: { title: 'Formlar',       index: 0 } } });
-      if (!existing.includes('Kalite Havuzu')) toAdd.push({ addSheet: { properties: { title: 'Kalite Havuzu', index: 1 } } });
-      if (toAdd.length) {
-        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}:batchUpdate`, {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ requests: toAdd })
-        });
-        const m2 = await (await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}?fields=sheets.properties`, { headers: { 'Authorization': 'Bearer ' + token } })).json();
-        sheetProps = m2.sheets.map(s => s.properties);
-      }
-      const sheetIdFormlar = (sheetProps.find(s => s.title === 'Formlar')       || sheetProps[0]).sheetId;
-      const sheetIdKH      = (sheetProps.find(s => s.title === 'Kalite Havuzu') || sheetProps[1]).sheetId;
-
-      // 5. Mevcut ise önce temizle
-      if (isExisting) {
-        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}/values:batchClear`, {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ranges: ['Formlar', 'Kalite Havuzu'] })
-        });
-      }
-
-      // 6. Form verilerini hazırla
+      // 3. Formları çek
       let forms = kfGetForms();
       if (navigator.onLine) { const s = await kfSbSync(); if (s) forms = s; }
-      const formHeader = ['Form Adı', 'Model', 'Kaydedilme', 'Güncelleme', 'Aksilikler', 'Revize Önerileri', 'Parametre Kodu', 'Açıklama', 'Grup', 'Sonuç', 'Durum', 'Referans'];
-      const formRows = [formHeader];
-      if (!forms.length) {
-        formRows.push(['Kayıtlı form yok.', '', '', '', '', '', '', '', '', '', '', '']);
-      } else {
-        forms.forEach(f => {
-          const n = kfNotesNormalize(f.notes);
-          const aks = n.aksilikler.join(' | ');
-          const rev = n.revizeler.join(' | ');
-          const sd = f.savedAt ? new Date(f.savedAt).toLocaleString('tr-TR') : '';
-          const ud = f.updatedAt ? new Date(f.updatedAt).toLocaleString('tr-TR') : '';
-          const data = f.data || [];
-          if (!data.length) {
-            formRows.push([f.name, f.modelLabel || f.modelId || '', sd, ud, aks, rev, '', '', '', '', '', '']);
-          } else {
-            data.forEach((row, i) => {
-              formRows.push([
-                i === 0 ? f.name : '',
-                i === 0 ? (f.modelLabel || f.modelId || '') : '',
-                i === 0 ? sd : '',
-                i === 0 ? ud : '',
-                i === 0 ? aks : '',
-                i === 0 ? rev : '',
-                String(row[0] || ''), String(row[1] || ''), String(row[2] || ''),
-                String(row[3] || ''), String(row[4] || ''), String(row[5] || '')
-              ]);
-            });
-            formRows.push(['', '', '', '', '', '', '', '', '', '', '', '']);
-          }
+
+      // 4. Mevcut sheet metadata
+      let metaD = await (await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}?fields=sheets.properties`, { headers: H })).json();
+      let sheetProps = metaD.sheets.map(s => s.properties);
+      let existingTitles = sheetProps.map(s => s.title);
+
+      // 5. Eksik sheetleri ekle (Kalite Havuzu + her form)
+      const addReqs = [];
+      if (!existingTitles.includes('Kalite Havuzu')) {
+        addReqs.push({ addSheet: { properties: { title: 'Kalite Havuzu', index: 0 } } });
+      }
+      const formSheetNames = forms.map(f => kxSanitizeSheet(f.name));
+      // Aynı isimde sheet varsa ikinci kez ekleme
+      const addedNames = new Set(existingTitles);
+      forms.forEach((f, i) => {
+        const sn = formSheetNames[i];
+        if (!addedNames.has(sn)) { addReqs.push({ addSheet: { properties: { title: sn } } }); addedNames.add(sn); }
+      });
+      if (addReqs.length) {
+        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}:batchUpdate`, {
+          method: 'POST', headers: H, body: JSON.stringify({ requests: addReqs })
         });
+        metaD = await (await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}?fields=sheets.properties`, { headers: H })).json();
+        sheetProps = metaD.sheets.map(s => s.properties);
+        existingTitles = sheetProps.map(s => s.title);
       }
 
-      // 7. Kalite Havuzu matrisini hazırla (KH_FIXED sütunları + tüm model sütunları)
+      // 6. Temizle (hem Kalite Havuzu hem her form sheeti)
+      const clearRanges = ['Kalite Havuzu'];
+      formSheetNames.forEach(sn => clearRanges.push(kxSheetRange(sn, 'A1:Z500')));
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}/values:batchClear`, {
+        method: 'POST', headers: H, body: JSON.stringify({ ranges: clearRanges })
+      });
+
+      // 7. Her form için veri hazırla
+      const TABLE_HDR = ['Parametre Kodu', 'Açıklama', 'Grup', 'Sonuç', 'Durum', 'Referans'];
+      const dataWrites = [];
+      const formatReqs = [];
+
+      forms.forEach((f, fi) => {
+        const sn = formSheetNames[fi];
+        const n = kfNotesNormalize(f.notes);
+        const aks = n.aksilikler.join(' | ') || '—';
+        const rev = n.revizeler.join(' | ') || '—';
+        const sd = f.savedAt ? new Date(f.savedAt).toLocaleString('tr-TR') : '';
+        const ud = f.updatedAt ? new Date(f.updatedAt).toLocaleString('tr-TR') : '';
+
+        // Üst bilgi satırları (1-6) + boş satır (7) + tablo başlığı (8) + veri (9+)
+        const sheetRows = [
+          ['Form Adı',         f.name || ''],
+          ['Model',            f.modelLabel || f.modelId || ''],
+          ['Kaydedilme',       sd],
+          ['Güncelleme',       ud],
+          ['Aksilikler',       aks],
+          ['Revize Önerileri', rev],
+          [],
+          TABLE_HDR,
+          ...(f.data || []).map(row => [
+            String(row[0]||''), String(row[1]||''), String(row[2]||''),
+            String(row[3]||''), String(row[4]||''), String(row[5]||'')
+          ])
+        ];
+        dataWrites.push({ range: kxSheetRange(sn, 'A1'), values: sheetRows });
+
+        const shId = (sheetProps.find(s => s.title === sn) || {}).sheetId;
+        if (shId !== undefined) {
+          // Bilgi etiketleri (A1:A6) kalın
+          formatReqs.push({ repeatCell: {
+            range: { sheetId: shId, startRowIndex: 0, endRowIndex: 6, startColumnIndex: 0, endColumnIndex: 1 },
+            cell: { userEnteredFormat: { textFormat: { bold: true } } },
+            fields: 'userEnteredFormat(textFormat)'
+          }});
+          // Tablo başlığı satırı (index 7 = 8. satır)
+          formatReqs.push({ repeatCell: {
+            range: { sheetId: shId, startRowIndex: 7, endRowIndex: 8, startColumnIndex: 0, endColumnIndex: 6 },
+            cell: { userEnteredFormat: { backgroundColor: { red:0.133, green:0.133, blue:0.133 }, textFormat: { bold:true, foregroundColor:{ red:1, green:1, blue:1 } } } },
+            fields: 'userEnteredFormat(backgroundColor,textFormat)'
+          }});
+        }
+      });
+
+      // 8. Kalite Havuzu
       const khHeader = [...KH_FIXED, ...KH_MODELS.map(m => m.label)];
       const khRows = [khHeader];
       for (let ri = 0; ri < KH.TOTAL_ROWS; ri++) {
         const fixed = KH.paramData[ri] || new Array(KH_FIXED.length).fill('');
-        if (!fixed[0]) continue; // KOD boşsa satırı atla
-        const modelVals = KH_MODELS.map(m => khMVal(m.id, ri));
-        khRows.push([...fixed, ...modelVals]);
+        if (!fixed[0]) continue;
+        khRows.push([...fixed, ...KH_MODELS.map(m => khMVal(m.id, ri))]);
+      }
+      dataWrites.push({ range: 'Kalite Havuzu!A1', values: khRows });
+      const khShId = (sheetProps.find(s => s.title === 'Kalite Havuzu') || {}).sheetId;
+      if (khShId !== undefined) {
+        formatReqs.push({ repeatCell: {
+          range: { sheetId: khShId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: khHeader.length },
+          cell: { userEnteredFormat: { backgroundColor: { red:0.133, green:0.133, blue:0.133 }, textFormat: { bold:true, foregroundColor:{ red:1, green:1, blue:1 } } } },
+          fields: 'userEnteredFormat(backgroundColor,textFormat)'
+        }});
       }
 
-      // 8. Verileri toplu yaz
+      // 9. Yaz
       const valRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}/values:batchUpdate`, {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          valueInputOption: 'RAW',
-          data: [
-            { range: 'Formlar!A1',       values: formRows },
-            { range: 'Kalite Havuzu!A1', values: khRows  }
-          ]
-        })
+        method: 'POST', headers: H,
+        body: JSON.stringify({ valueInputOption: 'RAW', data: dataWrites })
       });
       if (!valRes.ok) throw new Error('Veri yazılamadı: ' + valRes.status);
 
-      // 9. Başlık formatlaması
-      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}:batchUpdate`, {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requests: [
-          { repeatCell: {
-            range: { sheetId: sheetIdFormlar, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: formHeader.length },
-            cell: { userEnteredFormat: { backgroundColor: { red:0.133, green:0.133, blue:0.133 }, textFormat: { bold:true, foregroundColor:{ red:1, green:1, blue:1 } } } },
-            fields: 'userEnteredFormat(backgroundColor,textFormat)'
-          }},
-          { repeatCell: {
-            range: { sheetId: sheetIdKH, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: khHeader.length },
-            cell: { userEnteredFormat: { backgroundColor: { red:0.133, green:0.133, blue:0.133 }, textFormat: { bold:true, foregroundColor:{ red:1, green:1, blue:1 } } } },
-            fields: 'userEnteredFormat(backgroundColor,textFormat)'
-          }}
-        ]})
-      });
+      // 10. Formatla
+      if (formatReqs.length) {
+        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}:batchUpdate`, {
+          method: 'POST', headers: H,
+          body: JSON.stringify({ requests: formatReqs })
+        });
+      }
 
       const now = new Date().toLocaleString('tr-TR');
       kfToast((isExisting ? 'Güncellendi' : 'Yedeklendi') + ' ✓  ' + forms.length + ' form · ' + (khRows.length - 1) + ' parametre  —  ' + now);
@@ -2448,7 +2455,7 @@
           const dt = new Date(f.savedAt);
           const ds = dt.toLocaleDateString('tr-TR') + ' ' + dt.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
           const syncIcon = f.updatedAt ? '🌐' : '📴';
-          items += `<div class="kfm-item" onclick="kfDoLoad('${f.id}')"><div class="kfm-item-info"><div class="kfm-item-name">${kfHEsc(f.name)}</div><div class="kfm-item-meta">${syncIcon} ${ds}</div></div><button class="kfm-del" onclick="event.stopPropagation();kfDeleteForm('${f.id}')">Sil</button></div>`;
+          items += `<div class="kfm-item" onclick="kfDoLoad('${f.id}')"><div class="kfm-item-info"><div class="kfm-item-name">${kfHEsc(f.name)}</div><div class="kfm-item-meta">${syncIcon} ${ds}</div></div><button class="kfm-del" onclick="event.stopPropagation();kfConfirmDelete('${f.id}')">Sil</button></div>`;
         });
         list += `<div class="kfm-group">
           <div class="kfm-group-hdr" onclick="(function(el){var b=el.nextElementSibling;var c=el.querySelector('.kfm-group-chevron');var open=b.style.display!=='none';b.style.display=open?'none':'flex';c.style.transform=open?'rotate(-90deg)':'rotate(0deg)';})(this)">
@@ -2493,6 +2500,47 @@
     // Supabase'den de sil (arka planda)
     if (navigator.onLine) kfSbDeleteForm(id).catch(() => {});
     kfShowLoadModal();
+  }
+
+  function kfConfirmDelete(id) {
+    const forms = kfGetForms();
+    const f = forms.find(x => x.id === id);
+    if (!f) return;
+    const overlay = document.getElementById('kf-modal-overlay');
+    const box = document.getElementById('kf-modal-box');
+    if (!overlay || !box) return;
+    box.innerHTML = `
+      <div class="kfm-title" style="color:#dc2626;">&#128465;&#65039; Formu Sil</div>
+      <div style="padding:12px 0 8px;font-size:13px;color:#374151;text-align:center;line-height:1.6;">
+        <strong style="display:block;word-break:break-all;color:#1f2937;font-size:14px;background:#f3f4f6;border-radius:6px;padding:8px 12px;margin-bottom:12px;">${kfHEsc(f.name)}</strong>
+        Bu formu <strong>kalıcı olarak silmek</strong> için adını tam olarak yazın:
+      </div>
+      <input id="kf-del-inp"
+        data-expected="${kfHEsc(f.name)}"
+        type="text" autocomplete="off"
+        placeholder="${kfHEsc(f.name)}"
+        oninput="kfDelCheck()"
+        style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #fecaca;border-radius:8px;font-size:13px;font-family:inherit;outline:none;color:#1f2937;background:#fff;display:block;margin-bottom:16px;">
+      <div class="kfm-btns" style="gap:8px;">
+        <button class="kfm-cancel" onclick="kfShowLoadModal()">&#8592; Geri</button>
+        <button id="kf-del-btn" disabled
+          onclick="kfDeleteForm('${id}')"
+          style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:not-allowed;opacity:0.35;transition:opacity 0.2s;font-family:inherit;">
+          &#128465;&#65039; Kalıcı Sil
+        </button>
+      </div>`;
+    overlay.style.display = 'flex';
+    setTimeout(() => { const i = document.getElementById('kf-del-inp'); if (i) i.focus(); }, 50);
+  }
+
+  function kfDelCheck() {
+    const inp = document.getElementById('kf-del-inp');
+    const btn = document.getElementById('kf-del-btn');
+    if (!inp || !btn) return;
+    const ok = inp.value === inp.dataset.expected;
+    btn.disabled = !ok;
+    btn.style.opacity = ok ? '1' : '0.35';
+    btn.style.cursor = ok ? 'pointer' : 'not-allowed';
   }
 
   // ── Online olunca otomatik form sync ──────────────────────────────────────
