@@ -149,7 +149,7 @@
         <button onclick="khImportCSV()" class="kfhb kfhb-org kh-editor-only" title="CSV Yükle"><i data-lucide="folder-open" class="w-4 h-4"></i><span class="kfhb-lbl">CSV Yükle</span></button>
         <button onclick="khAddRow()" class="kfhb kfhb-grn kh-editor-only" title="Satır Ekle"><i data-lucide="plus" class="w-4 h-4"></i><span class="kfhb-lbl">Satır Ekle</span></button>
         <button onclick="khForceReload()" class="kfhb kfhb-pur" title="Supabase'den Yenile"><i data-lucide="refresh-cw" class="w-4 h-4"></i><span class="kfhb-lbl">Yenile</span></button>
-        <button onclick="kxDriveBackup()" class="kfhb" title="Google Drive'a Yedekle" style="background:#fff;color:#374151;border:1.5px solid #e5e7eb;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M6.28 19l-4.03-6.97L5.66 7h12.68l3.41 5.03L17.72 19H6.28z" fill="#4285F4"/><path d="M15.73 19l3.41-5.97H5.66L2.25 19h13.48z" fill="#0F9D58"/><path d="M5.66 7l4.03 6.97h4.62L18.34 7H5.66z" fill="#FBBC05"/></svg><span class="kfhb-lbl">Yedekle</span></button>
+        <button onclick="kxDriveBackup()" class="kfhb kh-editor-only" title="Google Drive'a Yedekle" style="background:#fff;color:#374151;border:1.5px solid #e5e7eb;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M6.28 19l-4.03-6.97L5.66 7h12.68l3.41 5.03L17.72 19H6.28z" fill="#4285F4"/><path d="M15.73 19l3.41-5.97H5.66L2.25 19h13.48z" fill="#0F9D58"/><path d="M5.66 7l4.03 6.97h4.62L18.34 7H5.66z" fill="#FBBC05"/></svg><span class="kfhb-lbl">Yedekle</span></button>
         <span id="kh-sync-st" style="font-size:11px;font-weight:700;padding:0 4px;"></span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
@@ -1619,16 +1619,19 @@
   function handleFormAction(action) {
     switch(action) {
       case 'save':
+        if (!isEditor()) { kfToast('Salt okunur modda kayıt yapılamaz.'); return; }
         if (window.kfCurrentSaveId) kfDoSave(window.kfCurrentSaveName, false);
         else kfShowSaveModal(false);
         break;
       case 'save-as':
+        if (!isEditor()) { kfToast('Salt okunur modda kayıt yapılamaz.'); return; }
         kfShowSaveModal(true);
         break;
       case 'load':
         kfShowLoadModal();
         break;
       case 'notes':
+        if (!isEditor()) { kfToast('Salt okunur modda not eklenemez.'); return; }
         kfShowNotesModal();
         break;
     }
@@ -1970,6 +1973,7 @@
   }
 
   function kfShowNotesModal() {
+    if (!isEditor()) { kfToast('Salt okunur modda not eklenemez.'); return; }
     const overlay = document.getElementById('kf-notes-overlay');
     if (!overlay) return;
     _kfnw = kfNotesNormalize(window.kfNotes);
@@ -2300,8 +2304,18 @@
     const slbl = document.getElementById('kf-save-name');
     if (!slbl) return;
     const short = name.split('-')[0].trim();
-    slbl.innerHTML = `<span class="kfsn-full">💾 ${kfHEsc(name)}</span><span class="kfsn-short">💾 ${kfHEsc(short)}</span>`;
+    const editHint = isEditor() ? ' title="Çift tıkla: adı düzenle" style="cursor:pointer;"' : '';
+    const dblclick = isEditor() ? ' ondblclick="kfRenameForm()"' : '';
+    slbl.innerHTML = `<span class="kfsn-full"${editHint}${dblclick}>💾 ${kfHEsc(name)}</span><span class="kfsn-short"${editHint}${dblclick}>💾 ${kfHEsc(short)}</span>`;
     slbl.style.display = 'inline-flex';
+  }
+
+  function kfRenameForm() {
+    if (!isEditor() || !window.kfCurrentSaveId) return;
+    // Mevcut adı önceden doldur, "farklı kaydet" modunu kapat → sadece adı günceller
+    window._fnkbForceNew = false;
+    _fnkb.val = window.kfCurrentSaveName || '';
+    kfShowSaveModal(false);
   }
 
   // ── Form Adı Özel Klavye ───────────────────────────────────────────────
@@ -2388,6 +2402,7 @@
   }
 
   function kfDoSave(name, forceNew) {
+    if (!isEditor()) { kfToast('Salt okunur modda kayıt yapılamaz.'); return; }
     name = (name || '').trim();
     if (!name) { const i = document.getElementById('kfm-name-inp'); if (i) { i.style.borderColor='#dc2626'; i.focus(); } return; }
     const forms = kfGetForms();
@@ -2480,6 +2495,7 @@
   }
 
   async function kfDeleteForm(id) {
+    if (!isEditor()) { kfToast('Salt okunur modda silinemez.'); return; }
     let forms = kfGetForms();
     forms = forms.filter(f => f.id !== id);
     kfSvForms(forms);
@@ -2494,6 +2510,7 @@
   }
 
   function kfConfirmDelete(id) {
+    if (!isEditor()) { kfToast('Salt okunur modda silinemez.'); return; }
     const forms = kfGetForms();
     const f = forms.find(x => x.id === id);
     if (!f) return;
