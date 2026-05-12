@@ -2022,64 +2022,58 @@
     if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
     kfToast('Yedekleniyor…');
 
-    // Tek bir dosya: bul-veya-oluştur, veri yaz, formatla, sütun genişliklerini ayarla
-    async function kxWriteSpreadsheet(H, folderId, title, sheetTitle, rows, headerRowIndex, nCols, infoLabelCols) {
-      // 1. Klasörde bu isimde dosya var mı?
-      const q = encodeURIComponent(`name='${title.replace(/'/g,"\\'")}' and '${folderId}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`);
-      const sr = await fetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id)', { headers: H });
-      let ssId = null;
-      if (sr.ok) { const sd = await sr.json(); if (sd.files && sd.files.length) ssId = sd.files[0].id; }
+    // ── Yardımcı: localStorage yedek logu ─────────────────────────────────
+    // log[formId] = { updatedAt, fileId }   log['__KH__'] = { hash, fileId }
+    function kxLoadLog() { try { return JSON.parse(localStorage.getItem('kx_backup_log')||'{}'); } catch(e) { return {}; } }
+    function kxSaveLog(l) { localStorage.setItem('kx_backup_log', JSON.stringify(l)); }
 
-      if (!ssId) {
-        // Yeni oluştur
-        const cr = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
-          method: 'POST', headers: H,
-          body: JSON.stringify({ properties: { title }, sheets: [{ properties: { title: sheetTitle, index: 0 } }] })
-        });
-        if (!cr.ok) throw new Error('Dosya oluşturulamadı: ' + cr.status + ' — ' + title);
-        ssId = (await cr.json()).spreadsheetId;
-        await fetch(`https://www.googleapis.com/drive/v3/files/${ssId}?addParents=${folderId}&removeParents=root&fields=id`, {
-          method: 'PATCH', headers: H, body: JSON.stringify({})
-        });
-      } else {
-        // Temizle
-        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}/values:batchClear`, {
-          method: 'POST', headers: H, body: JSON.stringify({ ranges: [sheetTitle] })
-        });
-      }
+    // Basit string hash — KH değişiklik tespiti için
+    function kxHash(str) {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+      return h.toString(36);
+    }
 
-      // 2. Veri yaz
+    // Yeni Sheets dosyası oluştur klasör içinde
+    async function kxCreate(H, folderId, title, sheetTitle) {
+      const cr = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+        method: 'POST', headers: H,
+        body: JSON.stringify({ properties: { title }, sheets: [{ properties: { title: sheetTitle, index: 0 } }] })
+      });
+      if (!cr.ok) throw new Error('Oluşturulamadı: ' + cr.status + ' — ' + title);
+      const ssId = (await cr.json()).spreadsheetId;
+      await fetch(`https://www.googleapis.com/drive/v3/files/${ssId}?addParents=${folderId}&removeParents=root&fields=id`, {
+        method: 'PATCH', headers: H, body: JSON.stringify({})
+      });
+      return ssId;
+    }
+
+    // Mevcut dosyaya veri yaz + formatla
+    async function kxWrite(H, ssId, sheetTitle, rows, headerRowIndex, nCols, infoLabelCols) {
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}/values:batchClear`, {
+        method: 'POST', headers: H, body: JSON.stringify({ ranges: [sheetTitle] })
+      });
       const wRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}/values/${encodeURIComponent(sheetTitle + '!A1')}?valueInputOption=RAW`, {
         method: 'PUT', headers: H, body: JSON.stringify({ values: rows })
       });
-      if (!wRes.ok) throw new Error('Veri yazılamadı: ' + wRes.status + ' — ' + title);
-
-      // 3. Format + auto-resize
+      if (!wRes.ok) throw new Error('Yazılamadı: ' + wRes.status);
       const requests = [];
-      // Koyu başlık satırı
       requests.push({ repeatCell: {
-        range: { sheetId: 0, startRowIndex: headerRowIndex, endRowIndex: headerRowIndex + 1, startColumnIndex: 0, endColumnIndex: nCols },
-        cell: { userEnteredFormat: { backgroundColor: { red:0.133, green:0.133, blue:0.133 }, textFormat: { bold:true, foregroundColor:{ red:1, green:1, blue:1 } } } },
+        range: { sheetId:0, startRowIndex:headerRowIndex, endRowIndex:headerRowIndex+1, startColumnIndex:0, endColumnIndex:nCols },
+        cell: { userEnteredFormat: { backgroundColor:{red:0.133,green:0.133,blue:0.133}, textFormat:{bold:true,foregroundColor:{red:1,green:1,blue:1}} } },
         fields: 'userEnteredFormat(backgroundColor,textFormat)'
       }});
-      // Bilgi etiketi sütunu kalın (sol sütun, ilk birkaç satır)
       if (infoLabelCols > 0) {
         requests.push({ repeatCell: {
-          range: { sheetId: 0, startRowIndex: 0, endRowIndex: headerRowIndex - 1, startColumnIndex: 0, endColumnIndex: 1 },
-          cell: { userEnteredFormat: { textFormat: { bold: true } } },
+          range: { sheetId:0, startRowIndex:0, endRowIndex:headerRowIndex-1, startColumnIndex:0, endColumnIndex:1 },
+          cell: { userEnteredFormat: { textFormat:{bold:true} } },
           fields: 'userEnteredFormat(textFormat)'
         }});
       }
-      // Sütun genişliklerini içeriğe göre otomatik ayarla
-      requests.push({ autoResizeDimensions: {
-        dimensions: { sheetId: 0, dimension: 'COLUMNS', startIndex: 0, endIndex: nCols }
-      }});
-
+      requests.push({ autoResizeDimensions: { dimensions:{sheetId:0, dimension:'COLUMNS', startIndex:0, endIndex:nCols} } });
       await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ssId}:batchUpdate`, {
         method: 'POST', headers: H, body: JSON.stringify({ requests })
       });
-
-      return ssId;
     }
 
     try {
@@ -2092,10 +2086,7 @@
         { headers: H }
       );
       if (folderRes.status === 401) { _kxDriveToken = null; _kxTokenClient = null; kfToast('Oturum süresi doldu, tekrar deneyin.'); return; }
-      if (folderRes.ok) {
-        const fd = await folderRes.json();
-        if (fd.files && fd.files.length > 0) folderId = fd.files[0].id;
-      }
+      if (folderRes.ok) { const fd = await folderRes.json(); if (fd.files && fd.files.length) folderId = fd.files[0].id; }
       if (!folderId) {
         const fRes = await fetch('https://www.googleapis.com/drive/v3/files', {
           method: 'POST', headers: H,
@@ -2105,28 +2096,40 @@
         folderId = (await fRes.json()).id;
       }
 
-      // 2. Formları çek
+      // 2. Klasördeki tüm Sheets dosyalarını TEK çağrıda al — varlık kontrolü için
+      const allFilesRes = await fetch(
+        'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(`'${folderId}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`) + '&fields=files(id)&pageSize=1000',
+        { headers: H }
+      );
+      const existingIds = new Set();
+      if (allFilesRes.ok) { const afd = await allFilesRes.json(); (afd.files||[]).forEach(f => existingIds.add(f.id)); }
+
+      // 3. Yedek logu yükle
+      const log = kxLoadLog();
+
+      // 4. Formları çek
       let forms = kfGetForms();
       if (navigator.onLine) { const s = await kfSbSync(); if (s) forms = s; }
 
       const TABLE_HDR = ['Parametre Kodu', 'Açıklama', 'Grup', 'Sonuç', 'Durum', 'Referans'];
+      let written = 0, skipped = 0, lastSsId = null;
 
-      // 3. Her form için ayrı Sheets dosyası oluştur / güncelle
-      let lastSsId = null;
+      // 5. Her form: değişmediyse ve Drive dosyası hâlâ varsa atla
       for (const f of forms) {
+        const lk = log[f.id];
+        const fileOk = lk?.fileId && existingIds.has(lk.fileId);
+        const stamp = f.updatedAt || f.savedAt || '';
+        if (fileOk && lk.updatedAt === stamp) { skipped++; lastSsId = lastSsId || lk.fileId; continue; }
+
         const title = String(f.name || 'Form').replace(/[\\\/\?\*\[\]\:]/g, '-').trim().substring(0, 100) || 'Form';
         const n = kfNotesNormalize(f.notes);
-        const aks = n.aksilikler.join(' | ') || '—';
-        const rev = n.revizeler.join(' | ') || '—';
-        const sd = f.savedAt ? new Date(f.savedAt).toLocaleString('tr-TR') : '';
-        const ud = f.updatedAt ? new Date(f.updatedAt).toLocaleString('tr-TR') : '';
         const rows = [
           ['Form Adı',         f.name || ''],
           ['Model',            f.modelLabel || f.modelId || ''],
-          ['Kaydedilme',       sd],
-          ['Güncelleme',       ud],
-          ['Aksilikler',       aks],
-          ['Revize Önerileri', rev],
+          ['Kaydedilme',       f.savedAt ? new Date(f.savedAt).toLocaleString('tr-TR') : ''],
+          ['Güncelleme',       f.updatedAt ? new Date(f.updatedAt).toLocaleString('tr-TR') : ''],
+          ['Aksilikler',       n.aksilikler.join(' | ') || '—'],
+          ['Revize Önerileri', n.revizeler.join(' | ') || '—'],
           [],
           TABLE_HDR,
           ...(f.data || []).map(row => [
@@ -2134,10 +2137,15 @@
             String(row[3]||''), String(row[4]||''), String(row[5]||'')
           ])
         ];
-        lastSsId = await kxWriteSpreadsheet(H, folderId, title, 'Veri', rows, 7, 6, 1);
+
+        const ssId = fileOk ? lk.fileId : await kxCreate(H, folderId, title, 'Veri');
+        await kxWrite(H, ssId, 'Veri', rows, 7, 6, 1);
+        log[f.id] = { updatedAt: stamp, fileId: ssId };
+        lastSsId = ssId;
+        written++;
       }
 
-      // 4. Kalite Havuzu — ayrı Sheets dosyası
+      // 6. Kalite Havuzu — hash değişmediyse ve dosya varsa atla
       const khHeader = [...KH_FIXED, ...KH_MODELS.map(m => m.label)];
       const khRows = [khHeader];
       for (let ri = 0; ri < KH.TOTAL_ROWS; ri++) {
@@ -2145,10 +2153,23 @@
         if (!fixed[0]) continue;
         khRows.push([...fixed, ...KH_MODELS.map(m => khMVal(m.id, ri))]);
       }
-      await kxWriteSpreadsheet(H, folderId, 'Kalite Havuzu', 'Parametreler', khRows, 0, khHeader.length, 0);
+      const khHash = kxHash(khRows.flat().join('|'));
+      const khLog = log['__KH__'];
+      const khOk = khLog?.fileId && existingIds.has(khLog.fileId);
+      if (!khOk || khLog.hash !== khHash) {
+        const khSsId = khOk ? khLog.fileId : await kxCreate(H, folderId, 'Kalite Havuzu', 'Parametreler');
+        await kxWrite(H, khSsId, 'Parametreler', khRows, 0, khHeader.length, 0);
+        log['__KH__'] = { hash: khHash, fileId: khSsId };
+      }
+
+      // 7. Logu kaydet
+      kxSaveLog(log);
 
       const now = new Date().toLocaleString('tr-TR');
-      kfToast('Yedeklendi ✓  ' + forms.length + ' form · ' + (khRows.length - 1) + ' parametre  —  ' + now);
+      const msg = written
+        ? ('✓ ' + written + ' yeni/güncellendi' + (skipped ? ' · ' + skipped + ' atlandı' : '') + '  —  ' + now)
+        : ('✓ Tüm veriler güncel, değişiklik yok  —  ' + now);
+      kfToast(msg);
       if (lastSsId) setTimeout(() => window.open('https://docs.google.com/spreadsheets/d/' + lastSsId, '_blank'), 600);
     } catch (e) {
       _kxDriveToken = null;
