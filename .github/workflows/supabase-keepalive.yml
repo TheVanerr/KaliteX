@@ -6,11 +6,17 @@ on:
     - cron: '0 0,6,12,18 * * *'
   workflow_dispatch: # Manuel tetikleme için
 
+permissions:
+  contents: write
+
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Supabase'e ping at
         run: |
@@ -26,9 +32,22 @@ jobs:
             exit 1
           fi
 
-      - name: Workflow'u canlı tut (60 gün sınırını sıfırla)
+      - name: Workflow'u gerekirse canlı tut
+        env:
+          KEEPALIVE_THRESHOLD_DAYS: '55'
         run: |
+          latest_commit_ts=$(git log -1 --format=%ct)
+          now_ts=$(date +%s)
+          age_days=$(( (now_ts - latest_commit_ts) / 86400 ))
+
+          echo "Latest commit age: ${age_days} days"
+
+          if [ "$age_days" -lt "$KEEPALIVE_THRESHOLD_DAYS" ]; then
+            echo "Repository activity is recent enough. No keep-alive commit needed."
+            exit 0
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit --allow-empty -m "chore: keep-alive ping [skip ci]"
-          git push
+          git push origin HEAD:${{ github.event.repository.default_branch }}
