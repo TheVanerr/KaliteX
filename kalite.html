@@ -2251,8 +2251,7 @@
         model_label: entry.modelLabel || '',
         saved_at: entry.savedAt,
         updated_at: new Date().toISOString(),
-        data: entry.data,
-        notes: entry.notes || {aksilikler:[],revizeler:[]}
+        data: entry.data
       }, 'id');
       return true;
     } catch(e) { console.warn('[KaliteX] kf_forms UPSERT hatası:', e.message||e); }
