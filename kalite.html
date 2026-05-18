@@ -154,7 +154,7 @@
         <span id="kh-sync-st" style="font-size:11px;font-weight:700;padding:0 4px;"></span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <button onclick="location.reload()" title="Uygulamayı Yenile" style="padding:6px 10px;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;color:#6b7280;font-size:18px;cursor:pointer;line-height:1;touch-action:manipulation;" onmouseenter="this.style.background='#f3f4f6'" onmouseleave="this.style.background='#f9fafb'">⟳</button>
+        <button onclick="hardRefreshApp()" title="Uygulamayı Yenile (Hard)" style="padding:6px 10px;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;color:#6b7280;font-size:18px;cursor:pointer;line-height:1;touch-action:manipulation;" onmouseenter="this.style.background='#f3f4f6'" onmouseleave="this.style.background='#f9fafb'">⟳</button>
         <div id="auth-ui" class="flex items-center gap-3"></div>
       </div>
     </header><!-- Page Content -->
@@ -2625,6 +2625,37 @@
   function applyConfig(config) {
     document.getElementById('brand-title').textContent = config.brand_title || defaultConfig.brand_title;
     document.getElementById('brand-subtitle').textContent = config.brand_subtitle || defaultConfig.brand_subtitle;
+  }
+
+  async function hardRefreshApp() {
+    try {
+      if (typeof _kfSavingToCloud !== 'undefined' && _kfSavingToCloud) {
+        kfToast('Supabase yazimi suruyor, lutfen tamamlanmasini bekleyin.');
+        return;
+      }
+      if (typeof _khSyncing !== 'undefined' && _khSyncing) {
+        khToast('Bulut senkronu suruyor, lutfen bekleyin.', 1800);
+        return;
+      }
+
+      if (typeof khToast === 'function') khToast('Onbellek temizleniyor, sayfa yenileniyor...');
+
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+    } catch(e) {
+      console.warn('[KaliteX] Hard refresh hazirlik hatasi:', e);
+    } finally {
+      const u = new URL(window.location.href);
+      u.searchParams.set('hr', Date.now().toString());
+      window.location.replace(u.toString());
+    }
   }
 
   applyConfig(defaultConfig);
