@@ -356,9 +356,10 @@
     } catch(e) { return null; }
   }
   // localStorage'daki son başarılı sync zaman damgasını oku/yaz
+  // ts: sunucudan gelen updated_at değeri — verilmezse cihaz saati kullanılır
   const KH_SYNC_AT_KEY = 'kh_last_sync_at';
   function khGetLastSyncAt() { return localStorage.getItem(KH_SYNC_AT_KEY) || null; }
-  function khSetLastSyncAt() { localStorage.setItem(KH_SYNC_AT_KEY, new Date().toISOString()); }
+  function khSetLastSyncAt(ts) { localStorage.setItem(KH_SYNC_AT_KEY, ts || new Date().toISOString()); }
 
   const KH_PENDING_UPLOAD_KEY = 'dataX_pending_upload';
   function khHasPendingUpload() {
@@ -386,8 +387,8 @@
       const localTs  = khGetLastSyncAt();
 
       if (serverTs) {
-        // updated_at sütunu var — zaman karşılaştırması yap
-        if (localTs && serverTs <= localTs) return false; // Güncel
+        // Date nesnesiyle karşılaştır — string karşılaştırması +00:00 / Z farkında hatalı sonuç üretebilir
+        if (localTs && new Date(serverTs) <= new Date(localTs)) return false; // Güncel
       } else {
         // updated_at sütunu henüz yok — 30 saniye cooldown ile çek
         const now = Date.now();
@@ -399,7 +400,7 @@
       khSyncStatus('syncing');
       await khLoadFromSupabase();
       khSaveLocal();
-      khSetLastSyncAt();
+      khSetLastSyncAt(serverTs); // Sunucu zaman damgasını kaydet (cihaz saati değil)
       khSyncStatus('ok');
 
       const isModelPage = KH_MODELS.some(m => m.id === currentPage);
@@ -456,9 +457,9 @@
           const serverTs = await khGetServerLastUpdated();
           const localTs  = khGetLastSyncAt();
           console.log(`[KaliteX] Zaman: local=${localTs}, sunucu=${serverTs}`);
-          const shouldReload = !localTs                         // hiç sync olmadı
-                            || (serverTs && serverTs > localTs) // sunucuda yeni veri var
-                            || !serverTs;                       // updated_at sütunu yok → her açılışta Supabase'den çek
+          const shouldReload = !localTs                              // hiç sync olmadı
+                            || (serverTs && new Date(serverTs) > new Date(localTs)) // sunucuda yeni veri var
+                            || !serverTs;                            // updated_at sütunu yok → her açılışta Supabase'den çek
           if (shouldReload) {
             console.log('[KaliteX] Supabase\'den yükleniyor...');
             khSyncStatus('syncing');
@@ -468,7 +469,7 @@
             await khLoadFromSupabase();
             if (KH.paramData.some(r => r[0])) {
               khSaveLocal();
-              khSetLastSyncAt();
+              khSetLastSyncAt(serverTs); // Sunucu zaman damgasını kaydet (cihaz saati değil)
               khSyncStatus('ok');
               return;
             }
@@ -503,6 +504,11 @@
   }
 
   async function khLoadFromSupabase() {
+    // Önce belleği temizle — eski / fazla satırlar kalmasın
+    KH.paramData = [];
+    for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
+    KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
+
     const [params, atamaList] = await Promise.all([
       sbGetAll('kalite_parametreleri', 'order=id.asc'),
       sbGetAll('model_atama', 'select=model_id,parametre_kod&order=model_id,parametre_kod')
