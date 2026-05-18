@@ -563,19 +563,19 @@
       }
       // 300+ satırda silme işlemi URL limiti nedeniyle yapılmaz, eklenmiş satırlar güvende
 
-      // ── ADIM 3: Model atamalarını UPSERT et ──────────────────────────────────
-      for (let i = 0; i < atamaRows.length; i += 200)
-        await sbUpsert('model_atama', atamaRows.slice(i, i + 200), 'model_id,parametre_kod');
-
-      // ── ADIM 4: Her model için kaldırılmış X işaretlerini temizle ────────────
+      // ── ADIM 3: Her model için atmaları sıfırla ve yeniden ekle ─────────────
+      // UPSERT yerine DELETE+INSERT: DB'de kalmış duplicate satırlardan kaynaklanan
+      // "ON CONFLICT DO UPDATE cannot affect row a second time" hatasını önler
       for (const [mid, aktifKodlar] of Object.entries(atamaByModel)) {
-        if (aktifKodlar.length > 0)
-          await sbDel('model_atama', 'model_id=eq.' + mid + '&parametre_kod=not.in.(' + aktifKodlar.join(',') + ')');
-        else
-          await sbDel('model_atama', 'model_id=eq.' + mid);
+        await sbDel('model_atama', 'model_id=eq.' + mid);
+        if (aktifKodlar.length > 0) {
+          const rows = aktifKodlar.map(kod => ({ model_id: mid, parametre_kod: kod }));
+          for (let i = 0; i < rows.length; i += 200)
+            await sbPost('model_atama', rows.slice(i, i + 200));
+        }
       }
 
-      // ── ADIM 5: Zaman damgası ve local kayıt ────────────────────────────────
+      // ── ADIM 4: Zaman damgası ve local kayıt ────────────────────────────────
       khSetLastSyncAt();
       khSetPendingUpload(false);
       khSaveLocal();
@@ -805,6 +805,7 @@
 
   // ── Header ───────────────────────────────────────────────────
   function khBuildHeader() {
+    if (!document.getElementById('kh-thead')) return; // Sayfa henüz render edilmedi
     const ss = KH.sortState;
     // Fixed column min-widths (px) so label fits single line
     const fixedW = [80, 100, 90, 85, 270, 70, 90]; // KOD,ALAN TÜRÜ,UZUNLUK,DESİMAL,AÇIKLAMA,GRUP,GRUP KODU
