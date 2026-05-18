@@ -528,8 +528,9 @@
     khSyncStatus('syncing');
 
     // Snapshot al — sync sırasında bellek değişmez
+    const _syncNow = new Date().toISOString();
     const params = KH.paramData.filter(r => r[0]).map(r => ({
-      kod: r[0], alan_turu: r[1]||'', uzunluk: r[2]||'', desimal: r[3]||'', aciklama: r[4]||'', grup: r[5]||'', grup_kodu: r[6]||''
+      kod: r[0], alan_turu: r[1]||'', uzunluk: r[2]||'', desimal: r[3]||'', aciklama: r[4]||'', grup: r[5]||'', grup_kodu: r[6]||'', updated_at: _syncNow
     }));
     const localKodlar = params.map(p => p.kod);
     const atamaRows = [];
@@ -2327,14 +2328,17 @@
           // updated_at daha yeni olanı al
           const sbTime = new Date(r.updated_at || r.saved_at).getTime();
           const locTime = new Date(loc.updatedAt || loc.savedAt).getTime();
-          if (sbTime > locTime) merged[r.id] = sbEntry;
+          // Supabase daha yeniyse onu al, ama local notları koru (notes Supabase'e yazılmadığı için)
+          if (sbTime > locTime) merged[r.id] = { ...sbEntry, notes: loc.notes || sbEntry.notes };
         }
       });
-      // Local'de olup Supabase'de olmayan → editor ise Supabase'e gönder
+      // Local'de Supabase'den daha yeni veya hiç olmayan → editor ise Supabase'e gönder
       if (isEditor()) {
-        const sbIds = new Set(rows.map(r => r.id));
+        const sbTimestamps = new Map(rows.map(r => [r.id, new Date(r.updated_at || r.saved_at).getTime()]));
         for (const f of local) {
-          if (!sbIds.has(f.id)) await kfSbUpsertForm(f);
+          const sbTime = sbTimestamps.get(f.id);
+          const locTime = new Date(f.updatedAt || f.savedAt).getTime();
+          if (sbTime === undefined || locTime > sbTime) await kfSbUpsertForm(f);
         }
       }
       const finalList = Object.values(merged).sort((a,b) => new Date(b.savedAt)-new Date(a.savedAt));
