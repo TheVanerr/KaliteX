@@ -395,6 +395,7 @@
   }
 
   let _khAutoRefreshInFlight = false;
+  let _khLastFallbackPullAt = 0;
   async function khRefreshIfNeeded(reason) {
     if (!navigator.onLine || _khSyncing || _khAutoRefreshInFlight) return false;
     _khAutoRefreshInFlight = true;
@@ -406,7 +407,25 @@
       }
 
       const sbVer = await khGetSupabaseVersion();
-      if (sbVer === null) return false;
+      if (sbVer === null) {
+        // sync_lock yoksa fallback: kısa aralıklarla Supabase'den çek
+        const now = Date.now();
+        if (now - _khLastFallbackPullAt < 30000) return false;
+        console.log(`[KaliteX] KH fallback yenile (${reason}): data_version yok, tam çekim yapılıyor`);
+        khSyncStatus('syncing');
+        await khLoadFromSupabase();
+        khSaveLocal(khGetLocalVersion());
+        khSyncStatus('ok');
+        _khLastFallbackPullAt = now;
+
+        const isModelPage = KH_MODELS.some(m => m.id === currentPage);
+        if (currentPage === 'kalite-havuzu') {
+          await khRenderPage();
+        } else if (isModelPage) {
+          renderPage();
+        }
+        return true;
+      }
       const localVer = khGetLocalVersion();
       if (sbVer === localVer) return false;
 
@@ -467,7 +486,7 @@
         const localVer = khGetLocalVersion();
         console.log(`[KaliteX] Versiyon: local=${localVer}, supabase=${sbVer}`);
         const shouldReload = (sbVer !== null && sbVer !== localVer)  // versiyon farklı
-                          || (sbVer === null && !localLoaded);       // sync_lock yok ama local da boş → yine de çek
+                          || (sbVer === null && !khHasPendingUpload()); // sync_lock yoksa pending yokken Supabase'den çek
         if (shouldReload) {
           console.log('[KaliteX] Supabase\'den yükleniyor...');
           khSyncStatus('syncing');
