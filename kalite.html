@@ -385,11 +385,26 @@
     return v !== null ? parseInt(v, 10) : -1;
   }
 
+  const KH_PENDING_UPLOAD_KEY = 'dataX_pending_upload';
+  function khHasPendingUpload() {
+    return localStorage.getItem(KH_PENDING_UPLOAD_KEY) === '1';
+  }
+  function khSetPendingUpload(v) {
+    if (v) localStorage.setItem(KH_PENDING_UPLOAD_KEY, '1');
+    else localStorage.removeItem(KH_PENDING_UPLOAD_KEY);
+  }
+
   let _khAutoRefreshInFlight = false;
   async function khRefreshIfNeeded(reason) {
     if (!navigator.onLine || _khSyncing || _khAutoRefreshInFlight) return false;
     _khAutoRefreshInFlight = true;
     try {
+      // Önce localde bekleyen değişiklik varsa Supabase'e yaz
+      if (khHasPendingUpload()) {
+        const pushed = await khSyncToSupabase();
+        if (!pushed) return false;
+      }
+
       const sbVer = await khGetSupabaseVersion();
       if (sbVer === null) return false;
       const localVer = khGetLocalVersion();
@@ -432,6 +447,7 @@
       localStorage.removeItem('dataX');
       localStorage.removeItem('dataX_version');
       localStorage.removeItem('dataX_sync_version');
+      localStorage.removeItem(KH_PENDING_UPLOAD_KEY);
     }
     const saved = localStorage.getItem('dataX');
     if (saved) {
@@ -513,7 +529,8 @@
 
   let _khSyncing = false;
   async function khSyncToSupabase() {
-    if (_khSyncing) { console.warn('[KaliteX] Sync zaten çalışıyor, atlandı'); return; }
+    if (!navigator.onLine) { khSyncStatus('offline'); return false; }
+    if (_khSyncing) { console.warn('[KaliteX] Sync zaten çalışıyor, atlandı'); return false; }
     _khSyncing = true;
     khSyncStatus('syncing');
 
@@ -549,8 +566,9 @@
         // 3 denemede kilit alınamadı, başka cihaz uzun süredir kilit tutuyor
         khSyncStatus('error');
         khToast('⚠️ Kayıt kilidi alınamadı. Lütfen tekrar deneyin.', 4000);
+        khSetPendingUpload(true);
         _khSyncing = false;
-        return;
+        return false;
       }
       if (!lockSystemOk) console.warn('[KaliteX] Kilit sistemi erişilemez, kilitsiz devam ediliyor');
 
@@ -582,13 +600,16 @@
       khSaveLocal(newVersion);
       khSyncStatus('ok');
       console.log(`[KaliteX] Sync tamamlandı (v${newVersion}): ${params.length} parametre, ${atamaRows.length} atama`);
+      return true;
 
     } catch(e) {
       khSyncStatus('error');
       console.error('[KaliteX] Supabase sync hatası:', e.message || e);
       khToast('⚠️ Supabase yazma hatası: ' + (e.message||e), 4000);
+      khSetPendingUpload(true);
       // Hata durumunda yine de kilidi bırakmaya çalış (versiyon değişmeden)
       try { await sbReleaseLock(khGetLocalVersion()); } catch(_) {}
+      return false;
     } finally {
       _khSyncing = false;
     }
@@ -622,7 +643,12 @@
   function khSaveLocal(syncVersion) {
     localStorage.setItem('dataX', JSON.stringify(khToJSON()));
     localStorage.setItem('dataX_version', KH_DATA_VERSION);
-    if (syncVersion !== undefined) localStorage.setItem('dataX_sync_version', String(syncVersion));
+    if (syncVersion !== undefined) {
+      localStorage.setItem('dataX_sync_version', String(syncVersion));
+      khSetPendingUpload(false);
+    } else {
+      khSetPendingUpload(true);
+    }
   }
 
   function khSave() {
@@ -1895,6 +1921,7 @@
     localStorage.removeItem('dataX');
     localStorage.removeItem('dataX_version');
     localStorage.removeItem('dataX_sync_version'); // versiyon önbelleğini de temizle
+    localStorage.removeItem(KH_PENDING_UPLOAD_KEY);
     KH._ready = false;
     KH.paramData = [];
     for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
@@ -1903,7 +1930,8 @@
     khToast('Supabase\'den yükleniyor...', 5000);
     try {
       await khLoadFromSupabase();
-      khSaveLocal();
+      const sbVer = await khGetSupabaseVersion();
+      khSaveLocal(sbVer !== null ? sbVer : khGetLocalVersion());
       khSyncStatus('ok');
       KH._ready = true;
       khBuildFR(); khBuildHeader(); khVSR();
