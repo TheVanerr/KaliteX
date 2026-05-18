@@ -137,6 +137,7 @@
           </div>
         </div>
         <span id="kf-save-name" style="display:none;font-size:12px;font-weight:700;color:#16a34a;padding:5px 10px;background:#f0fdf4;border-radius:7px;border:1.5px solid #bbf7d0;white-space:nowrap;align-items:center;"></span>
+        <span id="kf-sync-st" style="font-size:11px;font-weight:700;padding:0 4px;color:#6b7280;"></span>
       </div>
       <!-- Model sayfası başlık barı -->
       <div id="page-info-bar" style="display:none;flex:1;" class="flex items-center gap-2">
@@ -2208,11 +2209,40 @@
   function kfGetForms() { try { return JSON.parse(localStorage.getItem('kf_saved_forms')||'[]'); } catch(e) { return []; } }
   function kfSvForms(f) { localStorage.setItem('kf_saved_forms', JSON.stringify(f)); }
   function kfGenId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  let _kfSavingToCloud = false;
+
+  function kfSyncStatus(s) {
+    const el = document.getElementById('kf-sync-st');
+    if (!el) return;
+    const map = {
+      idle: '',
+      syncing: '⟳ Form Supabase\'e yazılıyor... Kapatmayın',
+      ok: '☁️ Form senkron',
+      error: '⚠️ Form bulut yazma hatası',
+      offline: '📴 Form sadece yerel kaydedildi'
+    };
+    const col = {
+      idle: '#6b7280',
+      syncing: '#d97706',
+      ok: '#16a34a',
+      error: '#dc2626',
+      offline: '#6b7280'
+    };
+    el.textContent = map[s] || '';
+    el.style.color = col[s] || '#6b7280';
+  }
+
+  // Supabase yazımı sürerken sayfanın erken kapanmasını engelle
+  window.addEventListener('beforeunload', function(e) {
+    if (!_kfSavingToCloud) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
 
   // ── Supabase form sync ───────────────────────────────────────────────────────
   // Tek bir formu Supabase'e UPSERT'le (editor girişi gerekli)
   async function kfSbUpsertForm(entry) {
-    if (!isEditor()) return;
+    if (!isEditor()) return false;
     try {
       await sbUpsert('kf_forms', {
         id: entry.id,
@@ -2224,7 +2254,9 @@
         data: entry.data,
         notes: entry.notes || {aksilikler:[],revizeler:[]}
       }, 'id');
+      return true;
     } catch(e) { console.warn('[KaliteX] kf_forms UPSERT hatası:', e.message||e); }
+    return false;
   }
 
   // Tek bir formu Supabase'den sil (editor girişi gerekli)
@@ -2401,7 +2433,7 @@
     overlay.style.display = 'flex';
   }
 
-  function kfDoSave(name, forceNew) {
+  async function kfDoSave(name, forceNew) {
     if (!isEditor()) { kfToast('Salt okunur modda kayıt yapılamaz.'); return; }
     name = (name || '').trim();
     if (!name) { const i = document.getElementById('kfm-name-inp'); if (i) { i.style.borderColor='#dc2626'; i.focus(); } return; }
@@ -2416,9 +2448,28 @@
     const slbl = document.getElementById('kf-save-name');
     if (slbl) kfSetSaveName(name);
     kfModalClose();
-    kfToast('Form kaydedildi \u2713');
-    // Supabase'e gönder (arka planda, editor ise)
-    if (navigator.onLine) kfSbUpsertForm(entry).catch(() => {});
+    // Supabase yazımı bitene kadar kullanıcıyı bilgilendir
+    if (!navigator.onLine) {
+      kfSyncStatus('offline');
+      kfToast('Form yerel kaydedildi (offline) ✓');
+      return;
+    }
+
+    _kfSavingToCloud = true;
+    kfSyncStatus('syncing');
+    kfToast('Supabase\'e yaziliyor, lutfen kapatmayin...');
+    try {
+      const ok = await kfSbUpsertForm(entry);
+      if (ok) {
+        kfSyncStatus('ok');
+        kfToast('Form kaydedildi ve Supabase\'e yazildi ✓');
+      } else {
+        kfSyncStatus('error');
+        kfToast('Form kaydedildi ama Supabase\'e yazilamadi ⚠️');
+      }
+    } finally {
+      _kfSavingToCloud = false;
+    }
   }
 
   async function kfShowLoadModal() {
