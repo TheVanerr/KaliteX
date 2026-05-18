@@ -346,85 +346,28 @@
   }
 
   // ── Data init / load / save ──────────────────────────────────
-  // Supabase'deki en son güncelleme zaman damgasını çek (delta sync için)
-  async function khGetServerLastUpdated() {
-    try {
-      const r = await fetch(SB_URL + '/rest/v1/kalite_parametreleri?select=updated_at&order=updated_at.desc&limit=1', { headers: sbH() });
-      if (!r.ok) return null;
-      const d = await r.json();
-      return (d && d[0] && d[0].updated_at) ? d[0].updated_at : null;
-    } catch(e) { return null; }
-  }
-  // localStorage'daki son başarılı sync zaman damgasını oku/yaz
-  // ts: sunucudan gelen updated_at değeri — verilmezse cihaz saati kullanılır
-  const KH_SYNC_AT_KEY = 'kh_last_sync_at';
-  function khGetLastSyncAt() { return localStorage.getItem(KH_SYNC_AT_KEY) || null; }
-  function khSetLastSyncAt(ts) { localStorage.setItem(KH_SYNC_AT_KEY, ts || new Date().toISOString()); }
-
-  const KH_PENDING_UPLOAD_KEY = 'dataX_pending_upload';
-  function khHasPendingUpload() {
-    return localStorage.getItem(KH_PENDING_UPLOAD_KEY) === '1';
-  }
-  function khSetPendingUpload(v) {
-    if (v) localStorage.setItem(KH_PENDING_UPLOAD_KEY, '1');
-    else localStorage.removeItem(KH_PENDING_UPLOAD_KEY);
-  }
-
-  // ── Kasıtlı silme takibi ─────────────────────────────────────────────────────
-  // "local'de yok = başka cihaz ekledi" ile "local'den sildim" arasındaki farkı ayırt eder.
-  // Sadece bu cihazda açıkça silinen kodlar Supabase'den de silinir.
-  const KH_DELETED_KODLAR_KEY = 'kh_deleted_kodlar';
-  const KH_DELETED_ATAMA_KEY  = 'kh_deleted_atama';
-  function khGetDeletedKodlar() { try { return JSON.parse(localStorage.getItem(KH_DELETED_KODLAR_KEY)||'[]'); } catch(e) { return []; } }
-  function khAddDeletedKodlar(kodlar) {
-    const s = new Set([...khGetDeletedKodlar(), ...kodlar]);
-    localStorage.setItem(KH_DELETED_KODLAR_KEY, JSON.stringify([...s]));
-  }
-  function khClearDeletedKodlar() { localStorage.removeItem(KH_DELETED_KODLAR_KEY); }
-  function khGetDeletedAtama(mid) { try { const d = JSON.parse(localStorage.getItem(KH_DELETED_ATAMA_KEY)||'{}'); return d[mid] || []; } catch(e) { return []; } }
-  function khAddDeletedAtama(mid, kodlar) {
-    try {
-      const d = JSON.parse(localStorage.getItem(KH_DELETED_ATAMA_KEY)||'{}');
-      d[mid] = [...new Set([...(d[mid]||[]), ...kodlar])];
-      localStorage.setItem(KH_DELETED_ATAMA_KEY, JSON.stringify(d));
-    } catch(e) {}
-  }
-  function khClearDeletedAtama() { localStorage.removeItem(KH_DELETED_ATAMA_KEY); }
+  // ── Kasıtlı silme takibi (bellekte, session boyunca) ───────────────────────
+  // Uygulama her açılışta Supabase'den çektiği için localStorage'a gerek yok.
+  // Kasıtlı silinen kodlar sync anında Supabase'den de silinir.
+  let _khDeletedKodlar = new Set();
+  let _khDeletedAtama  = {};  // mid → Set<kod>
+  function khGetDeletedKodlar() { return [..._khDeletedKodlar]; }
+  function khAddDeletedKodlar(kodlar) { kodlar.forEach(k => _khDeletedKodlar.add(k)); }
+  function khClearDeletedKodlar() { _khDeletedKodlar = new Set(); }
+  function khGetDeletedAtama(mid) { return [...(_khDeletedAtama[mid] || new Set())]; }
+  function khAddDeletedAtama(mid, kodlar) { if (!_khDeletedAtama[mid]) _khDeletedAtama[mid] = new Set(); kodlar.forEach(k => _khDeletedAtama[mid].add(k)); }
+  function khClearDeletedAtama() { _khDeletedAtama = {}; }
 
 
   let _khAutoRefreshInFlight = false;
-  let _khLastFallbackPullAt = 0;
   async function khRefreshIfNeeded(reason) {
     if (!navigator.onLine || _khSyncing || _khAutoRefreshInFlight) return false;
     _khAutoRefreshInFlight = true;
     try {
-      // 1. Önce bekleyen yükleme varsa Supabase'e gönder
-      if (khHasPendingUpload()) {
-        const pushed = await khSyncToSupabase();
-        if (!pushed) return false;
-      }
-
-      // 2. Sunucudaki son güncelleme zamanını kontrol et
-      const serverTs = await khGetServerLastUpdated();
-      const localTs  = khGetLastSyncAt();
-
-      if (serverTs) {
-        // Date nesnesiyle karşılaştır — string karşılaştırması +00:00 / Z farkında hatalı sonuç üretebilir
-        if (localTs && new Date(serverTs) <= new Date(localTs)) return false; // Güncel
-      } else {
-        // updated_at sütunu henüz yok — 30 saniye cooldown ile çek
-        const now = Date.now();
-        if (reason !== 'navigate' && now - _khLastFallbackPullAt < 30000) return false;
-        _khLastFallbackPullAt = now;
-      }
-
-      console.log(`[KaliteX] KH yenileniyor (${reason}) serverTs=${serverTs}, localTs=${localTs}`);
+      console.log(`[KaliteX] KH yenileniyor (${reason})`);
       khSyncStatus('syncing');
       await khLoadFromSupabase();
-      khSaveLocal();
-      khSetLastSyncAt(serverTs); // Sunucu zaman damgasını kaydet (cihaz saati değil)
       khSyncStatus('ok');
-
       const isModelPage = KH_MODELS.some(m => m.id === currentPage);
       if (currentPage === 'kalite-havuzu') {
         await khRenderPage();
@@ -440,71 +383,41 @@
     }
   }
 
+  function khShowOfflineBlock() {
+    // İnternet yoksa tüm sayfayı offline ekranıyla kapla
+    const pc = document.getElementById('page-content');
+    if (!pc) return;
+    pc.className = 'flex-1 overflow-y-auto p-6 page-fade';
+    pc.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:18px;text-align:center;">
+        <div style="font-size:56px;">📡</div>
+        <div style="font-size:20px;font-weight:800;color:#dc2626;">İnternet Bağlantısı Yok</div>
+        <div style="font-size:14px;color:#6b7280;max-width:320px;">KaliteX çevrimdışı çalışmaz. Lütfen internet bağlantınızı kontrol edip sayfayı yenileyin.</div>
+        <button onclick="location.reload()" style="background:#dc2626;color:#fff;border:none;padding:10px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🔄 Yenile</button>
+      </div>`;
+  }
+
   async function khInit() {
     if (KH._ready) return;
+
+    // İnternet yoksa blokla — offline mod yok
+    if (!navigator.onLine) {
+      khShowOfflineBlock();
+      khSyncStatus('offline');
+      return;
+    }
+
     KH._ready = true;
-    KH.paramData = [];
-    for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
-    KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
-
-    // 1. localStorage — hızlı yükle ve UI'ı göster
-    let localLoaded = false;
-    const savedVer = localStorage.getItem('dataX_version');
-    if (savedVer !== KH_DATA_VERSION) {
-      // Eski şema versiyonu — temizle, Supabase'den çek
-      console.log(`[KaliteX] localStorage şema versiyonu eski (${savedVer} → ${KH_DATA_VERSION}), temizleniyor`);
-      localStorage.removeItem('dataX');
-      localStorage.removeItem('dataX_version');
-      localStorage.removeItem(KH_SYNC_AT_KEY);
-      localStorage.removeItem(KH_PENDING_UPLOAD_KEY);
+    khSyncStatus('syncing');
+    try {
+      await khLoadFromSupabase();
+      khSyncStatus('ok');
+      console.log('[KaliteX] Supabase\'den yüklendi ✓');
+    } catch(e) {
+      KH._ready = false;
+      khSyncStatus('error');
+      khToast('⚠️ Supabase bağlantı hatası: ' + (e.message||e), 5000);
     }
-    const saved = localStorage.getItem('dataX');
-    if (saved) {
-      try {
-        khLoadJSON(JSON.parse(saved));
-        if (KH.paramData.some(r => r[0])) {
-          localLoaded = true;
-          khSyncStatus('ok');
-        }
-      } catch(e) { console.warn('[KaliteX] localStorage okunamadı:', e); }
-    }
-
-    // 2. Online ise: bekleyen yükleme varsa gönder, yoksa sunucuyu kontrol et
-    if (navigator.onLine) {
-      try {
-        if (khHasPendingUpload()) {
-          console.log('[KaliteX] Bekleyen yükleme var, Supabase\'e gönderiliyor...');
-          await khSyncToSupabase();
-        } else {
-          const serverTs = await khGetServerLastUpdated();
-          const localTs  = khGetLastSyncAt();
-          console.log(`[KaliteX] Zaman: local=${localTs}, sunucu=${serverTs}`);
-          const shouldReload = !localTs                              // hiç sync olmadı
-                            || (serverTs && new Date(serverTs) > new Date(localTs)) // sunucuda yeni veri var
-                            || !serverTs;                            // updated_at sütunu yok → her açılışta Supabase'den çek
-          if (shouldReload) {
-            console.log('[KaliteX] Supabase\'den yükleniyor...');
-            khSyncStatus('syncing');
-            KH.paramData = [];
-            for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
-            KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
-            await khLoadFromSupabase();
-            if (KH.paramData.some(r => r[0])) {
-              khSaveLocal();
-              khSetLastSyncAt(serverTs); // Sunucu zaman damgasını kaydet (cihaz saati değil)
-              khSyncStatus('ok');
-              return;
-            }
-          }
-        }
-      } catch(e) { console.warn('[KaliteX] Supabase kontrol hatası:', e); }
-    }
-
-    if (localLoaded) return;
-
-    // 3. localStorage da Supabase da boşsa CSV bekle
-    khSyncStatus('offline');
-    khToast('Veri bulunamadı. Lütfen 📂 CSV Yükle butonunu kullanın.', 4000);
   }
 
   async function sbGetAll(tbl, qs, pageSize = 1000) {
@@ -618,25 +531,20 @@
         }
       }
 
-      // ── ADIM 4: Merge edilmiş veriyi tekrar çek → local'i güncelle ───────────
+      // ── ADIM 4: Merge edilmiş veriyi tekrar çek → belleği güncelle ──────────
       await khLoadFromSupabase();
-      khSaveLocal();
 
-      // ── ADIM 5: Silme kayıtlarını temizle, timestamp kaydet ──────────────────
+      // ── ADIM 5: Silme kayıtlarını temizle, güncel halini belleğe al ────────
       khClearDeletedKodlar();
       khClearDeletedAtama();
-      khSetPendingUpload(false);
-      const freshServerTs = await khGetServerLastUpdated();
-      khSetLastSyncAt(freshServerTs || _syncNow);
       khSyncStatus('ok');
-      console.log(`[KaliteX] Sync tamamlandı: ${mergedParams.length} parametre, serverTs=${freshServerTs}`);
+      console.log(`[KaliteX] Sync tamamlandı: ${mergedParams.length} parametre`);
       return true;
 
     } catch(e) {
       khSyncStatus('error');
       console.error('[KaliteX] Supabase sync hatası:', e.message || e);
       khToast('⚠️ Supabase yazma hatası: ' + (e.message||e), 4000);
-      khSetPendingUpload(true);
       return false;
     } finally {
       _khSyncing = false;
@@ -651,38 +559,17 @@
     el.textContent = map[s] || ''; el.style.color = col[s] || '#6b7280';
   }
 
-  function khLoadJSON(j) {
-    if (j.paramData) for (let r = 0; r < Math.min(j.paramData.length, KH.TOTAL_ROWS); r++) {
-      if (Array.isArray(j.paramData[r])) for (let c = 0; c < KH_FIXED.length; c++) KH.paramData[r][c] = j.paramData[r][c] || '';
-    }
-    if (j.assignments) for (const [mid, obj] of Object.entries(j.assignments)) {
-      if (Array.isArray(obj)) { KH.assignments[mid] = {}; obj.forEach(ri => { KH.assignments[mid][ri] = 'X'; }); }
-      else KH.assignments[mid] = obj || {};
-    }
-  }
-
-  function khToJSON() {
-    const asgn = {};
-    for (const [mid, obj] of Object.entries(KH.assignments)) asgn[mid] = obj || {};
-    // Sadece dolu satırları kaydet (boş 500 satırı serialize etme)
-    return { paramData: KH.paramData.filter(r => r[0]).map(r => [...r]), assignments: asgn };
-  }
-
-  function khSaveLocal() {
-    localStorage.setItem('dataX', JSON.stringify(khToJSON()));
-    localStorage.setItem('dataX_version', KH_DATA_VERSION);
-  }
-
   function khSave() {
-    khSetPendingUpload(true);
-    khSaveLocal();
-    khToast('Kaydedildi ✓', 1400);
-    if (navigator.onLine) khSyncToSupabase();
-    else khSyncStatus('offline');
+    if (!navigator.onLine) { khToast('⚠️ İnternet yok — kayıt yapılamaz', 3000); khSyncStatus('offline'); return; }
+    khSyncToSupabase();
   }
 
   function khExportJSON() {
-    const blob = new Blob([JSON.stringify(khToJSON(), null, 2)], { type: 'application/json' });
+    // Mevcut bellekteki veriyi JSON olarak indir (yedek amaçlı)
+    const asgn = {};
+    for (const [mid, obj] of Object.entries(KH.assignments)) asgn[mid] = obj || {};
+    const j = { paramData: KH.paramData.filter(r => r[0]).map(r => [...r]), assignments: asgn };
+    const blob = new Blob([JSON.stringify(j, null, 2)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = 'dataX.json'; a.click(); URL.revokeObjectURL(a.href);
   }
@@ -692,7 +579,20 @@
     inp.onchange = () => {
       const f = inp.files[0]; if (!f) return;
       const rd = new FileReader();
-      rd.onload = e => { try { khLoadJSON(JSON.parse(e.target.result)); khBuildFR(); khVSR(); khSave(); khToast('Yüklendi ve kaydedildi ✓'); } catch(err) { alert('Geçersiz JSON dosyası'); } };
+      rd.onload = e => {
+        try {
+          const j = JSON.parse(e.target.result);
+          // JSON'dan belleğe yükle
+          if (j.paramData) for (let r = 0; r < Math.min(j.paramData.length, KH.TOTAL_ROWS); r++) {
+            if (Array.isArray(j.paramData[r])) for (let c = 0; c < KH_FIXED.length; c++) KH.paramData[r][c] = j.paramData[r][c] || '';
+          }
+          if (j.assignments) for (const [mid, obj] of Object.entries(j.assignments)) {
+            KH.assignments[mid] = Array.isArray(obj) ? {} : (obj || {});
+            if (Array.isArray(obj)) obj.forEach(ri => { KH.assignments[mid][ri] = 'X'; });
+          }
+          khBuildFR(); khVSR(); khSave(); khToast('Yüklendi ve kaydedildi ✓');
+        } catch(err) { alert('Geçersiz JSON dosyası'); }
+      };
       rd.readAsText(f);
     };
     inp.click();
@@ -1963,24 +1863,14 @@
   // ── Kalite Havuzu Force Reload ───────────────────────────────────────────────
   async function khForceReload() {
     if (!navigator.onLine) { khToast('Offline — Supabase\'e bağlanılamıyor', 3000); return; }
-    localStorage.removeItem('dataX');
-    localStorage.removeItem('dataX_version');
-    localStorage.removeItem(KH_SYNC_AT_KEY);
-    localStorage.removeItem(KH_PENDING_UPLOAD_KEY);
     KH._ready = false;
-    KH.paramData = [];
-    for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
-    KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
     khSyncStatus('syncing');
     khToast('Supabase\'den yükleniyor...', 5000);
     try {
       await khLoadFromSupabase();
-      khSaveLocal();
-      khSetLastSyncAt();
       khSyncStatus('ok');
       KH._ready = true;
-      khBuildFR(); khBuildHeader(); khVSR();
-      renderPage(currentPage);
+      if (document.getElementById('kh-thead')) { khBuildFR(); khBuildHeader(); khVSR(); }
       khToast('Supabase\'den yüklendi ✓', 2000);
     } catch(e) {
       khSyncStatus('error');
@@ -2714,13 +2604,12 @@
 
   // ── Online olunca otomatik form sync ──────────────────────────────────────
   window.addEventListener('online', () => {
-    console.log('[KaliteX] İnternet bağlantısı geldi, form sync başlatılıyor...');
+    console.log('[KaliteX] İnternet bağlantısı geldi, yenileniyor...');
     kfSbSync().then(result => {
       if (result) kfToast('☁️ Formlar senkronize edildi ✓');
     });
-    khRefreshIfNeeded('online').then(updated => {
-      if (updated) khToast('☁️ Kalite havuzu güncellendi ✓', 1800);
-    });
+    // Offline ekranı varsa sayfayı yenile
+    location.reload();
   });
 
   window.addEventListener('focus', () => {
