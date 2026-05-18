@@ -34,6 +34,7 @@
     .kfhb-blu { background:#2563eb;color:#fff; }
     .kfhb-grn { background:#16a34a;color:#fff; }
     .kfhb-tel { background:#0d9488;color:#fff; }
+    .kfhb-pur { background:#7c3aed;color:#fff; }
     /* Sidebar açıkken label'ları gizle */
     .sidebar-open .kfhb-lbl { display:none; }
     /* Kayıt adı: sidebar açıkken sadece seri no */
@@ -388,9 +389,9 @@
         // updated_at sütunu var — zaman karşılaştırması yap
         if (localTs && serverTs <= localTs) return false; // Güncel
       } else {
-        // updated_at sütunu henüz yok — 60 saniye cooldown ile çek
+        // updated_at sütunu henüz yok — 30 saniye cooldown ile çek
         const now = Date.now();
-        if (now - _khLastFallbackPullAt < 60000) return false;
+        if (reason !== 'navigate' && now - _khLastFallbackPullAt < 30000) return false;
         _khLastFallbackPullAt = now;
       }
 
@@ -455,9 +456,9 @@
           const serverTs = await khGetServerLastUpdated();
           const localTs  = khGetLastSyncAt();
           console.log(`[KaliteX] Zaman: local=${localTs}, sunucu=${serverTs}`);
-          const shouldReload = !localTs                                   // hiç sync olmadı
-                            || (serverTs && serverTs > localTs)           // sunucuda yeni veri var
-                            || (!serverTs && !localLoaded);               // sütun yok ve local boş
+          const shouldReload = !localTs                         // hiç sync olmadı
+                            || (serverTs && serverTs > localTs) // sunucuda yeni veri var
+                            || !serverTs;                       // updated_at sütunu yok → her açılışta Supabase'den çek
           if (shouldReload) {
             console.log('[KaliteX] Supabase\'den yükleniyor...');
             khSyncStatus('syncing');
@@ -553,10 +554,13 @@
         await sbUpsert('kalite_parametreleri', params.slice(i, i + 100), 'kod');
 
       // ── ADIM 2: Local'de silinmiş parametreleri Supabase'den de sil ──────────
-      if (localKodlar.length > 0)
-        await sbDel('kalite_parametreleri', 'kod=not.in.(' + localKodlar.join(',') + ')');
-      else
+      // Not: 300'den fazla satırda not.in() URL limiti aşılır — silme atlanır (ekleme/düzenleme her zaman çalışır)
+      if (localKodlar.length === 0) {
         await sbDel('kalite_parametreleri', 'kod=not.is.null'); // tamamını sil (nadir durum)
+      } else if (localKodlar.length <= 300) {
+        await sbDel('kalite_parametreleri', 'kod=not.in.(' + localKodlar.join(',') + ')');
+      }
+      // 300+ satırda silme işlemi URL limiti nedeniyle yapılmaz, eklenmiş satırlar güvende
 
       // ── ADIM 3: Model atamalarını UPSERT et ──────────────────────────────────
       for (let i = 0; i < atamaRows.length; i += 200)
@@ -1886,7 +1890,6 @@
   // ── Kalite Havuzu Force Reload ───────────────────────────────────────────────
   async function khForceReload() {
     if (!navigator.onLine) { khToast('Offline — Supabase\'e bağlanılamıyor', 3000); return; }
-    if (!confirm('localStorage temizlenecek ve Supabase\'den tüm veriler yeniden çekilecek. Emin misiniz?')) return;
     localStorage.removeItem('dataX');
     localStorage.removeItem('dataX_version');
     localStorage.removeItem(KH_SYNC_AT_KEY);
