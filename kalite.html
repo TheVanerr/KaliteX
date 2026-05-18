@@ -273,8 +273,8 @@
   const SB_KEY = 'sb_publishable_T0ZpujhmI_kBuuT4M6U1Gw_BCdweMf-';
   // ── Google Drive Yedek — OAuth Client ID ──────────────────────────
   const KX_GDRIVE_CLIENT_ID = '691548738009-55q8dipm3hoeb8qs60vd166ppmg14sqq.apps.googleusercontent.com';
-  // ── Düzenleyici listesi: Bu listedeki Google hesapları düzenleme yapabilir ──
-  const ALLOWED_EDITORS = ['fatihgural80@gmail.com', 'fatihgural_2001@hotmail.com'];
+  // ── Düzenleyici: Sadece bu hesap değişiklik yapabilir, diğerleri salt okunur ──
+  const ALLOWED_EDITORS = ['fatihgural80@gmail.com'];
   let SB_TOKEN = null;
   let currentUser = null; // { email, name } — giriş yapan editör
   function isEditor() { return !!currentUser; }
@@ -282,12 +282,7 @@
     const token = SB_TOKEN || SB_KEY;
     return Object.assign({ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, extra || {});
   }
-  // Bu cihaza özgü kalıcı kimlik (kilit sistemi için)
-  function sbDeviceId() {
-    let id = localStorage.getItem('sb_device_id');
-    if (!id) { id = 'dev-' + Math.random().toString(36).slice(2, 10); localStorage.setItem('sb_device_id', id); }
-    return id;
-  }
+
   async function sbGet(tbl, qs) {
     const r = await fetch(SB_URL + '/rest/v1/' + tbl + (qs ? '?' + qs : ''), { headers: sbH() });
     if (!r.ok) throw new Error(await r.text());
@@ -314,27 +309,7 @@
     const r = await fetch(SB_URL + '/rest/v1/' + tbl + '?' + filter, { method: 'DELETE', headers: sbH() });
     if (!r.ok) throw new Error(await r.text());
   }
-  // ── Cihazlar arası kilit (PostgreSQL seviyesinde atomik) ──────────────────────
-  async function sbAcquireLock() {
-    // true  = kilit alındı
-    // false = başka cihaz kitledi (beklememiz gerekiyor)
-    // null  = sunucu hatası (kilit sistemi yok/çalışmıyor, devam et)
-    try {
-      const r = await fetch(SB_URL + '/rest/v1/rpc/acquire_sync_lock', {
-        method: 'POST', headers: sbH(), body: JSON.stringify({ p_device_id: sbDeviceId() })
-      });
-      if (!r.ok) return null; // sunucu hatası → kilitsiz devam
-      return (await r.json()) === true;
-    } catch(e) { return null; }
-  }
-  async function sbReleaseLock(newVersion) {
-    try {
-      await fetch(SB_URL + '/rest/v1/rpc/release_sync_lock', {
-        method: 'POST', headers: sbH(),
-        body: JSON.stringify({ p_device_id: sbDeviceId(), p_new_version: newVersion })
-      });
-    } catch(e) { console.warn('[KaliteX] Kilit bırakma hatası:', e); }
-  }
+
 
   const KH = {
     TOTAL_ROWS: 500,
@@ -370,20 +345,19 @@
   }
 
   // ── Data init / load / save ──────────────────────────────────
-  // Supabase'deki data_version numarasını hafif bir sorguyla çek
-  async function khGetSupabaseVersion() {
+  // Supabase'deki en son güncelleme zaman damgasını çek (delta sync için)
+  async function khGetServerLastUpdated() {
     try {
-      const r = await fetch(SB_URL + '/rest/v1/sync_lock?id=eq.1&select=data_version', { headers: sbH() });
+      const r = await fetch(SB_URL + '/rest/v1/kalite_parametreleri?select=updated_at&order=updated_at.desc&limit=1', { headers: sbH() });
       if (!r.ok) return null;
       const d = await r.json();
-      return (d && d[0] && d[0].data_version !== undefined) ? Number(d[0].data_version) : null;
+      return (d && d[0] && d[0].updated_at) ? d[0].updated_at : null;
     } catch(e) { return null; }
   }
-  // localStorage'daki sync versiyonunu oku
-  function khGetLocalVersion() {
-    const v = localStorage.getItem('dataX_sync_version');
-    return v !== null ? parseInt(v, 10) : -1;
-  }
+  // localStorage'daki son başarılı sync zaman damgasını oku/yaz
+  const KH_SYNC_AT_KEY = 'kh_last_sync_at';
+  function khGetLastSyncAt() { return localStorage.getItem(KH_SYNC_AT_KEY) || null; }
+  function khSetLastSyncAt() { localStorage.setItem(KH_SYNC_AT_KEY, new Date().toISOString()); }
 
   const KH_PENDING_UPLOAD_KEY = 'dataX_pending_upload';
   function khHasPendingUpload() {
@@ -400,39 +374,31 @@
     if (!navigator.onLine || _khSyncing || _khAutoRefreshInFlight) return false;
     _khAutoRefreshInFlight = true;
     try {
-      // Önce localde bekleyen değişiklik varsa Supabase'e yaz
+      // 1. Önce bekleyen yükleme varsa Supabase'e gönder
       if (khHasPendingUpload()) {
         const pushed = await khSyncToSupabase();
         if (!pushed) return false;
       }
 
-      const sbVer = await khGetSupabaseVersion();
-      if (sbVer === null) {
-        // sync_lock yoksa fallback: kısa aralıklarla Supabase'den çek
+      // 2. Sunucudaki son güncelleme zamanını kontrol et
+      const serverTs = await khGetServerLastUpdated();
+      const localTs  = khGetLastSyncAt();
+
+      if (serverTs) {
+        // updated_at sütunu var — zaman karşılaştırması yap
+        if (localTs && serverTs <= localTs) return false; // Güncel
+      } else {
+        // updated_at sütunu henüz yok — 60 saniye cooldown ile çek
         const now = Date.now();
-        if (now - _khLastFallbackPullAt < 30000) return false;
-        console.log(`[KaliteX] KH fallback yenile (${reason}): data_version yok, tam çekim yapılıyor`);
-        khSyncStatus('syncing');
-        await khLoadFromSupabase();
-        khSaveLocal(khGetLocalVersion());
-        khSyncStatus('ok');
+        if (now - _khLastFallbackPullAt < 60000) return false;
         _khLastFallbackPullAt = now;
-
-        const isModelPage = KH_MODELS.some(m => m.id === currentPage);
-        if (currentPage === 'kalite-havuzu') {
-          await khRenderPage();
-        } else if (isModelPage) {
-          renderPage();
-        }
-        return true;
       }
-      const localVer = khGetLocalVersion();
-      if (sbVer === localVer) return false;
 
-      console.log(`[KaliteX] KH otomatik yenile (${reason}): local=${localVer}, supabase=${sbVer}`);
+      console.log(`[KaliteX] KH yenileniyor (${reason}) serverTs=${serverTs}, localTs=${localTs}`);
       khSyncStatus('syncing');
       await khLoadFromSupabase();
-      khSaveLocal(sbVer);
+      khSaveLocal();
+      khSetLastSyncAt();
       khSyncStatus('ok');
 
       const isModelPage = KH_MODELS.some(m => m.id === currentPage);
@@ -465,7 +431,7 @@
       console.log(`[KaliteX] localStorage şema versiyonu eski (${savedVer} → ${KH_DATA_VERSION}), temizleniyor`);
       localStorage.removeItem('dataX');
       localStorage.removeItem('dataX_version');
-      localStorage.removeItem('dataX_sync_version');
+      localStorage.removeItem(KH_SYNC_AT_KEY);
       localStorage.removeItem(KH_PENDING_UPLOAD_KEY);
     }
     const saved = localStorage.getItem('dataX');
@@ -476,31 +442,38 @@
           localLoaded = true;
           khSyncStatus('ok');
         }
-      } catch(e) { console.warn('[KaliteX] localStorage okunamadi:', e); }
+      } catch(e) { console.warn('[KaliteX] localStorage okunamadı:', e); }
     }
 
-    // 2. Online ise Supabase versiyon numarasını karşılaştır
+    // 2. Online ise: bekleyen yükleme varsa gönder, yoksa sunucuyu kontrol et
     if (navigator.onLine) {
       try {
-        const sbVer = await khGetSupabaseVersion();
-        const localVer = khGetLocalVersion();
-        console.log(`[KaliteX] Versiyon: local=${localVer}, supabase=${sbVer}`);
-        const shouldReload = (sbVer !== null && sbVer !== localVer)  // versiyon farklı
-                          || (sbVer === null && !khHasPendingUpload()); // sync_lock yoksa pending yokken Supabase'den çek
-        if (shouldReload) {
-          console.log('[KaliteX] Supabase\'den yükleniyor...');
-          khSyncStatus('syncing');
-          KH.paramData = [];
-          for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
-          KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
-          await khLoadFromSupabase();
-          if (KH.paramData.some(r => r[0])) {
-            khSaveLocal(sbVer !== null ? sbVer : khGetLocalVersion());
-            khSyncStatus('ok');
-            return;
+        if (khHasPendingUpload()) {
+          console.log('[KaliteX] Bekleyen yükleme var, Supabase\'e gönderiliyor...');
+          await khSyncToSupabase();
+        } else {
+          const serverTs = await khGetServerLastUpdated();
+          const localTs  = khGetLastSyncAt();
+          console.log(`[KaliteX] Zaman: local=${localTs}, sunucu=${serverTs}`);
+          const shouldReload = !localTs                                   // hiç sync olmadı
+                            || (serverTs && serverTs > localTs)           // sunucuda yeni veri var
+                            || (!serverTs && !localLoaded);               // sütun yok ve local boş
+          if (shouldReload) {
+            console.log('[KaliteX] Supabase\'den yükleniyor...');
+            khSyncStatus('syncing');
+            KH.paramData = [];
+            for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
+            KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
+            await khLoadFromSupabase();
+            if (KH.paramData.some(r => r[0])) {
+              khSaveLocal();
+              khSetLastSyncAt();
+              khSyncStatus('ok');
+              return;
+            }
           }
         }
-      } catch(e) { console.warn('[KaliteX] Supabase versiyon kontrol hatası:', e); }
+      } catch(e) { console.warn('[KaliteX] Supabase kontrol hatası:', e); }
     }
 
     if (localLoaded) return;
@@ -569,43 +542,21 @@
     }
 
     try {
-      // ── ADIM 1: Cihazlar arası kilit al (maks 3 deneme × 5sn) ───────────────
-      let locked = false;
-      let lockSystemOk = true;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const lockResult = await sbAcquireLock();
-        if (lockResult === true)  { locked = true; break; }
-        if (lockResult === null)  { lockSystemOk = false; break; } // sunucu hatası → kilitsiz devam
-        // false: başka cihaz kitledi
-        console.warn(`[KaliteX] Kilit başka cihazda (${attempt + 1}/3), 5sn bekleniyor...`);
-        khToast(`⏳ Başka cihaz kaydediyor, bekleniyor... (${attempt + 1}/3)`, 5000);
-        await new Promise(res => setTimeout(res, 5000));
-      }
-      if (!locked && lockSystemOk) {
-        // 3 denemede kilit alınamadı, başka cihaz uzun süredir kilit tutuyor
-        khSyncStatus('error');
-        khToast('⚠️ Kayıt kilidi alınamadı. Lütfen tekrar deneyin.', 4000);
-        khSetPendingUpload(true);
-        _khSyncing = false;
-        return false;
-      }
-      if (!lockSystemOk) console.warn('[KaliteX] Kilit sistemi erişilemez, kilitsiz devam ediliyor');
-
-      // ── ADIM 2: Parametreleri UPSERT et (sil YOK — var olanı güncelle, yok ise ekle) ──
+      // ── ADIM 1: Parametreleri UPSERT et ──────────────────────────────────────
       for (let i = 0; i < params.length; i += 100)
         await sbUpsert('kalite_parametreleri', params.slice(i, i + 100), 'kod');
 
-      // ── ADIM 3: Local'de silinmiş parametreleri Supabase'den de sil ──────────
+      // ── ADIM 2: Local'de silinmiş parametreleri Supabase'den de sil ──────────
       if (localKodlar.length > 0)
         await sbDel('kalite_parametreleri', 'kod=not.in.(' + localKodlar.join(',') + ')');
       else
         await sbDel('kalite_parametreleri', 'kod=not.is.null'); // tamamını sil (nadir durum)
 
-      // ── ADIM 4: Model atamalarını UPSERT et ──────────────────────────────────
+      // ── ADIM 3: Model atamalarını UPSERT et ──────────────────────────────────
       for (let i = 0; i < atamaRows.length; i += 200)
         await sbUpsert('model_atama', atamaRows.slice(i, i + 200), 'model_id,parametre_kod');
 
-      // ── ADIM 5: Her model için kaldırılmış X işaretlerini temizle ────────────
+      // ── ADIM 4: Her model için kaldırılmış X işaretlerini temizle ────────────
       for (const [mid, aktifKodlar] of Object.entries(atamaByModel)) {
         if (aktifKodlar.length > 0)
           await sbDel('model_atama', 'model_id=eq.' + mid + '&parametre_kod=not.in.(' + aktifKodlar.join(',') + ')');
@@ -613,12 +564,12 @@
           await sbDel('model_atama', 'model_id=eq.' + mid);
       }
 
-      // ── ADIM 6: Versiyon artır, kilidi bırak, localStorage'ı güncelle ────────
-      const newVersion = khGetLocalVersion() + 1;
-      await sbReleaseLock(newVersion);
-      khSaveLocal(newVersion);
+      // ── ADIM 5: Zaman damgası ve local kayıt ────────────────────────────────
+      khSetLastSyncAt();
+      khSetPendingUpload(false);
+      khSaveLocal();
       khSyncStatus('ok');
-      console.log(`[KaliteX] Sync tamamlandı (v${newVersion}): ${params.length} parametre, ${atamaRows.length} atama`);
+      console.log(`[KaliteX] Sync tamamlandı: ${params.length} parametre, ${atamaRows.length} atama`);
       return true;
 
     } catch(e) {
@@ -626,8 +577,6 @@
       console.error('[KaliteX] Supabase sync hatası:', e.message || e);
       khToast('⚠️ Supabase yazma hatası: ' + (e.message||e), 4000);
       khSetPendingUpload(true);
-      // Hata durumunda yine de kilidi bırakmaya çalış (versiyon değişmeden)
-      try { await sbReleaseLock(khGetLocalVersion()); } catch(_) {}
       return false;
     } finally {
       _khSyncing = false;
@@ -659,18 +608,13 @@
     return { paramData: KH.paramData.filter(r => r[0]).map(r => [...r]), assignments: asgn };
   }
 
-  function khSaveLocal(syncVersion) {
+  function khSaveLocal() {
     localStorage.setItem('dataX', JSON.stringify(khToJSON()));
     localStorage.setItem('dataX_version', KH_DATA_VERSION);
-    if (syncVersion !== undefined) {
-      localStorage.setItem('dataX_sync_version', String(syncVersion));
-      khSetPendingUpload(false);
-    } else {
-      khSetPendingUpload(true);
-    }
   }
 
   function khSave() {
+    khSetPendingUpload(true);
     khSaveLocal();
     khToast('Kaydedildi ✓', 1400);
     if (navigator.onLine) khSyncToSupabase();
@@ -1939,7 +1883,7 @@
     if (!confirm('localStorage temizlenecek ve Supabase\'den tüm veriler yeniden çekilecek. Emin misiniz?')) return;
     localStorage.removeItem('dataX');
     localStorage.removeItem('dataX_version');
-    localStorage.removeItem('dataX_sync_version'); // versiyon önbelleğini de temizle
+    localStorage.removeItem(KH_SYNC_AT_KEY);
     localStorage.removeItem(KH_PENDING_UPLOAD_KEY);
     KH._ready = false;
     KH.paramData = [];
@@ -1949,8 +1893,8 @@
     khToast('Supabase\'den yükleniyor...', 5000);
     try {
       await khLoadFromSupabase();
-      const sbVer = await khGetSupabaseVersion();
-      khSaveLocal(sbVer !== null ? sbVer : khGetLocalVersion());
+      khSaveLocal();
+      khSetLastSyncAt();
       khSyncStatus('ok');
       KH._ready = true;
       khBuildFR(); khBuildHeader(); khVSR();
