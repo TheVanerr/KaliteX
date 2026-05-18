@@ -370,6 +370,28 @@
     else localStorage.removeItem(KH_PENDING_UPLOAD_KEY);
   }
 
+  // ── Kasıtlı silme takibi ─────────────────────────────────────────────────────
+  // "local'de yok = başka cihaz ekledi" ile "local'den sildim" arasındaki farkı ayırt eder.
+  // Sadece bu cihazda açıkça silinen kodlar Supabase'den de silinir.
+  const KH_DELETED_KODLAR_KEY = 'kh_deleted_kodlar';
+  const KH_DELETED_ATAMA_KEY  = 'kh_deleted_atama';
+  function khGetDeletedKodlar() { try { return JSON.parse(localStorage.getItem(KH_DELETED_KODLAR_KEY)||'[]'); } catch(e) { return []; } }
+  function khAddDeletedKodlar(kodlar) {
+    const s = new Set([...khGetDeletedKodlar(), ...kodlar]);
+    localStorage.setItem(KH_DELETED_KODLAR_KEY, JSON.stringify([...s]));
+  }
+  function khClearDeletedKodlar() { localStorage.removeItem(KH_DELETED_KODLAR_KEY); }
+  function khGetDeletedAtama(mid) { try { const d = JSON.parse(localStorage.getItem(KH_DELETED_ATAMA_KEY)||'{}'); return d[mid] || []; } catch(e) { return []; } }
+  function khAddDeletedAtama(mid, kodlar) {
+    try {
+      const d = JSON.parse(localStorage.getItem(KH_DELETED_ATAMA_KEY)||'{}');
+      d[mid] = [...new Set([...(d[mid]||[]), ...kodlar])];
+      localStorage.setItem(KH_DELETED_ATAMA_KEY, JSON.stringify(d));
+    } catch(e) {}
+  }
+  function khClearDeletedAtama() { localStorage.removeItem(KH_DELETED_ATAMA_KEY); }
+
+
   let _khAutoRefreshInFlight = false;
   let _khLastFallbackPullAt = 0;
   async function khRefreshIfNeeded(reason) {
@@ -533,64 +555,81 @@
     _khSyncing = true;
     khSyncStatus('syncing');
 
-    // Snapshot al — sync sırasında bellek değişmez
     const _syncNow = new Date().toISOString();
-    const params = KH.paramData.filter(r => r[0]).map(r => ({
-      kod: r[0], alan_turu: r[1]||'', uzunluk: r[2]||'', desimal: r[3]||'', aciklama: r[4]||'', grup: r[5]||'', grup_kodu: r[6]||'', updated_at: _syncNow
-    }));
-    const localKodlar = params.map(p => p.kod);
-    const atamaRows = [];
-    const atamaByModel = {}; // mid → aktif parametre_kod listesi
-    const _seenAtama = new Set(); // (model_id|parametre_kod) çiftlerinde tekrar önleme
-    for (const [mid, obj] of Object.entries(KH.assignments)) {
-      atamaByModel[mid] = [];
-      for (const ri of Object.keys(obj)) {
-        const kod = KH.paramData[Number(ri)]?.[0];
-        if (!kod) continue;
-        const key = mid + '|' + kod;
-        if (_seenAtama.has(key)) continue; // aynı (model,kod) çifti zaten ekli
-        _seenAtama.add(key);
-        atamaRows.push({ model_id: mid, parametre_kod: kod });
-        atamaByModel[mid].push(kod);
-      }
-    }
 
     try {
-      // ── ADIM 1: Parametreleri UPSERT et ──────────────────────────────────────
-      for (let i = 0; i < params.length; i += 100)
-        await sbUpsert('kalite_parametreleri', params.slice(i, i + 100), 'kod');
+      // ── ADIM 0: Sunucudaki mevcut durumu çek (Pull → Merge → Push) ───────────
+      // Bu olmadan cihaz A'ın eklediği verileri cihaz B'nin sync'i siliyordu.
+      // Her cihaz yalnızca kendi bildiği verileri "tek gerçek" sanıyordu.
+      const [serverParams, serverAtama] = await Promise.all([
+        sbGetAll('kalite_parametreleri', 'order=id.asc'),
+        sbGetAll('model_atama', 'select=model_id,parametre_kod')
+      ]);
 
-      // ── ADIM 2: Local'de silinmiş parametreleri Supabase'den de sil ──────────
-      // Not: 300'den fazla satırda not.in() URL limiti aşılır — silme atlanır (ekleme/düzenleme her zaman çalışır)
-      if (localKodlar.length === 0) {
-        await sbDel('kalite_parametreleri', 'kod=not.is.null'); // tamamını sil (nadir durum)
-      } else if (localKodlar.length <= 300) {
-        await sbDel('kalite_parametreleri', 'kod=not.in.(' + localKodlar.join(',') + ')');
+      // ── ADIM 1: Parametreleri Merge et ve UPSERT et ───────────────────────────
+      // Server parametreleri base olarak al, local (kullanıcının düzenlediği) override eder
+      const mergedParamMap = new Map();
+      serverParams.forEach(p => mergedParamMap.set(p.kod, p)); // 1. server base
+      KH.paramData.filter(r => r[0]).forEach(r => {            // 2. local override
+        mergedParamMap.set(r[0], {
+          kod: r[0], alan_turu: r[1]||'', uzunluk: r[2]||'', desimal: r[3]||'',
+          aciklama: r[4]||'', grup: r[5]||'', grup_kodu: r[6]||'', updated_at: _syncNow
+        });
+      });
+      const mergedParams = [...mergedParamMap.values()];
+      for (let i = 0; i < mergedParams.length; i += 100)
+        await sbUpsert('kalite_parametreleri', mergedParams.slice(i, i + 100), 'kod');
+
+      // ── ADIM 2: Kasıtlı silinen parametreleri Supabase'den sil ───────────────
+      // "local'de olmayan her şeyi sil" YERİNE sadece bu cihazda açıkça silinen
+      // kodları sil. Bu sayede diğer cihazın eklediği veriler korunur.
+      const deletedKodlar = khGetDeletedKodlar();
+      if (deletedKodlar.length > 0 && deletedKodlar.length <= 300) {
+        await sbDel('kalite_parametreleri', 'kod=in.(' + deletedKodlar.join(',') + ')');
       }
-      // 300+ satırda silme işlemi URL limiti nedeniyle yapılmaz, eklenmiş satırlar güvende
 
-      // ── ADIM 3: Her model için atmaları sıfırla ve yeniden ekle ─────────────
-      // UPSERT yerine DELETE+INSERT: DB'de kalmış duplicate satırlardan kaynaklanan
-      // "ON CONFLICT DO UPDATE cannot affect row a second time" hatasını önler
-      for (const [mid, aktifKodlar] of Object.entries(atamaByModel)) {
+      // ── ADIM 3: Model atamalarını Merge et ve yaz ─────────────────────────────
+      // Server atamalarını model bazında grupla
+      const serverAtamaByModel = new Map();
+      serverAtama.forEach(a => {
+        if (!serverAtamaByModel.has(a.model_id)) serverAtamaByModel.set(a.model_id, new Set());
+        serverAtamaByModel.get(a.model_id).add(a.parametre_kod);
+      });
+
+      // Her model için: server atamaları ∪ local atamaları → kayıp olmaz
+      for (const [mid, obj] of Object.entries(KH.assignments)) {
+        const localKodlar = new Set();
+        for (const ri of Object.keys(obj)) {
+          const kod = KH.paramData[Number(ri)]?.[0];
+          if (kod) localKodlar.add(kod);
+        }
+        const serverKodlar = serverAtamaByModel.get(mid) || new Set();
+        // Birleşim: her iki cihazın atamalarını koru
+        const merged = new Set([...serverKodlar, ...localKodlar]);
+        // Bu modelde kasıtlı kaldırılanları çıkar
+        const deletedAtama = khGetDeletedAtama(mid);
+        deletedAtama.forEach(k => merged.delete(k));
+
         await sbDel('model_atama', 'model_id=eq.' + mid);
-        if (aktifKodlar.length > 0) {
-          const rows = aktifKodlar.map(kod => ({ model_id: mid, parametre_kod: kod }));
+        if (merged.size > 0) {
+          const rows = [...merged].map(kod => ({ model_id: mid, parametre_kod: kod }));
           for (let i = 0; i < rows.length; i += 200)
             await sbPost('model_atama', rows.slice(i, i + 200));
         }
       }
 
-      // ── ADIM 4: Zaman damgası ve local kayıt ────────────────────────────────
-      khSetPendingUpload(false);
+      // ── ADIM 4: Merge edilmiş veriyi tekrar çek → local'i güncelle ───────────
+      await khLoadFromSupabase();
       khSaveLocal();
-      // Sunucudan gerçek timestamp'i çek ve kaydet.
-      // _syncNow cihaz saatiydi; tüm API çağrıları bittikten sonra localTs'i kaydetmek
-      // "localTs > serverTs" durumuna yol açar ve diğer cihazlar "zaten güncel" sanır.
+
+      // ── ADIM 5: Silme kayıtlarını temizle, timestamp kaydet ──────────────────
+      khClearDeletedKodlar();
+      khClearDeletedAtama();
+      khSetPendingUpload(false);
       const freshServerTs = await khGetServerLastUpdated();
       khSetLastSyncAt(freshServerTs || _syncNow);
       khSyncStatus('ok');
-      console.log(`[KaliteX] Sync tamamlandı: ${params.length} parametre, ${atamaRows.length} atama, serverTs=${freshServerTs}`);
+      console.log(`[KaliteX] Sync tamamlandı: ${mergedParams.length} parametre, serverTs=${freshServerTs}`);
       return true;
 
     } catch(e) {
@@ -986,10 +1025,32 @@
     const { r1, c1, r2, c2 } = KH.sel; if (r1 < 0) return;
     const minR = Math.min(r1,r2), maxR = Math.max(r1,r2);
     const minC = Math.min(c1,c2), maxC = Math.max(c1,c2);
-    for (let r = minR; r <= maxR; r++) for (let c = minC; c <= maxC; c++) {
-      if (c < KH_FIXED.length) KH.paramData[r][c] = '';
-      else khMValSet(KH_MODELS[c - KH_FIXED.length].id, r, '');
+
+    // Kasıtlı silme takibi: KOD sütunu (ci=0) siliniyorsa Supabase'deki kaydı da sil
+    // Model atama sütunu siliniyorsa o modelin atamasını kaldır
+    const deletedKodlar = [];
+    const deletedAtamaByModel = {}; // mid → [kod, ...]
+    for (let r = minR; r <= maxR; r++) {
+      for (let c = minC; c <= maxC; c++) {
+        if (c === 0 && KH.paramData[r][0]) {
+          // KOD sütunu temizleniyor = satır siliniyor
+          deletedKodlar.push(KH.paramData[r][0]);
+        } else if (c >= KH_FIXED.length) {
+          // Model atama sütunu temizleniyor
+          const mid = KH_MODELS[c - KH_FIXED.length].id;
+          const kod = KH.paramData[r][0];
+          if (kod) {
+            if (!deletedAtamaByModel[mid]) deletedAtamaByModel[mid] = [];
+            deletedAtamaByModel[mid].push(kod);
+          }
+        }
+        if (c < KH_FIXED.length) KH.paramData[r][c] = '';
+        else khMValSet(KH_MODELS[c - KH_FIXED.length].id, r, '');
+      }
     }
+    if (deletedKodlar.length) khAddDeletedKodlar(deletedKodlar);
+    for (const [mid, kodlar] of Object.entries(deletedAtamaByModel)) khAddDeletedAtama(mid, kodlar);
+
     KH._dirty = true; khVSR();
   }
 
