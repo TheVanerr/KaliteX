@@ -582,11 +582,15 @@
       }
 
       // ── ADIM 4: Zaman damgası ve local kayıt ────────────────────────────────
-      khSetLastSyncAt();
       khSetPendingUpload(false);
       khSaveLocal();
+      // Sunucudan gerçek timestamp'i çek ve kaydet.
+      // _syncNow cihaz saatiydi; tüm API çağrıları bittikten sonra localTs'i kaydetmek
+      // "localTs > serverTs" durumuna yol açar ve diğer cihazlar "zaten güncel" sanır.
+      const freshServerTs = await khGetServerLastUpdated();
+      khSetLastSyncAt(freshServerTs || _syncNow);
       khSyncStatus('ok');
-      console.log(`[KaliteX] Sync tamamlandı: ${params.length} parametre, ${atamaRows.length} atama`);
+      console.log(`[KaliteX] Sync tamamlandı: ${params.length} parametre, ${atamaRows.length} atama, serverTs=${freshServerTs}`);
       return true;
 
     } catch(e) {
