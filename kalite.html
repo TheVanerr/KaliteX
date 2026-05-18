@@ -284,13 +284,27 @@
     return Object.assign({ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, extra || {});
   }
 
+  // Supabase JWT 401 alınırsa token'ı yenile ve isteği tekrar dene
+  async function _sbFetch(input, init) {
+    let r = await fetch(input, init);
+    if (r.status === 401 && currentUser) {
+      const ok = await authRefreshToken();
+      if (ok) {
+        // Headers'ı yeni token ile güncelle
+        const newHeaders = sbH(init.headers?.Prefer ? { 'Prefer': init.headers.Prefer } : {});
+        r = await fetch(input, { ...init, headers: newHeaders });
+      }
+    }
+    return r;
+  }
+
   async function sbGet(tbl, qs) {
-    const r = await fetch(SB_URL + '/rest/v1/' + tbl + (qs ? '?' + qs : ''), { headers: sbH() });
+    const r = await _sbFetch(SB_URL + '/rest/v1/' + tbl + (qs ? '?' + qs : ''), { headers: sbH() });
     if (!r.ok) throw new Error(await r.text());
     return r.json();
   }
   async function sbPost(tbl, data, pref) {
-    const r = await fetch(SB_URL + '/rest/v1/' + tbl, {
+    const r = await _sbFetch(SB_URL + '/rest/v1/' + tbl, {
       method: 'POST', headers: sbH({ 'Prefer': pref || 'return=minimal' }), body: JSON.stringify(data)
     });
     if (!r.ok) throw new Error(await r.text());
@@ -299,7 +313,7 @@
   // onConflict: çakışma çözümünde kullanılacak sütun(lar), örn: "kod" veya "model_id,parametre_kod"
   async function sbUpsert(tbl, data, onConflict) {
     const qs = onConflict ? '?on_conflict=' + onConflict : '';
-    const r = await fetch(SB_URL + '/rest/v1/' + tbl + qs, {
+    const r = await _sbFetch(SB_URL + '/rest/v1/' + tbl + qs, {
       method: 'POST',
       headers: sbH({ 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
       body: JSON.stringify(data)
@@ -307,7 +321,7 @@
     if (!r.ok) throw new Error(await r.text());
   }
   async function sbDel(tbl, filter) {
-    const r = await fetch(SB_URL + '/rest/v1/' + tbl + '?' + filter, { method: 'DELETE', headers: sbH() });
+    const r = await _sbFetch(SB_URL + '/rest/v1/' + tbl + '?' + filter, { method: 'DELETE', headers: sbH() });
     if (!r.ok) throw new Error(await r.text());
   }
 
@@ -1558,6 +1572,48 @@
     window.location.href = SB_URL + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(redirectTo);
   }
 
+  // ── Token yenileme ──────────────────────────────────────────────────────────
+  async function authRefreshToken() {
+    try {
+      const raw = localStorage.getItem('kx_editor_session');
+      if (!raw) return false;
+      const s = JSON.parse(raw);
+      if (!s.refresh_token) return false;
+      const res = await fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+        method: 'POST',
+        headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: s.refresh_token })
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      SB_TOKEN = data.access_token;
+      const expiresAt = Math.floor(Date.now() / 1000) + (data.expires_in || 3600);
+      localStorage.setItem('kx_editor_session', JSON.stringify({
+        token: data.access_token,
+        refresh_token: data.refresh_token || s.refresh_token,
+        email: s.email, name: s.name,
+        expires_at: expiresAt
+      }));
+      authScheduleRefresh(expiresAt);
+      console.log('[KaliteX] JWT token yenilendi ✓');
+      return true;
+    } catch(e) {
+      console.warn('[KaliteX] Token yenileme hatası:', e);
+      return false;
+    }
+  }
+
+  let _authRefreshTimer = null;
+  function authScheduleRefresh(expiresAt) {
+    if (_authRefreshTimer) clearTimeout(_authRefreshTimer);
+    const delay = (expiresAt - Math.floor(Date.now() / 1000) - 300) * 1000; // expire'dan 5 dk önce
+    if (delay > 0) {
+      _authRefreshTimer = setTimeout(() => {
+        authRefreshToken().then(ok => { if (ok) authUpdateUI(); });
+      }, delay);
+    }
+  }
+
   async function authCheckCallback() {
     // OAuth sonrası URL'de #access_token=... var mı?
     const hash = window.location.hash;
@@ -1576,10 +1632,15 @@
       if (ALLOWED_EDITORS.some(e => e.toLowerCase() === email)) {
         SB_TOKEN = token;
         currentUser = { email: data.email, name: data.user_metadata?.name || data.email.split('@')[0] };
+        const refreshToken = params.get('refresh_token');
+        const expiresIn = parseInt(params.get('expires_in') || '3600', 10);
+        const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
         localStorage.setItem('kx_editor_session', JSON.stringify({
-          token, email: data.email, name: currentUser.name,
-          expires_at: Math.floor(Date.now() / 1000) + 3600
+          token, refresh_token: refreshToken,
+          email: data.email, name: currentUser.name,
+          expires_at: expiresAt
         }));
+        authScheduleRefresh(expiresAt);
       } else {
         khToast('⛔ ' + data.email + ' düzenleyici listesinde değil.', 4000);
       }
@@ -1591,9 +1652,21 @@
       const raw = localStorage.getItem('kx_editor_session');
       if (!raw) return;
       const s = JSON.parse(raw);
-      if (s.token && s.expires_at > Math.floor(Date.now() / 1000)) {
+      const now = Math.floor(Date.now() / 1000);
+      if (s.token && s.expires_at > now) {
         SB_TOKEN = s.token;
         currentUser = { email: s.email, name: s.name };
+        authScheduleRefresh(s.expires_at);
+      } else if (s.refresh_token) {
+        // Token expire olmuş ama refresh_token var — kullanıcıyı restore et, async yenile
+        currentUser = { email: s.email, name: s.name };
+        authRefreshToken().then(ok => {
+          if (!ok) {
+            localStorage.removeItem('kx_editor_session');
+            currentUser = null; SB_TOKEN = null;
+          }
+          authUpdateUI();
+        });
       } else {
         localStorage.removeItem('kx_editor_session');
       }
