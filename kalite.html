@@ -2746,23 +2746,46 @@
   }
 
   async function hardRefreshApp() {
+    const _btn = document.querySelector('button[onclick="hardRefreshApp()"]');
+    const _btnDisable = () => { if (_btn) { _btn.style.opacity = '0.4'; _btn.style.pointerEvents = 'none'; } };
+    const _btnEnable  = () => { if (_btn) { _btn.style.opacity = ''; _btn.style.pointerEvents = ''; } };
+
+    // ── Kalite Formu sayfası: sadece veriyi tazele, sayfa yenileme yok ──────
+    if (currentPage === 'kalite-formu') {
+      if (_kfSavingToCloud) { kfToast('Supabase yazimi suruyor, lutfen tamamlanmasini bekleyin.'); return; }
+      if (!navigator.onLine) { kfToast('İnternet bağlantısı yok.'); return; }
+      _btnDisable();
+      kfSyncStatus('syncing');
+      try {
+        await kfSbSync();
+        kfSyncStatus('ok');
+        kfToast('Formlar güncellendi ✓');
+      } catch(e) {
+        kfSyncStatus('error');
+        kfToast('⚠️ Güncelleme hatası: ' + (e.message || e));
+      } finally {
+        _btnEnable();
+      }
+      return;
+    }
+
+    // ── Kalite Havuzu / Model sayfası: Supabase'den yenile, sayfa yenileme yok ──
+    const _isModelPage = typeof KH_MODELS !== 'undefined' && KH_MODELS.some(m => m.id === currentPage);
+    if (currentPage === 'kalite-havuzu' || _isModelPage) {
+      if (_khSyncing) { khToast('Bulut senkronu suruyor, lutfen bekleyin.', 1800); return; }
+      _btnDisable();
+      try { await khForceReload(); } finally { _btnEnable(); }
+      return;
+    }
+
+    // ── Diğer sayfalar: cache temizle + hard reload ──────────────────────────
     try {
-      if (typeof _kfSavingToCloud !== 'undefined' && _kfSavingToCloud) {
-        kfToast('Supabase yazimi suruyor, lutfen tamamlanmasini bekleyin.');
-        return;
-      }
-      if (typeof _khSyncing !== 'undefined' && _khSyncing) {
-        khToast('Bulut senkronu suruyor, lutfen bekleyin.', 1800);
-        return;
-      }
-
-      if (typeof khToast === 'function') khToast('Onbellek temizleniyor, sayfa yenileniyor...');
-
+      if (_kfSavingToCloud) { kfToast('Supabase yazimi suruyor, lutfen tamamlanmasini bekleyin.'); return; }
+      if (_khSyncing) { khToast('Bulut senkronu suruyor, lutfen bekleyin.', 1800); return; }
       if ('caches' in window) {
         const keys = await caches.keys();
         await Promise.all(keys.map(k => caches.delete(k)));
       }
-
       if ('serviceWorker' in navigator) {
         const regs = await navigator.serviceWorker.getRegistrations();
         await Promise.all(regs.map(r => r.unregister()));
