@@ -3163,11 +3163,11 @@
       addTo(monMap, a.montajci);
     });
 
-    const rpPersonelBlock = (title, color, map) => {
+    const rpPersonelBlock = (title, color, map, rol) => {
       const items = Object.entries(map).sort((a,b)=>{
         const ar = a[1].toplamT>0?a[1].toplamHata/a[1].toplamT:0;
         const br = b[1].toplamT>0?b[1].toplamHata/b[1].toplamT:0;
-        return br - ar; // en çok hata yapan üstte
+        return br - ar;
       });
       if (!items.length) return `<div style="color:#9ca3af;font-size:12px;padding:8px 0;">Veri yok.</div>`;
       return items.map(([isim, d]) => {
@@ -3176,9 +3176,10 @@
         const bc = basariOrani===null?'#9ca3af':basariOrani>=90?'#16a34a':basariOrani>=70?'#d97706':'#dc2626';
         const makineler = Object.values(d.makineler).sort((a,b)=>b.hata-a.hata)
           .map(m=>`<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:2px 7px;font-size:10px;margin:2px;font-weight:600;color:#374151;">${m.lbl} (${m.sayi} form${m.hata>0?', '+m.hata+' hata':''})</span>`).join('');
-        return `<div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+        const isimEnc = encodeURIComponent(isim);
+        return `<div onclick="rpShowPersonelDetail('${isimEnc}','${rol}')" style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:box-shadow .15s;" onmouseenter="this.style.boxShadow='0 2px 12px rgba(0,0,0,0.09)'" onmouseleave="this.style.boxShadow=''">
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
-            <div style="font-size:14px;font-weight:800;color:#111827;flex:1;">${isim}</div>
+            <div style="font-size:14px;font-weight:800;color:#111827;flex:1;">${isim} <span style="font-size:10px;color:#9ca3af;font-weight:600;">detay için tıkla</span></div>
             <div style="background:#f9fafb;border-radius:7px;padding:5px 12px;text-align:center;min-width:70px;">
               <div style="font-size:18px;font-weight:900;color:${bc};">${basariOrani!==null?'%'+basariOrani:'—'}</div>
               <div style="font-size:9px;color:#6b7280;font-weight:700;text-transform:uppercase;">Başarı</div>
@@ -3207,14 +3208,68 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
         <div>
           <div style="font-size:13px;font-weight:800;color:#dc2626;border-bottom:2px solid #fee2e2;padding-bottom:7px;margin-bottom:12px;">🔥 Kaynakçılar</div>
-          ${rpPersonelBlock('Kaynakçı','#dc2626',kayMap)}
+          ${rpPersonelBlock('Kaynakçı','#dc2626',kayMap,'kaynakci')}
         </div>
         <div>
           <div style="font-size:13px;font-weight:800;color:#2563eb;border-bottom:2px solid #dbeafe;padding-bottom:7px;margin-bottom:12px;">🔧 Montajcılar</div>
-          ${rpPersonelBlock('Montajcı','#2563eb',monMap)}
+          ${rpPersonelBlock('Montajcı','#2563eb',monMap,'montajci')}
         </div>
       </div>
       <style>@media(max-width:640px){.rp-personel-grid{grid-template-columns:1fr!important;}}</style>`;
+  }
+
+  function rpShowPersonelDetail(isimEnc, rol) {
+    const isim = decodeURIComponent(isimEnc);
+    const filtered = rpApplyFilters(window._rpForms);
+    // Bu kişinin yer aldığı formları bul
+    const forms = filtered.filter(f => {
+      const a = rpAnalyzeForm(f);
+      return rol === 'kaynakci' ? a.kaynakci === isim : a.montajci === isim;
+    }).sort((a,b) => new Date(b.savedAt) - new Date(a.savedAt));
+
+    if (!forms.length) { rpCloseModal(); return; }
+
+    const rolLbl = rol === 'kaynakci' ? '🔥 Kaynakçı' : '🔧 Montajcı';
+    const rolRenk = rol === 'kaynakci' ? '#dc2626' : '#2563eb';
+    const toplamHata = forms.reduce((s,f) => s + rpAnalyzeForm(f).hata, 0);
+
+    const formBlocks = forms.map(f => {
+      const a = rpAnalyzeForm(f);
+      const tarih = new Date(f.savedAt||f.updatedAt).toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric'});
+      // Sadece T tipinde HAYIR olan satırlar
+      const hatalar = (f.data||[]).filter(r => r[6]===1 && (r[7]||'').toUpperCase().trim()==='T' && r[3]==='HAYIR');
+      const hataHtml = hatalar.length === 0
+        ? `<div style="font-size:11px;color:#16a34a;padding:4px 0;">✅ Bu formda hata yok</div>`
+        : hatalar.map(r => `<div style="display:flex;gap:8px;align-items:flex-start;padding:4px 0;border-bottom:1px solid #f3f4f6;">
+            <span style="font-size:10px;font-weight:800;color:#dc2626;background:#fee2e2;border-radius:4px;padding:2px 6px;white-space:nowrap;flex-shrink:0;">${r[0]||'—'}</span>
+            <span style="font-size:11px;color:#374151;">${r[1]||''}</span>
+            <span style="font-size:10px;color:#9ca3af;white-space:nowrap;flex-shrink:0;">${r[2]||''}</span>
+          </div>`).join('');
+      const bc = a.passRate===null?'#9ca3af':a.passRate>=90?'#16a34a':a.passRate>=70?'#d97706':'#dc2626';
+      return `<div style="border:1px solid ${a.hata>0?'#fca5a5':'#e5e7eb'};border-radius:10px;margin-bottom:10px;overflow:hidden;">
+        <div style="background:${a.hata>0?'#fff1f1':'#f9fafb'};padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;" onclick="rpShowDetail('${f.id}')">
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:800;color:#111827;">${f.name||'—'}</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:1px;">${f.modelLabel||'—'} &nbsp;·&nbsp; ${tarih}</div>
+          </div>
+          <span style="font-size:16px;font-weight:900;color:${bc};">${a.passRate!==null?'%'+a.passRate:'—'}</span>
+          <span style="font-size:11px;font-weight:700;color:${a.hata>0?'#dc2626':'#16a34a'};">${a.hata>0?a.hata+' hata':'✓ Hatasız'}</span>
+          <span style="font-size:10px;color:#9ca3af;">detay ▶</span>
+        </div>
+        ${hatalar.length > 0 ? `<div style="padding:8px 14px;">${hataHtml}</div>` : `<div style="padding:6px 14px;">${hataHtml}</div>`}
+      </div>`;
+    }).join('');
+
+    document.getElementById('rp-mbox').innerHTML = `
+      <div style="background:${rolRenk};color:#fff;padding:15px 18px;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:14px;font-weight:800;">${isim}</div>
+          <div style="font-size:11px;opacity:.8;margin-top:2px;">${rolLbl} · ${forms.length} form · toplam ${toplamHata} hata</div>
+        </div>
+        <button onclick="rpCloseModal()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:26px;height:26px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+      <div style="padding:14px 18px;max-height:70vh;overflow-y:auto;">${formBlocks}</div>`;
+    document.getElementById('rp-modal').style.display = 'block';
   }
 
   function rpTabNotes(panel, filtered) {
