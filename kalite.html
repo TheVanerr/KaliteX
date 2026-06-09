@@ -1247,8 +1247,21 @@
 
       function kfBuildRows() {
         let html = '';
+        let lastGrup = null;
         for (let ri = 0; ri < window.kfData.length; ri++) {
           const row = window.kfData[ri];
+          // Grup başlık satırı: parametre satırı ve grup değiştiyse
+          if (row[6] === 1 && row[2] && row[2] !== lastGrup) {
+            lastGrup = row[2];
+            const grupEsc = kfEsc(row[2]);
+            html += '<tr class="kf-grup-hdr" data-grup="' + grupEsc + '">'
+              + '<td class="kf-rn" style="background:#fef2f2;"></td>'
+              + '<td colspan="6" style="background:#fef2f2;border-bottom:1px solid #fca5a5;padding:0 10px;height:30px;">'
+              + '<div style="display:flex;align-items:center;justify-content:space-between;">'
+              + '<span style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.06em;">' + grupEsc + '</span>'
+              + '<button onclick="kfGroupAllEvet(this.closest(\'tr\').dataset.grup)" style="font-size:10px;font-weight:700;color:#16a34a;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:5px;padding:2px 9px;cursor:pointer;font-family:inherit;line-height:1.6;touch-action:manipulation;" title="Bu gruptaki tüm T tipi soruları EVET yap">\u2713 Tümü EVET</button>'
+              + '</div></td></tr>';
+          }
           html += `<tr class="kf-row" data-ri="${ri}">`;
           html += `<td class="kf-rn">${ri + 1}</td>`;
           for (let ci = 0; ci < 6; ci++) {
@@ -1859,6 +1872,28 @@
         const refCell = document.querySelector(`#kf-tbody .kf-row[data-ri="${ri}"] .kf-cell[data-ci="5"] .kf-cv`);
         if (refCell) refCell.textContent = window.kfData[ri][5];
       }
+    }
+  };
+
+  // Gruptaki tüm T tipindeki satırları EVET yap
+  window.kfGroupAllEvet = function(grupAdi) {
+    if (!window.kfData) return;
+    let degistirilen = 0;
+    window.kfData.forEach((row, ri) => {
+      if (row[6] !== 1) return;                      // parametre satırı değil
+      if ((row[2] || '') !== grupAdi) return;        // farklı grup
+      if ((row[7] || '').toUpperCase().trim() !== 'T') return; // sadece T tipi
+      if (row[3] === 'EVET') return;                 // zaten EVET
+      window.kfSonucSet(ri, 'EVET');
+      // Ekrandaki select'i güncelle
+      const sel = document.querySelector(`#kf-tbody .kf-row[data-ri="${ri}"] select.kf-sel`);
+      if (sel) sel.value = 'EVET';
+      degistirilen++;
+    });
+    if (degistirilen === 0) {
+      kfToast('Bu grupta zaten tümü EVET ✓');
+    } else {
+      kfToast(`✓ ${grupAdi}: ${degistirilen} satır EVET yapıldı`);
     }
   };
 
