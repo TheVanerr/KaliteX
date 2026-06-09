@@ -2854,7 +2854,7 @@
   // ─────────────────────────────────────────────────────────────────────────
   // RAPOR SAYFASI
   // ─────────────────────────────────────────────────────────────────────────
-  window._rpFilters = { period: 'month', modelId: '', kontrolor: '' };
+  window._rpFilters = { period: 'month', modelId: '', kaynakci: '', montajci: '' };
   window._rpActiveTab = 'list';
   window._rpForms = [];
 
@@ -2876,26 +2876,33 @@
       const d = new Date(f.savedAt || f.updatedAt || 0);
       if (d < from || d > to) return false;
       if (window._rpFilters.modelId && f.modelId !== window._rpFilters.modelId) return false;
-      if (window._rpFilters.kontrolor && rpGetKontrolör(f) !== window._rpFilters.kontrolor) return false;
+      if (window._rpFilters.kaynakci && rpGetKaynakci(f) !== window._rpFilters.kaynakci) return false;
+      if (window._rpFilters.montajci && rpGetMontajci(f) !== window._rpFilters.montajci) return false;
       return true;
     });
   }
 
-  function rpGetKontrolör(form) {
+  function rpGetKaynakci(form) {
     const row = (form.data || []).find(r => r[0] === 'K9011');
+    return row ? String(row[3] || '') : '';
+  }
+  function rpGetMontajci(form) {
+    const row = (form.data || []).find(r => r[0] === 'K9012');
     return row ? String(row[3] || '') : '';
   }
 
   function rpAnalyzeForm(form) {
     const dataRows = (form.data || []).filter(r => r[6] === 1);
+    // Hata: sadece T tipindeki HAYIR’lar (KD ve sayısal değerler hata sayılmaz)
     const tRows = dataRows.filter(r => (r[7] || '') === 'T');
     const evet  = tRows.filter(r => r[3] === 'EVET').length;
-    const hayir = tRows.filter(r => r[3] === 'HAYIR').length;
+    const hata  = tRows.filter(r => r[3] === 'HAYIR').length; // HAYIR = hata
     const kd    = tRows.filter(r => r[3] === 'KD').length;
     const total = tRows.length;
     const passRate = total > 0 ? Math.round(evet / total * 100) : null;
-    return { evet, hayir, kd, total, passRate,
-      kontrolor:  rpGetKontrolör(form),
+    return { evet, hata, hayir: hata, kd, total, passRate,
+      kaynakci:  rpGetKaynakci(form),
+      montajci:  rpGetMontajci(form),
       hasAksilik: (form.notes?.aksilikler || []).length > 0 };
   }
 
@@ -2954,7 +2961,8 @@
           </div>
           <div class="rp-div"></div>
           <select class="rp-sel" onchange="rpSetModel(this.value)"><option value="">Tüm Modeller</option>${mOpts}</select>
-          <select class="rp-sel" id="rp-ksel" onchange="rpSetKontr(this.value)"><option value="">Tüm Kontrolörler</option></select>
+          <select class="rp-sel" id="rp-kaysel" onchange="rpSetKaynakci(this.value)"><option value="">Tüm Kaynakçılar</option></select>
+          <select class="rp-sel" id="rp-monsel" onchange="rpSetMontajci(this.value)"><option value="">Tüm Montajcılar</option></select>
           <span id="rp-lst" style="font-size:11px;color:#6b7280;font-weight:600;margin-left:auto;"></span>
         </div>
         <div class="rp-kpis" id="rp-kpis"></div>
@@ -2962,6 +2970,7 @@
           <button class="rp-tab${window._rpActiveTab==='list'?' on':''}" onclick="rpSetTab('list')">Form Listesi</button>
           <button class="rp-tab${window._rpActiveTab==='param'?' on':''}" onclick="rpSetTab('param')">Parametre Analizi</button>
           <button class="rp-tab${window._rpActiveTab==='model'?' on':''}" onclick="rpSetTab('model')">Model Karşılaştırma</button>
+          <button class="rp-tab${window._rpActiveTab==='personel'?' on':''}" onclick="rpSetTab('personel')">Personel Analizi</button>
           <button class="rp-tab${window._rpActiveTab==='notes'?' on':''}" onclick="rpSetTab('notes')">Aksilikler &amp; Revizeler</button>
         </div>
         <div class="rp-panel" id="rp-panel"></div>
@@ -2983,41 +2992,45 @@
     if (currentPage !== 'rapor') return;
     const filtered = rpApplyFilters(window._rpForms);
     rpRenderKPIs(filtered);
-    rpPopKontrFilt();
+    rpPopPersonelFilt();
     rpRenderTab(filtered);
   }
 
   function rpRenderKPIs(filtered) {
     const el = document.getElementById('rp-kpis'); if (!el) return;
-    let sumP=0, cntP=0, hayirF=0, aksilikF=0;
+    let sumP=0, cntP=0, hataF=0, aksilikF=0, toplamHata=0;
     filtered.forEach(f => {
       const a = rpAnalyzeForm(f);
       if (a.passRate !== null) { sumP += a.passRate; cntP++; }
-      if (a.hayir > 0) hayirF++;
+      if (a.hata > 0) hataF++;
       if (a.hasAksilik) aksilikF++;
+      toplamHata += a.hata;
     });
     const avg = cntP > 0 ? Math.round(sumP / cntP) : null;
     const ac = avg===null?'#9ca3af':avg>=80?'#16a34a':avg>=60?'#d97706':'#dc2626';
     el.innerHTML = `
       <div class="rp-kpi rp-kpi-a"><div class="rp-kpi-v">${filtered.length}</div><div class="rp-kpi-l">Toplam Form</div><div class="rp-kpi-s">Seçili dönem</div></div>
       <div class="rp-kpi rp-kpi-g"><div class="rp-kpi-v" style="color:${ac}">${avg!==null?'%'+avg:'—'}</div><div class="rp-kpi-l">Ort. Geçme</div><div class="rp-kpi-s">EVET / toplam T</div></div>
-      <div class="rp-kpi rp-kpi-r"><div class="rp-kpi-v" style="color:${hayirF>0?'#dc2626':'#16a34a'}">${hayirF}</div><div class="rp-kpi-l">HAYIR İçeren</div><div class="rp-kpi-s">Form sayısı</div></div>
-      <div class="rp-kpi rp-kpi-o"><div class="rp-kpi-v" style="color:${aksilikF>0?'#d97706':'#16a34a'}">${aksilikF}</div><div class="rp-kpi-l">Aksiliği Olan</div><div class="rp-kpi-s">Form sayısı</div></div>`;
+      <div class="rp-kpi rp-kpi-r"><div class="rp-kpi-v" style="color:${hataF>0?'#dc2626':'#16a34a'}">${hataF}</div><div class="rp-kpi-l">Hatalı Form</div><div class="rp-kpi-s">HAYIR içeren</div></div>
+      <div class="rp-kpi rp-kpi-o"><div class="rp-kpi-v" style="color:${toplamHata>0?'#d97706':'#16a34a'}">${toplamHata}</div><div class="rp-kpi-l">Toplam Hata</div><div class="rp-kpi-s">Tüm formlardaki HAYIR</div></div>`;
   }
 
-  function rpPopKontrFilt() {
-    const sel = document.getElementById('rp-ksel'); if (!sel) return;
-    const ks = [...new Set(window._rpForms.map(rpGetKontrolör).filter(Boolean))].sort();
-    const cur = window._rpFilters.kontrolor;
-    sel.innerHTML = '<option value="">Tüm Kontrolörler</option>' + ks.map(k=>`<option value="${k}"${cur===k?' selected':''}>${k}</option>`).join('');
+  function rpPopPersonelFilt() {
+    const ksel = document.getElementById('rp-kaysel');
+    const msel = document.getElementById('rp-monsel');
+    const ks = [...new Set(window._rpForms.map(rpGetKaynakci).filter(Boolean))].sort();
+    const ms = [...new Set(window._rpForms.map(rpGetMontajci).filter(Boolean))].sort();
+    if (ksel) ksel.innerHTML = '<option value="">Tüm Kaynakçılar</option>' + ks.map(k=>`<option value="${k}"${window._rpFilters.kaynakci===k?' selected':''}>${k}</option>`).join('');
+    if (msel) msel.innerHTML = '<option value="">Tüm Montajcılar</option>' + ms.map(k=>`<option value="${k}"${window._rpFilters.montajci===k?' selected':''}>${k}</option>`).join('');
   }
 
   function rpRenderTab(filtered) {
     const p = document.getElementById('rp-panel'); if (!p) return;
-    if (window._rpActiveTab === 'list')       rpTabList(p, filtered);
-    else if (window._rpActiveTab === 'param') rpTabParam(p, filtered);
-    else if (window._rpActiveTab === 'model') rpTabModel(p, filtered);
-    else                                      rpTabNotes(p, filtered);
+    if (window._rpActiveTab === 'list')         rpTabList(p, filtered);
+    else if (window._rpActiveTab === 'param')   rpTabParam(p, filtered);
+    else if (window._rpActiveTab === 'model')   rpTabModel(p, filtered);
+    else if (window._rpActiveTab === 'personel')rpTabPersonel(p, filtered);
+    else                                        rpTabNotes(p, filtered);
   }
 
   function rpTabList(panel, filtered) {
@@ -3029,17 +3042,19 @@
         :a.passRate>=90?`<span class="rp-bdg rp-bdg-g">%${a.passRate}</span>`
         :a.passRate>=70?`<span class="rp-bdg rp-bdg-y">%${a.passRate}</span>`
         :`<span class="rp-bdg rp-bdg-r">%${a.passRate}</span>`;
-      const dur = a.hayir>0?'<span class="rp-bdg rp-bdg-r">HAYIR VAR</span>'
+      const dur = a.hata>0?`<span class="rp-bdg rp-bdg-r">${a.hata} Hata</span>`
         :a.total>0?'<span class="rp-bdg rp-bdg-g">TAMAM</span>':'<span class="rp-bdg rp-bdg-b">BOŞ</span>';
       return `<tr onclick="rpShowDetail('${f.id}')">
         <td style="color:#6b7280;">${tarih}</td>
         <td style="font-weight:600;">${f.modelLabel||'—'}</td>
-        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name||'—'}</td>
-        <td>${a.kontrolor||'—'}</td><td>${pb}</td><td>${dur}</td>
+        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name||'—'}</td>
+        <td style="white-space:nowrap;">${a.kaynakci||'—'}</td>
+        <td style="white-space:nowrap;">${a.montajci||'—'}</td>
+        <td>${pb}</td><td>${dur}</td>
         <td style="text-align:center;">${a.hasAksilik?'⚠️':''}</td></tr>`;
     }).join('');
     panel.innerHTML = `<table class="rp-tbl"><thead><tr>
-      <th>Tarih</th><th>Model</th><th>Form Adı / Seri No</th><th>Kontrolör</th><th>Geçme %</th><th>Durum</th><th style="text-align:center;">⚠️</th>
+      <th>Tarih</th><th>Model</th><th>Form / Seri No</th><th>Kaynakçı</th><th>Montajcı</th><th>Geçme %</th><th>Durum</th><th style="text-align:center;">⚠️</th>
     </tr></thead><tbody>${rows}</tbody></table>`;
   }
 
@@ -3092,6 +3107,81 @@
       }).join('');
   }
 
+  function rpTabPersonel(panel, filtered) {
+    // Kaynakçı ve montajcı bazında hata/geçme istatistiği
+    const kayMap = {}, monMap = {};
+    filtered.forEach(f => {
+      const a = rpAnalyzeForm(f);
+      const lbl = f.modelLabel || '—';
+      const addTo = (map, isim) => {
+        if (!isim) return;
+        if (!map[isim]) map[isim] = { formSayisi:0, toplamHata:0, toplamEvet:0, toplamT:0, makineler:{} };
+        map[isim].formSayisi++;
+        map[isim].toplamHata += a.hata;
+        map[isim].toplamEvet += a.evet;
+        map[isim].toplamT   += a.total;
+        if (!map[isim].makineler[f.modelId||'__']) map[isim].makineler[f.modelId||'__'] = { lbl, sayi:0, hata:0 };
+        map[isim].makineler[f.modelId||'__'].sayi++;
+        map[isim].makineler[f.modelId||'__'].hata += a.hata;
+      };
+      addTo(kayMap, a.kaynakci);
+      addTo(monMap, a.montajci);
+    });
+
+    const rpPersonelBlock = (title, color, map) => {
+      const items = Object.entries(map).sort((a,b)=>{
+        const ar = a[1].toplamT>0?a[1].toplamHata/a[1].toplamT:0;
+        const br = b[1].toplamT>0?b[1].toplamHata/b[1].toplamT:0;
+        return br - ar; // en çok hata yapan üstte
+      });
+      if (!items.length) return `<div style="color:#9ca3af;font-size:12px;padding:8px 0;">Veri yok.</div>`;
+      return items.map(([isim, d]) => {
+        const basariOrani = d.toplamT > 0 ? Math.round(d.toplamEvet / d.toplamT * 100) : null;
+        const hataOrani   = d.toplamT > 0 ? Math.round(d.toplamHata / d.toplamT * 100) : 0;
+        const bc = basariOrani===null?'#9ca3af':basariOrani>=90?'#16a34a':basariOrani>=70?'#d97706':'#dc2626';
+        const makineler = Object.values(d.makineler).sort((a,b)=>b.hata-a.hata)
+          .map(m=>`<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:2px 7px;font-size:10px;margin:2px;font-weight:600;color:#374151;">${m.lbl} (${m.sayi} form${m.hata>0?', '+m.hata+' hata':''})</span>`).join('');
+        return `<div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+            <div style="font-size:14px;font-weight:800;color:#111827;flex:1;">${isim}</div>
+            <div style="background:#f9fafb;border-radius:7px;padding:5px 12px;text-align:center;min-width:70px;">
+              <div style="font-size:18px;font-weight:900;color:${bc};">${basariOrani!==null?'%'+basariOrani:'—'}</div>
+              <div style="font-size:9px;color:#6b7280;font-weight:700;text-transform:uppercase;">Başarı</div>
+            </div>
+            <div style="background:#f9fafb;border-radius:7px;padding:5px 12px;text-align:center;min-width:70px;">
+              <div style="font-size:18px;font-weight:900;color:${d.toplamHata>0?'#dc2626':'#16a34a'}">${d.toplamHata}</div>
+              <div style="font-size:9px;color:#6b7280;font-weight:700;text-transform:uppercase;">Hata</div>
+            </div>
+            <div style="background:#f9fafb;border-radius:7px;padding:5px 12px;text-align:center;min-width:70px;">
+              <div style="font-size:18px;font-weight:900;color:#374151;">${d.formSayisi}</div>
+              <div style="font-size:9px;color:#6b7280;font-weight:700;text-transform:uppercase;">Form</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <div style="height:8px;flex:1;background:#f3f4f6;border-radius:4px;overflow:hidden;">
+              <div style="height:100%;width:${Math.min(hataOrani,100)}%;background:${d.toplamHata>0?'#dc2626':'#16a34a'};border-radius:4px;"></div>
+            </div>
+            <span style="font-size:10px;color:#9ca3af;min-width:48px;">%${hataOrani} hata</span>
+          </div>
+          <div>${makineler}</div>
+        </div>`;
+      }).join('');
+    };
+
+    panel.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#dc2626;border-bottom:2px solid #fee2e2;padding-bottom:7px;margin-bottom:12px;">🔥 Kaynakçılar</div>
+          ${rpPersonelBlock('Kaynakçı','#dc2626',kayMap)}
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#2563eb;border-bottom:2px solid #dbeafe;padding-bottom:7px;margin-bottom:12px;">🔧 Montajcılar</div>
+          ${rpPersonelBlock('Montajcı','#2563eb',monMap)}
+        </div>
+      </div>
+      <style>@media(max-width:640px){.rp-personel-grid{grid-template-columns:1fr!important;}}</style>`;
+  }
+
   function rpTabNotes(panel, filtered) {
     const items = [];
     filtered.forEach(f => {
@@ -3120,7 +3210,7 @@
     const pc2 = a.passRate===null?'#6b7280':a.passRate>=80?'#16a34a':a.passRate>=60?'#d97706':'#dc2626';
     const aks = (f.notes?.aksilikler||[]).map(t=>`<div style="padding:5px 10px;background:#fff1f1;border-radius:6px;margin-bottom:4px;font-size:12px;color:#991b1b;">⚠️ ${t}</div>`).join('');
     const rev = (f.notes?.revizeler||[]).map(t=>`<div style="padding:5px 10px;background:#eff6ff;border-radius:6px;margin-bottom:4px;font-size:12px;color:#1e40af;">🔧 ${t}</div>`).join('');
-    const stats = [['%'+(a.passRate??'—'),'Geçme',pc2],[''+a.evet,'EVET','#16a34a'],[''+a.hayir,'HAYIR',a.hayir>0?'#dc2626':'#9ca3af'],[''+a.kd,'KD','#6b7280'],[a.kontrolor||'—','Kontrolör','#374151']]
+    const stats = [['%'+(a.passRate??'—'),'Geçme',pc2],[''+a.evet,'EVET','#16a34a'],[''+a.hata,'Hata',a.hata>0?'#dc2626':'#9ca3af'],[''+a.kd,'KD','#6b7280'],[a.kaynakci||'—','Kaynakçı','#374151'],[a.montajci||'—','Montajcı','#374151']]
       .map(([v,l,c])=>`<div style="background:#f9fafb;border-radius:8px;padding:8px 12px;flex:1;min-width:80px;text-align:center;"><div style="font-size:20px;font-weight:900;color:${c};">${v}</div><div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;">${l}</div></div>`).join('');
     document.getElementById('rp-mbox').innerHTML = `
       <div style="background:#dc2626;color:#fff;padding:15px 18px;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;">
@@ -3152,8 +3242,9 @@
     document.querySelectorAll('.rp-pb').forEach(b => b.classList.toggle('on', b.getAttribute('onclick') === `rpSetPeriod('${p}')`) );
     rpRefresh();
   }
-  function rpSetModel(v)  { window._rpFilters.modelId  = v; rpRefresh(); }
-  function rpSetKontr(v)  { window._rpFilters.kontrolor = v; rpRefresh(); }
+  function rpSetModel(v)     { window._rpFilters.modelId  = v; rpRefresh(); }
+  function rpSetKaynakci(v)  { window._rpFilters.kaynakci = v; rpRefresh(); }
+  function rpSetMontajci(v)  { window._rpFilters.montajci = v; rpRefresh(); }
   function rpSetTab(t) {
     window._rpActiveTab = t;
     document.querySelectorAll('.rp-tab').forEach(b => b.classList.toggle('on', b.getAttribute('onclick') === `rpSetTab('${t}')`) );
@@ -3163,13 +3254,13 @@
   function rpExportExcel() {
     const filtered = rpApplyFilters(window._rpForms);
     if (!filtered.length) { kfToast('Dışa aktarılacak form yok.'); return; }
-    const rows = [['Tarih','Model','Form Adı / Seri No','Kontrolör','Geçme %','EVET','HAYIR','KD','Toplam T Param.','Aksilik Sayısı','Revize Sayısı']];
+    const rows = [['Tarih','Model','Form Adı / Seri No','Kaynakçı','Montajcı','Geçme %','EVET','Hata (HAYIR)','KD','Toplam T Param.','Aksilik Sayısı','Revize Sayısı']];
     [...filtered].sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt)).forEach(f => {
       const a = rpAnalyzeForm(f);
       rows.push([new Date(f.savedAt||f.updatedAt).toLocaleDateString('tr-TR'),
-        f.modelLabel||'', f.name||'', a.kontrolor,
+        f.modelLabel||'', f.name||'', a.kaynakci, a.montajci,
         a.passRate!==null?'%'+a.passRate:'',
-        a.evet, a.hayir, a.kd, a.total,
+        a.evet, a.hata, a.kd, a.total,
         (f.notes?.aksilikler||[]).length, (f.notes?.revizeler||[]).length]);
     });
     const csv = '\uFEFF' + rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\r\n');
