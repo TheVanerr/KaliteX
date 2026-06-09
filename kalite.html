@@ -2307,6 +2307,16 @@
   function kfGenId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
   let _kfSavingToCloud = false;
 
+  // ── Kaydedilmemiş değişiklik tespiti ────────────────────────────────────────
+  // kfDoLoad ve kfDoSave sonrası snapshot alınır; ⟳ basılınca karşılaştırılır
+  window._kfCleanSnapshot = null;
+  function kfTakeSnapshot() { window._kfCleanSnapshot = JSON.stringify(window.kfData || []); }
+  function kfHasUnsavedChanges() {
+    if (!window.kfCurrentSaveId) return false;   // form açık değil
+    if (!window._kfCleanSnapshot) return false;
+    return window._kfCleanSnapshot !== JSON.stringify(window.kfData || []);
+  }
+
   function kfSyncStatus(s) {
     const el = document.getElementById('kf-sync-st');
     if (!el) return;
@@ -2543,6 +2553,7 @@
     if (idx >= 0) { entry.savedAt = forms[idx].savedAt || now; forms[idx] = entry; } else forms.push(entry);
     kfSvForms(forms);
     window.kfCurrentSaveId = id; window.kfCurrentSaveName = name;
+    kfTakeSnapshot(); // kayıt anını "temiz hal" olarak işaretle
     const slbl = document.getElementById('kf-save-name');
     if (slbl) kfSetSaveName(name);
     kfModalClose();
@@ -2638,6 +2649,7 @@
     if (slbl) kfSetSaveName(f.name);
     const tbody = document.getElementById('kf-tbody');
     if (tbody && typeof window.kfBuildRows === 'function') tbody.innerHTML = window.kfBuildRows();
+    kfTakeSnapshot(); // yükleme anını "temiz hal" olarak işaretle
     kfModalClose();
     kfNotesUpdateBadge();
     kfToast(f.name + ' y\u00fcklendi \u2713');
@@ -2750,16 +2762,46 @@
     const _btnDisable = () => { if (_btn) { _btn.style.opacity = '0.4'; _btn.style.pointerEvents = 'none'; } };
     const _btnEnable  = () => { if (_btn) { _btn.style.opacity = ''; _btn.style.pointerEvents = ''; } };
 
-    // ── Kalite Formu sayfası: sadece veriyi tazele, sayfa yenileme yok ──────
+    // ── Kalite Formu sayfası: Supabase'den son formları çek, ekranı güncelle ─
     if (currentPage === 'kalite-formu') {
       if (_kfSavingToCloud) { kfToast('Supabase yazimi suruyor, lutfen tamamlanmasini bekleyin.'); return; }
       if (!navigator.onLine) { kfToast('İnternet bağlantısı yok.'); return; }
+
+      // Kaydedilmemiş değişiklik varsa kullanıcıyı uyar
+      if (kfHasUnsavedChanges()) {
+        const devam = window.confirm(
+          'Formda kaydedilmemiş değişiklikler var.\n' +
+          'Yenilersen bu değişiklikler kaybolur, Supabase\'deki son hal gelir.\n\n' +
+          'Devam edilsin mi?'
+        );
+        if (!devam) return;
+      }
+
       _btnDisable();
       kfSyncStatus('syncing');
       try {
-        await kfSbSync();
+        const forms = await kfSbSync(); // localStorage + Supabase merge → güncel liste
+
+        // Açık form varsa ekrandaki veriyi de güncelle
+        if (window.kfCurrentSaveId && Array.isArray(forms)) {
+          const updated = forms.find(f => f.id === window.kfCurrentSaveId);
+          if (updated) {
+            window.kfData  = JSON.parse(JSON.stringify(updated.data));
+            window.kfNotes = kfNotesNormalize(updated.notes);
+            window.kfCurrentSaveName = updated.name;
+            const tbody = document.getElementById('kf-tbody');
+            if (tbody && typeof window.kfBuildRows === 'function') tbody.innerHTML = window.kfBuildRows();
+            kfSetSaveName(updated.name);
+            kfNotesUpdateBadge();
+            kfTakeSnapshot(); // yeni temiz hal
+            kfToast('Form güncellendi ✓');
+          } else {
+            kfToast('Form listesi güncellendi ✓');
+          }
+        } else {
+          kfToast('Form listesi güncellendi ✓');
+        }
         kfSyncStatus('ok');
-        kfToast('Formlar güncellendi ✓');
       } catch(e) {
         kfSyncStatus('error');
         kfToast('⚠️ Güncelleme hatası: ' + (e.message || e));
@@ -2821,12 +2863,20 @@
       navigator.serviceWorker.register('./sw.js')
         .then(reg => {
           console.log('[KaliteX] Service Worker aktif:', reg.scope);
-          // Arkaplan sync desteği varsa kaydet (ileride Supabase sync için)
           if ('sync' in reg) {
             reg.sync.register('sync-forms').catch(() => {});
           }
         })
         .catch(err => console.warn('[KaliteX] SW kaydı başarısız:', err));
+    });
+
+    // Yeni SW devreye girince (yani yeni kod deploy edilince) sayfayı otomatik yenile
+    // Böylece tablette eski JS çalışmaya devam etmez
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!_kfSavingToCloud && !_khSyncing) {
+        console.log('[KaliteX] Yeni Service Worker aktif, sayfa yenileniyor...');
+        window.location.reload();
+      }
     });
   }
 </script>
