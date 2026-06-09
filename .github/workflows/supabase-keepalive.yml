@@ -19,11 +19,14 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Supabase'e ping at
+        env:
+          SB_URL: 'https://rhrhueocmcjtntkyyack.supabase.co'
+          SB_KEY: 'sb_publishable_T0ZpujhmI_kBuuT4M6U1Gw_BCdweMf-'
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/sync_lock?select=data_version&limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}")
+            "$SB_URL/rest/v1/sync_lock?select=data_version&limit=1" \
+            -H "apikey: $SB_KEY" \
+            -H "Authorization: Bearer $SB_KEY")
           echo "HTTP Status: $STATUS"
           if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
             echo "✅ Supabase aktif ve yanıt veriyor."
