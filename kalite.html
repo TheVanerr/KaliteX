@@ -16,6 +16,7 @@
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Outfit', sans-serif; }
@@ -50,6 +51,9 @@
     .kfm-btns{display:flex;gap:8px;justify-content:flex-end;}
     .kfm-ok{background:#dc2626;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
     .kfm-cancel{background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .kfm-export{background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .kfm-export:hover{background:#15803d;}
+    .kfm-export:disabled{opacity:0.5;cursor:not-allowed;}
     .kfm-list{max-height:min(420px,58vh);overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;-webkit-overflow-scrolling:touch;}
     .kfm-item{display:flex;align-items:center;gap:10px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:9px;padding:10px 12px;cursor:pointer;transition:background .12s,border-color .12s;flex-shrink:0;}
     .kfm-item-info{flex:1;min-width:0;}
@@ -1851,15 +1855,25 @@
   function closeLogin() {}
   function handleLogin(e) { e.preventDefault(); }
 
+  function kfRequireModel() {
+    if (!window.kfCurrentModel) {
+      kfToast('Model Se\u00e7iniz');
+      return false;
+    }
+    return true;
+  }
+
   function handleFormAction(action) {
     switch(action) {
       case 'save':
         if (!isEditor()) { kfToast('Salt okunur modda kayıt yapılamaz.'); return; }
+        if (!kfRequireModel()) return;
         if (window.kfCurrentSaveId) kfDoSave(window.kfCurrentSaveName, false);
         else kfShowSaveModal(false);
         break;
       case 'save-as':
         if (!isEditor()) { kfToast('Salt okunur modda kayıt yapılamaz.'); return; }
+        if (!kfRequireModel()) return;
         kfShowSaveModal(true);
         break;
       case 'load':
@@ -2311,7 +2325,7 @@
   let _kxDriveToken = null;
   let _kxTokenClient = null;
 
-  function kxDriveBackup() {
+  function kxRequestDriveToken(onToken) {
     if (!window.google || !window.google.accounts) {
       kfToast('Google kiti yükleniyor, birkaç saniye bekleyip tekrar deneyin.');
       return;
@@ -2320,15 +2334,141 @@
       _kxTokenClient = google.accounts.oauth2.initTokenClient({
         client_id: KX_GDRIVE_CLIENT_ID,
         scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive',
-        callback: async (resp) => {
+        callback: (resp) => {
           if (resp.error) { kfToast('Google yetkilendirme hatası: ' + resp.error); return; }
           _kxDriveToken = resp.access_token;
-          await kxDoExport(_kxDriveToken);
+          onToken(_kxDriveToken);
         }
       });
     }
-    if (_kxDriveToken) { kxDoExport(_kxDriveToken); }
-    else { _kxTokenClient.requestAccessToken(); }
+    if (_kxDriveToken) onToken(_kxDriveToken);
+    else _kxTokenClient.requestAccessToken();
+  }
+
+  function kxDriveBackup() {
+    kxRequestDriveToken(kxDoExport);
+  }
+
+  const KX_FORM_TABLE_HDR = ['Parametre Kodu', 'Açıklama', 'Grup', 'Sonuç', 'Durum', 'Referans'];
+
+  function kxBuildFormSheetRows(f) {
+    const n = kfFormGetNotes(f);
+    return [
+      ['Form Adı',         f.name || ''],
+      ['Model',            f.modelLabel || f.modelId || ''],
+      ['Kaydedilme',       f.savedAt ? new Date(f.savedAt).toLocaleString('tr-TR') : ''],
+      ['Güncelleme',       f.updatedAt ? new Date(f.updatedAt).toLocaleString('tr-TR') : ''],
+      ['Aksilikler',       n.aksilikler.join(' | ') || '—'],
+      ['Revize Önerileri', n.revizeler.join(' | ') || '—'],
+      [],
+      KX_FORM_TABLE_HDR,
+      ...kfFormGetRows(f).map(row => [
+        String(row[0]||''), String(row[1]||''), String(row[2]||''),
+        String(row[3]||''), String(row[4]||''), String(row[5]||'')
+      ])
+    ];
+  }
+
+  function kxFormToXlsxBlob(f) {
+    if (typeof XLSX === 'undefined') throw new Error('Excel kiti yüklenemedi');
+    const ws = XLSX.utils.aoa_to_sheet(kxBuildFormSheetRows(f));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Veri');
+    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+
+  async function kxFindDriveFile(H, folderId, name) {
+    const q = `'${folderId}' in parents and name='${String(name).replace(/'/g, "\\'")}' and trashed=false`;
+    const res = await fetch(
+      'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name)',
+      { headers: H }
+    );
+    if (!res.ok) return null;
+    const files = (await res.json()).files || [];
+    return files[0]?.id || null;
+  }
+
+  async function kxUploadXlsx(H, folderId, filename, blob, existingId) {
+    const metadata = { name: filename, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' };
+    if (!existingId) metadata.parents = [folderId];
+    const formData = new FormData();
+    formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    formData.append('file', blob);
+    const url = existingId
+      ? `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=multipart`
+      : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+    const res = await fetch(url, {
+      method: existingId ? 'PATCH' : 'POST',
+      headers: { 'Authorization': H.Authorization },
+      body: formData
+    });
+    if (!res.ok) throw new Error('Drive yükleme hatası: ' + res.status + ' — ' + filename);
+    return (await res.json()).id;
+  }
+
+  async function kxEnsureFolder(H, folderName) {
+    const folderRes = await fetch(
+      'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(`name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`) + '&fields=files(id)',
+      { headers: H }
+    );
+    if (folderRes.status === 401) throw new Error('AUTH_EXPIRED');
+    if (folderRes.ok) {
+      const fd = await folderRes.json();
+      if (fd.files && fd.files.length) return fd.files[0].id;
+    }
+    const fRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST', headers: H,
+      body: JSON.stringify({ name: folderName, mimeType: 'application/vnd.google-apps.folder' })
+    });
+    if (!fRes.ok) throw new Error('Klasör oluşturulamadı: ' + fRes.status);
+    return (await fRes.json()).id;
+  }
+
+  function kfExportAllForms() {
+    if (!isEditor()) { kfToast('Salt okunur modda dışarı aktarılamaz.'); return; }
+    kxRequestDriveToken(kxDoExportQualityForms);
+  }
+
+  async function kxDoExportQualityForms(token) {
+    const btn = document.querySelector('.kfm-export');
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+    kfToast('Formlar Excel olarak aktarılıyor…');
+    try {
+      const H = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+      const folderId = await kxEnsureFolder(H, 'QUALITY FORMS');
+      let forms = kfGetForms();
+      if (navigator.onLine) {
+        const synced = await kfSbFetchForms();
+        if (synced) forms = synced;
+      }
+      if (!forms.length) { kfToast('Aktarılacak form bulunamadı.'); return; }
+      const usedNames = {};
+      let written = 0;
+      for (const f of forms) {
+        let base = String(f.name || 'Form').replace(/[\\\/\?\*\[\]\:]/g, '-').trim().substring(0, 90) || 'Form';
+        let filename = base + '.xlsx';
+        if (usedNames[filename]) filename = base + ' (' + f.id.slice(-6) + ').xlsx';
+        usedNames[filename] = true;
+        const blob = kxFormToXlsxBlob(f);
+        const existingId = await kxFindDriveFile(H, folderId, filename);
+        await kxUploadXlsx(H, folderId, filename, blob, existingId);
+        written++;
+      }
+      kfToast('✓ ' + written + ' form QUALITY FORMS klasörüne aktarıldı');
+      setTimeout(() => window.open('https://drive.google.com/drive/folders/' + folderId, '_blank'), 600);
+    } catch (e) {
+      if (e.message === 'AUTH_EXPIRED') {
+        _kxDriveToken = null; _kxTokenClient = null;
+        kfToast('Oturum süresi doldu, tekrar deneyin.');
+      } else {
+        _kxDriveToken = null;
+        kfToast('Dışarı aktarma hatası: ' + (e.message || e));
+        console.error('[KaliteX] QUALITY FORMS export:', e);
+      }
+    } finally {
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+    }
   }
 
   async function kxDoExport(token) {
@@ -2428,7 +2568,7 @@
       let forms = kfGetForms();
       if (navigator.onLine) { const s = await kfSbSync(); if (s) forms = s; }
 
-      const TABLE_HDR = ['Parametre Kodu', 'Açıklama', 'Grup', 'Sonuç', 'Durum', 'Referans'];
+      const TABLE_HDR = KX_FORM_TABLE_HDR;
       let written = 0, skipped = 0, lastSsId = null;
 
       // 5. Her form: değişmediyse ve Drive dosyası hâlâ varsa atla
@@ -2440,20 +2580,7 @@
 
         const title = String(f.name || 'Form').replace(/[\\\/\?\*\[\]\:]/g, '-').trim().substring(0, 100) || 'Form';
         const n = kfFormGetNotes(f);
-        const rows = [
-          ['Form Adı',         f.name || ''],
-          ['Model',            f.modelLabel || f.modelId || ''],
-          ['Kaydedilme',       f.savedAt ? new Date(f.savedAt).toLocaleString('tr-TR') : ''],
-          ['Güncelleme',       f.updatedAt ? new Date(f.updatedAt).toLocaleString('tr-TR') : ''],
-          ['Aksilikler',       n.aksilikler.join(' | ') || '—'],
-          ['Revize Önerileri', n.revizeler.join(' | ') || '—'],
-          [],
-          TABLE_HDR,
-          ...kfFormGetRows(f).map(row => [
-            String(row[0]||''), String(row[1]||''), String(row[2]||''),
-            String(row[3]||''), String(row[4]||''), String(row[5]||'')
-          ])
-        ];
+        const rows = kxBuildFormSheetRows(f);
 
         // Drive'da aynı isimli dosya varsa yeni oluşturma — log'u o dosyayla güncelle
         let ssId;
@@ -2721,6 +2848,7 @@
       if (disp) { disp.style.background='#7f1d1d'; setTimeout(()=>{ disp.style.background='#1f2937'; },600); }
       return;
     }
+    if (!kfRequireModel()) return;
     kfDoSave(name, window._fnkbForceNew);
     // Model geçişi bekliyorsa kayıt bitti — şimdi yeni modeli temiz aç
     if (window._kfPendingModelId) {
@@ -2734,6 +2862,7 @@
   }
 
   function kfShowSaveModal(forceNew) {
+    if (!kfRequireModel()) return;
     const overlay = document.getElementById('kf-modal-overlay');
     const box = document.getElementById('kf-modal-box');
     if (!overlay || !box) return;
@@ -2773,6 +2902,7 @@
 
   async function kfDoSave(name, forceNew) {
     if (!isEditor()) { kfToast('Salt okunur modda kayıt yapılamaz.'); return; }
+    if (!kfRequireModel()) return;
     name = (name || '').trim();
     if (!name) { const i = document.getElementById('kfm-name-inp'); if (i) { i.style.borderColor='#dc2626'; i.focus(); } return; }
     const forms = kfGetForms();
@@ -2874,7 +3004,10 @@
       });
       if (!list) list = '<div class="kfm-empty">Kay&#305;tl&#305; form bulunamad&#305;.</div>';
     }
-    box.innerHTML = `<div class="kfm-title">&#128194; Kay&#305;tl&#305; Formlar <span style="font-size:11px;font-weight:600;color:#6b7280;">(${forms.length})</span></div><div class="kfm-list" style="gap:8px;">${list}</div><div class="kfm-btns"><button class="kfm-cancel" onclick="kfModalClose()">Kapat</button></div>`;
+    const exportBtn = isEditor()
+      ? `<button class="kfm-export" onclick="kfExportAllForms()">&#128228; D&#305;&#351;ar&#305; Aktar</button>`
+      : `<span></span>`;
+    box.innerHTML = `<div class="kfm-title">&#128194; Kay&#305;tl&#305; Formlar <span style="font-size:11px;font-weight:600;color:#6b7280;">(${forms.length})</span></div><div class="kfm-list" style="gap:8px;">${list}</div><div class="kfm-btns" style="justify-content:space-between;">${exportBtn}<button class="kfm-cancel" onclick="kfModalClose()">Kapat</button></div>`;
   }
 
   function kfDoLoad(id) {
@@ -2899,6 +3032,11 @@
 
   async function kfDeleteForm(id) {
     if (!isEditor()) { kfToast('Salt okunur modda silinemez.'); return; }
+    const expected = window._kfDelTarget;
+    const inp = document.getElementById('kf-del-inp');
+    if (!expected || expected.id !== id) { kfToast('Silme doğrulaması geçersiz.'); return; }
+    if (!inp || inp.value.trim() !== expected.name.trim()) { kfToast('Form adı eşleşmiyor.'); return; }
+    window._kfDelTarget = null;
     let forms = kfGetForms();
     forms = forms.filter(f => f.id !== id);
     kfSvForms(forms);
@@ -2920,6 +3058,7 @@
     const overlay = document.getElementById('kf-modal-overlay');
     const box = document.getElementById('kf-modal-box');
     if (!overlay || !box) return;
+    window._kfDelTarget = { id, name: f.name };
     box.innerHTML = `
       <div class="kfm-title" style="color:#dc2626;">&#128465;&#65039; Formu Sil</div>
       <div style="padding:12px 0 8px;font-size:13px;color:#374151;text-align:center;line-height:1.6;">
@@ -2927,7 +3066,6 @@
         Bu formu <strong>kalıcı olarak silmek</strong> için adını tam olarak yazın:
       </div>
       <input id="kf-del-inp"
-        data-expected="${kfHEsc(f.name)}"
         type="text" autocomplete="off"
         placeholder="${kfHEsc(f.name)}"
         oninput="kfDelCheck()"
@@ -2948,7 +3086,8 @@
     const inp = document.getElementById('kf-del-inp');
     const btn = document.getElementById('kf-del-btn');
     if (!inp || !btn) return;
-    const ok = inp.value === inp.dataset.expected;
+    const expected = window._kfDelTarget?.name || '';
+    const ok = inp.value.trim() === expected.trim();
     btn.disabled = !ok;
     btn.style.opacity = ok ? '1' : '0.35';
     btn.style.cursor = ok ? 'pointer' : 'not-allowed';
