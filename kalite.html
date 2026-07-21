@@ -16,6 +16,7 @@
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
+  <script src="https://apis.google.com/js/api.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
   <style>
@@ -312,6 +313,9 @@
   const SB_KEY = 'sb_publishable_T0ZpujhmI_kBuuT4M6U1Gw_BCdweMf-';
   // ── Google Drive Yedek — OAuth Client ID ──────────────────────────
   const KX_GDRIVE_CLIENT_ID = '691548738009-55q8dipm3hoeb8qs60vd166ppmg14sqq.apps.googleusercontent.com';
+  const KX_GDRIVE_PROJECT_NUM = '691548738009';
+  // Google Cloud Console → API'ler → Kimlik bilgileri → API anahtarı (Picker için)
+  const KX_GDRIVE_API_KEY = '';
   // ── Düzenleyici: Sadece bu hesap değişiklik yapabilir, diğerleri salt okunur ──
   const ALLOWED_EDITORS = ['fatihgural80@gmail.com'];
   let SB_TOKEN = null;
@@ -2322,31 +2326,106 @@
 
   // ── Kalite Formu Kaydet / Yükle ─────────────────────────────────────────────
   // ── Google Drive / Google Sheets Yedek ───────────────────────────────
-  let _kxDriveToken = null;
-  let _kxTokenClient = null;
+  let _kxDriveTokenExport = null;
+  let _kxDriveTokenBackup = null;
+  let _kxTokenClientExport = null;
+  let _kxTokenClientBackup = null;
+  const KX_QUALITY_FORMS_FOLDER_KEY = 'kx_quality_forms_folder_id';
+  const KX_XLSX_EXPORT_LOG_KEY = 'kx_xlsx_export_log';
 
-  function kxRequestDriveToken(onToken) {
+  function kxGetExportLog() { try { return JSON.parse(localStorage.getItem(KX_XLSX_EXPORT_LOG_KEY)||'{}'); } catch(e) { return {}; } }
+  function kxSaveExportLog(l) { localStorage.setItem(KX_XLSX_EXPORT_LOG_KEY, JSON.stringify(l)); }
+  function kxGetQualityFormsFolderId() { return localStorage.getItem(KX_QUALITY_FORMS_FOLDER_KEY) || ''; }
+
+  function kxRequestDriveToken(onToken, mode) {
+    mode = mode || 'export';
+    const isBackup = mode === 'backup';
     if (!window.google || !window.google.accounts) {
       kfToast('Google kiti yükleniyor, birkaç saniye bekleyip tekrar deneyin.');
       return;
     }
-    if (!_kxTokenClient) {
-      _kxTokenClient = google.accounts.oauth2.initTokenClient({
+    const scope = isBackup
+      ? 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive'
+      : 'https://www.googleapis.com/auth/drive.file';
+    let client = isBackup ? _kxTokenClientBackup : _kxTokenClientExport;
+    if (!client) {
+      client = google.accounts.oauth2.initTokenClient({
         client_id: KX_GDRIVE_CLIENT_ID,
-        scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive',
+        scope,
         callback: (resp) => {
           if (resp.error) { kfToast('Google yetkilendirme hatası: ' + resp.error); return; }
-          _kxDriveToken = resp.access_token;
-          onToken(_kxDriveToken);
+          if (isBackup) _kxDriveTokenBackup = resp.access_token;
+          else _kxDriveTokenExport = resp.access_token;
+          onToken(resp.access_token);
         }
       });
+      if (isBackup) _kxTokenClientBackup = client;
+      else _kxTokenClientExport = client;
     }
-    if (_kxDriveToken) onToken(_kxDriveToken);
-    else _kxTokenClient.requestAccessToken();
+    const cached = isBackup ? _kxDriveTokenBackup : _kxDriveTokenExport;
+    if (cached) onToken(cached);
+    else client.requestAccessToken();
   }
 
   function kxDriveBackup() {
-    kxRequestDriveToken(kxDoExport);
+    kxRequestDriveToken(kxDoExport, 'backup');
+  }
+
+  function kxPickQualityFormsFolder(token) {
+    return new Promise((resolve, reject) => {
+      if (!KX_GDRIVE_API_KEY) {
+        reject(new Error('API_KEY_MISSING'));
+        return;
+      }
+      const showPicker = () => {
+        const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+          .setIncludeFolders(true)
+          .setSelectFolderEnabled(true)
+          .setMimeTypes('application/vnd.google-apps.folder');
+        new google.picker.PickerBuilder()
+          .setAppId(KX_GDRIVE_PROJECT_NUM)
+          .setOAuthToken(token)
+          .setDeveloperKey(KX_GDRIVE_API_KEY)
+          .addView(view)
+          .setTitle('QUALITY FORMS klas\u00f6r\u00fcn\u00fc se\u00e7in')
+          .setCallback((data) => {
+            if (data.action === google.picker.Action.PICKED) {
+              const folderId = data.docs[0].id;
+              localStorage.setItem(KX_QUALITY_FORMS_FOLDER_KEY, folderId);
+              resolve(folderId);
+            } else {
+              reject(new Error('Klas\u00f6r se\u00e7imi iptal edildi.'));
+            }
+          })
+          .build()
+          .setVisible(true);
+      };
+      if (window.google?.picker) showPicker();
+      else if (window.gapi) gapi.load('picker', showPicker);
+      else reject(new Error('Google Picker y\u00fcklenemedi.'));
+    });
+  }
+
+  async function kxCreateDriveFolder(H, name) {
+    const res = await fetch('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST', headers: H,
+      body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder' })
+    });
+    if (!res.ok) throw new Error('Klas\u00f6r olu\u015fturulamad\u0131: ' + res.status);
+    return (await res.json()).id;
+  }
+
+  async function kxEnsureExportFolder(H, token) {
+    const saved = kxGetQualityFormsFolderId();
+    if (saved) return saved;
+    if (KX_GDRIVE_API_KEY) {
+      kfToast('QUALITY FORMS klas\u00f6r\u00fcn\u00fc se\u00e7in\u2026');
+      return await kxPickQualityFormsFolder(token);
+    }
+    const folderId = await kxCreateDriveFolder(H, 'QUALITY FORMS');
+    localStorage.setItem(KX_QUALITY_FORMS_FOLDER_KEY, folderId);
+    kfToast('QUALITY FORMS klas\u00f6r\u00fc olu\u015fturuldu (Drive k\u00f6k\u00fcnde).');
+    return folderId;
   }
 
   const KX_FORM_TABLE_HDR = ['Parametre Kodu', 'Açıklama', 'Grup', 'Sonuç', 'Durum', 'Referans'];
@@ -2378,17 +2457,6 @@
     return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   }
 
-  async function kxFindDriveFile(H, folderId, name) {
-    const q = `'${folderId}' in parents and name='${String(name).replace(/'/g, "\\'")}' and trashed=false`;
-    const res = await fetch(
-      'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name)',
-      { headers: H }
-    );
-    if (!res.ok) return null;
-    const files = (await res.json()).files || [];
-    return files[0]?.id || null;
-  }
-
   async function kxUploadXlsx(H, folderId, filename, blob, existingId) {
     const metadata = { name: filename, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' };
     if (!existingId) metadata.parents = [folderId];
@@ -2407,27 +2475,10 @@
     return (await res.json()).id;
   }
 
-  async function kxEnsureFolder(H, folderName) {
-    const folderRes = await fetch(
-      'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(`name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`) + '&fields=files(id)',
-      { headers: H }
-    );
-    if (folderRes.status === 401) throw new Error('AUTH_EXPIRED');
-    if (folderRes.ok) {
-      const fd = await folderRes.json();
-      if (fd.files && fd.files.length) return fd.files[0].id;
-    }
-    const fRes = await fetch('https://www.googleapis.com/drive/v3/files', {
-      method: 'POST', headers: H,
-      body: JSON.stringify({ name: folderName, mimeType: 'application/vnd.google-apps.folder' })
-    });
-    if (!fRes.ok) throw new Error('Klasör oluşturulamadı: ' + fRes.status);
-    return (await fRes.json()).id;
-  }
-
-  function kfExportAllForms() {
+  function kfExportAllForms(forcePickFolder) {
     if (!isEditor()) { kfToast('Salt okunur modda dışarı aktarılamaz.'); return; }
-    kxRequestDriveToken(kxDoExportQualityForms);
+    if (forcePickFolder) localStorage.removeItem(KX_QUALITY_FORMS_FOLDER_KEY);
+    kxRequestDriveToken(kxDoExportQualityForms, 'export');
   }
 
   async function kxDoExportQualityForms(token) {
@@ -2436,13 +2487,14 @@
     kfToast('Formlar Excel olarak aktarılıyor…');
     try {
       const H = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
-      const folderId = await kxEnsureFolder(H, 'QUALITY FORMS');
+      const folderId = await kxEnsureExportFolder(H, token);
       let forms = kfGetForms();
       if (navigator.onLine) {
         const synced = await kfSbFetchForms();
         if (synced) forms = synced;
       }
       if (!forms.length) { kfToast('Aktarılacak form bulunamadı.'); return; }
+      const exportLog = kxGetExportLog();
       const usedNames = {};
       let written = 0;
       for (const f of forms) {
@@ -2451,18 +2503,30 @@
         if (usedNames[filename]) filename = base + ' (' + f.id.slice(-6) + ').xlsx';
         usedNames[filename] = true;
         const blob = kxFormToXlsxBlob(f);
-        const existingId = await kxFindDriveFile(H, folderId, filename);
-        await kxUploadXlsx(H, folderId, filename, blob, existingId);
+        const existingId = exportLog[f.id]?.fileId || null;
+        const fileId = await kxUploadXlsx(H, folderId, filename, blob, existingId);
+        exportLog[f.id] = { fileId, filename, updatedAt: f.updatedAt || f.savedAt || '' };
         written++;
       }
-      kfToast('✓ ' + written + ' form QUALITY FORMS klasörüne aktarıldı');
+      kxSaveExportLog(exportLog);
+      kfToast('\u2713 ' + written + ' form QUALITY FORMS klas\u00f6r\u00fcne aktar\u0131ld\u0131');
       setTimeout(() => window.open('https://drive.google.com/drive/folders/' + folderId, '_blank'), 600);
     } catch (e) {
       if (e.message === 'AUTH_EXPIRED') {
-        _kxDriveToken = null; _kxTokenClient = null;
+        _kxDriveTokenExport = null; _kxTokenClientExport = null;
         kfToast('Oturum süresi doldu, tekrar deneyin.');
+      } else if (e.message === 'API_KEY_MISSING') {
+        kfToast('Picker i\u00e7in Google API Key gerekli — yeni klas\u00f6r olu\u015fturuluyor\u2026');
+        try {
+          const H = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+          const folderId = await kxCreateDriveFolder(H, 'QUALITY FORMS');
+          localStorage.setItem(KX_QUALITY_FORMS_FOLDER_KEY, folderId);
+          await kxDoExportQualityForms(token);
+        } catch (e2) {
+          kfToast('Dışarı aktarma hatası: ' + (e2.message || e2));
+        }
       } else {
-        _kxDriveToken = null;
+        _kxDriveTokenExport = null;
         kfToast('Dışarı aktarma hatası: ' + (e.message || e));
         console.error('[KaliteX] QUALITY FORMS export:', e);
       }
@@ -2539,7 +2603,7 @@
         'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent("name='KaliteX Database' and mimeType='application/vnd.google-apps.folder' and trashed=false") + '&fields=files(id)',
         { headers: H }
       );
-      if (folderRes.status === 401) { _kxDriveToken = null; _kxTokenClient = null; kfToast('Oturum süresi doldu, tekrar deneyin.'); return; }
+      if (folderRes.status === 401) { _kxDriveTokenBackup = null; _kxTokenClientBackup = null; kfToast('Oturum süresi doldu, tekrar deneyin.'); return; }
       if (folderRes.ok) { const fd = await folderRes.json(); if (fd.files && fd.files.length) folderId = fd.files[0].id; }
       if (!folderId) {
         const fRes = await fetch('https://www.googleapis.com/drive/v3/files', {
@@ -2633,7 +2697,7 @@
       kfToast(msg);
       if (lastSsId) setTimeout(() => window.open('https://docs.google.com/spreadsheets/d/' + lastSsId, '_blank'), 600);
     } catch (e) {
-      _kxDriveToken = null;
+      _kxDriveTokenBackup = null;
       kfToast('Yedekleme hatası: ' + (e.message || e));
       console.error('[KaliteX] Drive export:', e);
     } finally {
@@ -3005,7 +3069,7 @@
       if (!list) list = '<div class="kfm-empty">Kay&#305;tl&#305; form bulunamad&#305;.</div>';
     }
     const exportBtn = isEditor()
-      ? `<button class="kfm-export" onclick="kfExportAllForms()">&#128228; D&#305;&#351;ar&#305; Aktar</button>`
+      ? `<button class="kfm-export" title="Sadece se\u00e7ti\u011finiz QUALITY FORMS klas\u00f6r\u00fcne yazar (dar izin). \u0130lk seferde klas\u00f6r se\u00e7ilir." onclick="kfExportAllForms()">&#128228; D&#305;&#351;ar&#305; Aktar</button>`
       : `<span></span>`;
     box.innerHTML = `<div class="kfm-title">&#128194; Kay&#305;tl&#305; Formlar <span style="font-size:11px;font-weight:600;color:#6b7280;">(${forms.length})</span></div><div class="kfm-list" style="gap:8px;">${list}</div><div class="kfm-btns" style="justify-content:space-between;">${exportBtn}<button class="kfm-cancel" onclick="kfModalClose()">Kapat</button></div>`;
   }
