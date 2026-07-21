@@ -41,6 +41,34 @@
     #kf-save-name .kfsn-short { display:none; }
     .sidebar-open #kf-save-name .kfsn-full { display:none; }
     .sidebar-open #kf-save-name .kfsn-short { display:inline; }
+    /* Form kaydet/yükle modal — global (giriş durumundan bağımsız) */
+    .kfm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9997;display:none;align-items:center;justify-content:center;}
+    .kfm-box{background:#fff;border-radius:14px;padding:22px 24px;min-width:300px;max-width:680px;width:97%;box-shadow:0 8px 40px rgba(0,0,0,0.22);}
+    .kfm-title{font-size:15px;font-weight:800;color:#111827;margin-bottom:14px;}
+    .kfm-input{width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:14px;}
+    .kfm-input:focus{border-color:#dc2626;}
+    .kfm-btns{display:flex;gap:8px;justify-content:flex-end;}
+    .kfm-ok{background:#dc2626;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .kfm-cancel{background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .kfm-list{max-height:min(420px,58vh);overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;-webkit-overflow-scrolling:touch;}
+    .kfm-item{display:flex;align-items:center;gap:10px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:9px;padding:10px 12px;cursor:pointer;transition:background .12s,border-color .12s;flex-shrink:0;}
+    .kfm-item-info{flex:1;min-width:0;}
+    .kfm-item-name{font-size:13px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .kfm-item-meta{font-size:10px;color:#6b7280;font-weight:600;margin-top:2px;}
+    .kfm-del{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit;}
+    .kfm-empty{text-align:center;color:#9ca3af;font-size:13px;padding:24px 0;}
+    .kfm-group{border:1.5px solid #e5e7eb;border-radius:10px;overflow:hidden;flex-shrink:0;width:100%;}
+    .kfm-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#f3f4f6;cursor:pointer;user-select:none;gap:8px;width:100%;box-sizing:border-box;}
+    .kfm-group-hdr:hover{background:#e5e7eb;}
+    .kfm-group-name{font-size:13px;font-weight:800;color:#111827;letter-spacing:.02em;flex:1;min-width:0;}
+    .kfm-group-count{font-size:10px;font-weight:700;color:#6b7280;background:#e5e7eb;border-radius:20px;padding:2px 8px;flex-shrink:0;}
+    .kfm-group-chevron{font-size:12px;color:#6b7280;transition:transform .18s;flex-shrink:0;transform:rotate(-90deg);}
+    .kfm-group.open .kfm-group-chevron{transform:rotate(0deg);}
+    .kfm-group-body{display:none;flex-direction:column;gap:0;border-top:1.5px solid #e5e7eb;background:#fff;}
+    .kfm-group.open .kfm-group-body{display:flex;}
+    .kfm-group-body .kfm-item{border-radius:0;border:none;border-bottom:1px solid #f0f0f0;background:#fff;}
+    .kfm-group-body .kfm-item:last-child{border-bottom:none;}
+    .kfm-group-empty{padding:14px 12px;font-size:12px;color:#9ca3af;text-align:center;font-style:italic;}
   </style>
 
  </head>
@@ -237,6 +265,7 @@
   // Satırlar = kalite parametreleri | Sütunlar = makine modelleri
   // ============================================================
   const KH_FIXED = ['KOD', 'ALAN TÜRÜ', 'UZUNLUK', 'DESİMAL', 'AÇIKLAMA', 'GRUP', 'GRUP KODU'];
+  const KH_ORDER_KOD = '__KX_ORDER__'; // Supabase'de satır sırasını tutan gizli kayıt
   const KH_MODELS = [
     { id: 'lym-950',       label: 'LYM 950',       series: 'LYM' },
     { id: 'lym-1150',      label: 'LYM 1150',      series: 'LYM' },
@@ -482,16 +511,56 @@
     return all;
   }
 
+  function khGetLocalKodOrder() {
+    const order = [];
+    for (let ri = 0; ri < KH.TOTAL_ROWS; ri++) {
+      const kod = (KH.paramData[ri] || [])[0];
+      if (kod && kod !== KH_ORDER_KOD) order.push(kod);
+    }
+    return order;
+  }
+
+  function khApplyKodOrder(params) {
+    const real = params.filter(p => p.kod !== KH_ORDER_KOD);
+    const orderRow = params.find(p => p.kod === KH_ORDER_KOD);
+    let order = [];
+    if (orderRow?.aciklama) {
+      try {
+        const parsed = JSON.parse(orderRow.aciklama);
+        if (Array.isArray(parsed)) order = parsed.filter(k => k && k !== KH_ORDER_KOD);
+      } catch (e) { /* id sırasına düş */ }
+    }
+    const map = new Map(real.map(p => [p.kod, p]));
+    const sorted = [];
+    const used = new Set();
+    order.forEach(kod => {
+      if (map.has(kod)) { sorted.push(map.get(kod)); used.add(kod); }
+    });
+    real.filter(p => !used.has(p.kod)).sort((a, b) => a.id - b.id).forEach(p => sorted.push(p));
+    return sorted;
+  }
+
+  function khBuildOrderRow(kodOrder, updatedAt) {
+    return {
+      kod: KH_ORDER_KOD,
+      alan_turu: '', uzunluk: '', desimal: '',
+      aciklama: JSON.stringify(kodOrder),
+      grup: '', grup_kodu: '',
+      updated_at: updatedAt
+    };
+  }
+
   async function khLoadFromSupabase() {
     // Önce belleği temizle — eski / fazla satırlar kalmasın
     KH.paramData = [];
     for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
     KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
 
-    const [params, atamaList] = await Promise.all([
+    const [paramsRaw, atamaList] = await Promise.all([
       sbGetAll('kalite_parametreleri', 'order=id.asc'),
       sbGetAll('model_atama', 'select=model_id,parametre_kod&order=model_id,parametre_kod')
     ]);
+    const params = khApplyKodOrder(paramsRaw);
     const kodIdx = {};
     params.forEach((p, i) => {
       kodIdx[p.kod] = i;
@@ -524,23 +593,57 @@
       ]);
 
       // ── ADIM 1: Parametreleri Merge et ve UPSERT et ───────────────────────────
-      // Server parametreleri base olarak al, local (kullanıcının düzenlediği) override eder
-      const mergedParamMap = new Map();
-      serverParams.forEach(p => mergedParamMap.set(p.kod, p)); // 1. server base
-      KH.paramData.filter(r => r[0]).forEach(r => {            // 2. local override
-        mergedParamMap.set(r[0], {
+      // Local satır sırasını koru — yeni eklenen maddeler en alta gitmesin
+      const deletedKodlar = khGetDeletedKodlar();
+      const deletedSet = new Set(deletedKodlar);
+      const serverReal = serverParams.filter(p => p.kod !== KH_ORDER_KOD);
+      const serverOrderRow = serverParams.find(p => p.kod === KH_ORDER_KOD);
+      const localKodSet = new Set();
+      const mergedParams = [];
+
+      for (let ri = 0; ri < KH.TOTAL_ROWS; ri++) {
+        const r = KH.paramData[ri];
+        if (!r || !r[0] || r[0] === KH_ORDER_KOD || deletedSet.has(r[0])) continue;
+        localKodSet.add(r[0]);
+        mergedParams.push({
           kod: r[0], alan_turu: r[1]||'', uzunluk: r[2]||'', desimal: r[3]||'',
           aciklama: r[4]||'', grup: r[5]||'', grup_kodu: r[6]||'', updated_at: _syncNow
         });
-      });
-      const mergedParams = [...mergedParamMap.values()];
+      }
+
+      const serverOnly = serverReal.filter(p => !localKodSet.has(p.kod) && !deletedSet.has(p.kod));
+      if (serverOnly.length) {
+        let serverOrder = [];
+        if (serverOrderRow?.aciklama) {
+          try {
+            const parsed = JSON.parse(serverOrderRow.aciklama);
+            if (Array.isArray(parsed)) serverOrder = parsed;
+          } catch (e) { /* yoksay */ }
+        }
+        serverOnly.sort((a, b) => {
+          const ia = serverOrder.indexOf(a.kod), ib = serverOrder.indexOf(b.kod);
+          if (ia === -1 && ib === -1) return a.id - b.id;
+          if (ia === -1) return 1;
+          if (ib === -1) return -1;
+          return ia - ib;
+        });
+        serverOnly.forEach(p => {
+          mergedParams.push({
+            kod: p.kod, alan_turu: p.alan_turu||'', uzunluk: p.uzunluk||'', desimal: p.desimal||'',
+            aciklama: p.aciklama||'', grup: p.grup||'', grup_kodu: p.grup_kodu||'',
+            updated_at: p.updated_at || _syncNow
+          });
+        });
+      }
+
+      const finalOrder = mergedParams.map(p => p.kod);
+      mergedParams.push(khBuildOrderRow(finalOrder, _syncNow));
       for (let i = 0; i < mergedParams.length; i += 100)
         await sbUpsert('kalite_parametreleri', mergedParams.slice(i, i + 100), 'kod');
 
       // ── ADIM 2: Kasıtlı silinen parametreleri Supabase'den sil ───────────────
       // "local'de olmayan her şeyi sil" YERİNE sadece bu cihazda açıkça silinen
       // kodları sil. Bu sayede diğer cihazın eklediği veriler korunur.
-      const deletedKodlar = khGetDeletedKodlar();
       if (deletedKodlar.length > 0 && deletedKodlar.length <= 300) {
         await sbDel('kalite_parametreleri', 'kod=in.(' + deletedKodlar.join(',') + ')');
       }
@@ -1381,8 +1484,8 @@
           .kfm-ok:hover{background:#b91c1c;}
           .kfm-cancel{background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
           .kfm-cancel:hover{background:#e5e7eb;}
-          .kfm-list{max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
-          .kfm-item{display:flex;align-items:center;gap:10px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:9px;padding:10px 12px;cursor:pointer;transition:background .12s,border-color .12s;}
+          .kfm-list{max-height:min(420px,58vh);overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;-webkit-overflow-scrolling:touch;}
+          .kfm-item{display:flex;align-items:center;gap:10px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:9px;padding:10px 12px;cursor:pointer;transition:background .12s,border-color .12s;flex-shrink:0;}
           .kfm-item:hover{background:#fef2f2;border-color:#fca5a5;}
           .kfm-item-info{flex:1;min-width:0;}
           .kfm-item-name{font-size:13px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -1423,15 +1526,18 @@
           .kfnm-cancel:hover{background:#e5e7eb;}
           /* Not badge */
           .kfhb-note-badge{position:absolute;top:3px;right:3px;width:7px;height:7px;background:#16a34a;border-radius:50%;display:none;}
-          .kfm-group{border:1.5px solid #e5e7eb;border-radius:10px;overflow:hidden;}
-          .kfm-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:#f3f4f6;cursor:pointer;user-select:none;gap:8px;}
+          .kfm-group{border:1.5px solid #e5e7eb;border-radius:10px;overflow:hidden;flex-shrink:0;width:100%;}
+          .kfm-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#f3f4f6;cursor:pointer;user-select:none;gap:8px;width:100%;box-sizing:border-box;}
           .kfm-group-hdr:hover{background:#e5e7eb;}
-          .kfm-group-name{font-size:12px;font-weight:800;color:#111827;letter-spacing:.02em;}
-          .kfm-group-count{font-size:10px;font-weight:700;color:#6b7280;background:#e5e7eb;border-radius:20px;padding:1px 7px;}
-          .kfm-group-chevron{font-size:12px;color:#6b7280;transition:transform .18s;}
-          .kfm-group-body{display:flex;flex-direction:column;gap:0;border-top:1.5px solid #e5e7eb;}
-          .kfm-group-body .kfm-item{border-radius:0;border:none;border-bottom:1px solid #f0f0f0;}
+          .kfm-group-name{font-size:13px;font-weight:800;color:#111827;letter-spacing:.02em;flex:1;min-width:0;}
+          .kfm-group-count{font-size:10px;font-weight:700;color:#6b7280;background:#e5e7eb;border-radius:20px;padding:2px 8px;flex-shrink:0;}
+          .kfm-group-chevron{font-size:12px;color:#6b7280;transition:transform .18s;flex-shrink:0;transform:rotate(-90deg);}
+          .kfm-group.open .kfm-group-chevron{transform:rotate(0deg);}
+          .kfm-group-body{display:none;flex-direction:column;gap:0;border-top:1.5px solid #e5e7eb;background:#fff;}
+          .kfm-group.open .kfm-group-body{display:flex;}
+          .kfm-group-body .kfm-item{border-radius:0;border:none;border-bottom:1px solid #f0f0f0;background:#fff;}
           .kfm-group-body .kfm-item:last-child{border-bottom:none;}
+          .kfm-group-empty{padding:14px 12px;font-size:12px;color:#9ca3af;text-align:center;font-style:italic;}
           /* Form adı özel klavye */
           .kfm-kb{background:#f3f4f6;border-radius:10px;padding:9px;display:flex;flex-direction:column;gap:5px;margin-top:6px;margin-bottom:14px;touch-action:manipulation;}
           .kfm-kb-disp{background:#1f2937;color:#f9fafb;font-size:16px;font-weight:700;border-radius:7px;padding:10px 14px;margin-bottom:7px;min-height:44px;word-break:break-all;display:flex;align-items:center;justify-content:space-between;gap:8px;}
@@ -1834,9 +1940,15 @@
     window.kfCurrentModel = modelId;
     window.kfCurrentModelLabel = model ? model.label : modelId;
     window.kfModelRows = params;
-    // Mevcut cevapları (sütun 3-5) koru, model verisini (sütun 0-2) yükle
-    window.kfData = params.map((r, i) => {
-      const old = (window.kfData || [])[i] || [];
+    // Mevcut cevapları (sütun 3-5) KOD ile eşleştir, model verisini (sütun 0-2) havuz sırasına göre yükle
+    const oldByKod = {};
+    (window.kfData || []).forEach(row => {
+      const kod = (row[0] || '').toUpperCase().trim();
+      if (kod) oldByKod[kod] = row;
+    });
+    window.kfData = params.map((r) => {
+      const kodKey = (r.kod || '').toUpperCase().trim();
+      const old = oldByKod[kodKey] || [];
       // K9013 → her zaman FATİH GÜRAL, değiştirilemez
       const sonuc = (r.kod||'').toUpperCase().trim() === 'K9013' ? 'FATİH GÜRAL' : (old[3]||'');
       return [r.kod, r.aciklama, r.grup, sonuc, old[4]||'', old[5]||'', 1, r.alanTuru||''];
@@ -2033,6 +2145,30 @@
     return {aksilikler: toArr(n.aksilik), revizeler: toArr(n.revize)};
   }
 
+  function kfPackFormPayload(kfData, kfNotes) {
+    return {
+      _v: 2,
+      rows: JSON.parse(JSON.stringify(kfData || [])),
+      notes: kfNotesNormalize(kfNotes)
+    };
+  }
+
+  function kfUnpackFormPayload(data, fallbackNotes) {
+    if (data && typeof data === 'object' && !Array.isArray(data) && data._v === 2) {
+      return {
+        rows: JSON.parse(JSON.stringify(data.rows || [])),
+        notes: kfNotesNormalize(data.notes)
+      };
+    }
+    return {
+      rows: Array.isArray(data) ? JSON.parse(JSON.stringify(data)) : [],
+      notes: kfNotesNormalize(fallbackNotes)
+    };
+  }
+
+  function kfFormGetRows(f) { return kfUnpackFormPayload(f?.data, f?.notes).rows; }
+  function kfFormGetNotes(f) { return kfUnpackFormPayload(f?.data, f?.notes).notes; }
+
   window.kfNotes = window.kfNotes || {aksilikler:[], revizeler:[]};
 
   function kfNotesUpdateBadge() {
@@ -2071,24 +2207,30 @@
 
   let _kfnmSR = null; // aktif SpeechRecognition instance
   let _kfnmSRSide = null;
+  let _kfnmManualStop = false;
 
-  function kfNotesMic(side) {
+  async function kfNotesMic(side) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { kfToast('Bu tarayıcı sesli yazmayı desteklemiyor.'); return; }
-    // Aynı taraf zaten dinliyorsa durdur
-    if (_kfnmSR && _kfnmSRSide === side) { _kfnmSR.stop(); return; }
-    // Farklı taraf çalışıyorsa onu durdur
-    if (_kfnmSR) { _kfnmSR.abort(); }
+    if (!SR) { kfToast('Bu tarayıcı sesli yazmayı desteklemiyor. Chrome kullanın.'); return; }
+    if (_kfnmSR && _kfnmSRSide === side) {
+      _kfnmManualStop = true;
+      try { _kfnmSR.stop(); } catch (e) {}
+      return;
+    }
+    if (_kfnmSR) { try { _kfnmSR.abort(); } catch (e) {} }
+    _kfnmManualStop = false;
+
     const inp = document.getElementById(side === 'a' ? 'kfnm-inp-a' : 'kfnm-inp-r');
     const btn = document.getElementById(side === 'a' ? 'kfnm-mic-a' : 'kfnm-mic-r');
+
     const sr = new SR();
     sr.lang = 'tr-TR';
+    sr.continuous = true;
     sr.interimResults = true;
     sr.maxAlternatives = 1;
     _kfnmSR = sr; _kfnmSRSide = side;
-    // Mikrofon açılırken mevcut input içeriğini taban olarak sakla
     const base = inp ? inp.value.trimEnd() : '';
-    let finalAccum = ''; // bu oturumda kesinleşen metin
+    let finalAccum = '';
     sr.onstart = () => { if (btn) btn.classList.add('listening'); if (inp) inp.placeholder = '🎤 Dinleniyor...'; };
     sr.onresult = (e) => {
       let newFinal = '', interim = '';
@@ -2101,17 +2243,39 @@
       if (inp) inp.value = display;
     };
     sr.onend = () => {
+      if (!_kfnmManualStop && _kfnmSR === sr) {
+        try { sr.start(); return; } catch (e) { /* yeniden başlatılamadı */ }
+      }
       _kfnmSR = null; _kfnmSRSide = null;
       if (btn) btn.classList.remove('listening');
-      // Son interim varsa temizle — inp.value zaten finalAccum ile doğru
-      if (inp) { inp.placeholder = side === 'a' ? 'Aksiliği yaz, Enter veya Ekle...' : 'Öneriyi yaz, Enter veya Ekle...'; inp.focus(); }
+      if (inp) {
+        inp.placeholder = side === 'a' ? 'Aksiliği yaz, Enter veya Ekle...' : 'Öneriyi yaz, Enter veya Ekle...';
+        inp.focus();
+      }
     };
     sr.onerror = (e) => {
+      if (e.error === 'no-speech' || e.error === 'aborted') return;
       _kfnmSR = null; _kfnmSRSide = null;
       if (btn) btn.classList.remove('listening');
-      if (e.error !== 'no-speech' && e.error !== 'aborted') kfToast('Mikrofon hatası: ' + e.error);
+      const msgs = {
+        'not-allowed': 'Mikrofon izni reddedildi.',
+        'service-not-allowed': 'Ses tanıma için HTTPS ve Chrome gerekli.',
+        'network': 'Ses tanıma için internet gerekli.'
+      };
+      kfToast(msgs[e.error] || ('Mikrofon hatası: ' + e.error));
     };
-    sr.start();
+    try {
+      sr.start();
+    } catch (e) {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+          stream.getTracks().forEach(t => t.stop());
+          try { sr.start(); } catch (e2) { kfToast('Mikrofon başlatılamadı.'); }
+        }).catch(() => kfToast('Mikrofon izni gerekli.'));
+      } else {
+        kfToast('Mikrofon başlatılamadı: ' + (e.message || e));
+      }
+    }
   }
 
   function kfShowNotesModal() {
@@ -2135,7 +2299,11 @@
     window.kfNotes = {aksilikler:[..._kfnw.aksilikler], revizeler:[..._kfnw.revizeler]};
     kfNotesClose();
     kfNotesUpdateBadge();
-    kfToast('Not kaydedildi \u2713');
+    if (window.kfCurrentSaveId && isEditor()) {
+      kfDoSave(window.kfCurrentSaveName, false);
+    } else {
+      kfToast('Not kaydedildi \u2713');
+    }
   }
 
   // ── Kalite Formu Kaydet / Yükle ─────────────────────────────────────────────
@@ -2271,7 +2439,7 @@
         if (fileOk && lk.updatedAt === stamp) { skipped++; lastSsId = lastSsId || lk.fileId; continue; }
 
         const title = String(f.name || 'Form').replace(/[\\\/\?\*\[\]\:]/g, '-').trim().substring(0, 100) || 'Form';
-        const n = kfNotesNormalize(f.notes);
+        const n = kfFormGetNotes(f);
         const rows = [
           ['Form Adı',         f.name || ''],
           ['Model',            f.modelLabel || f.modelId || ''],
@@ -2281,7 +2449,7 @@
           ['Revize Önerileri', n.revizeler.join(' | ') || '—'],
           [],
           TABLE_HDR,
-          ...(f.data || []).map(row => [
+          ...kfFormGetRows(f).map(row => [
             String(row[0]||''), String(row[1]||''), String(row[2]||''),
             String(row[3]||''), String(row[4]||''), String(row[5]||'')
           ])
@@ -2355,11 +2523,13 @@
   // ── Kaydedilmemiş değişiklik tespiti ────────────────────────────────────────
   // kfDoLoad ve kfDoSave sonrası snapshot alınır; ⟳ basılınca karşılaştırılır
   window._kfCleanSnapshot = null;
-  function kfTakeSnapshot() { window._kfCleanSnapshot = JSON.stringify(window.kfData || []); }
+  function kfTakeSnapshot() {
+    window._kfCleanSnapshot = JSON.stringify({ d: window.kfData || [], n: window.kfNotes || {} });
+  }
   function kfHasUnsavedChanges() {
-    if (!window.kfCurrentSaveId) return false;   // form açık değil
+    if (!window.kfCurrentSaveId) return false;
     if (!window._kfCleanSnapshot) return false;
-    return window._kfCleanSnapshot !== JSON.stringify(window.kfData || []);
+    return window._kfCleanSnapshot !== JSON.stringify({ d: window.kfData || [], n: window.kfNotes || {} });
   }
 
   function kfSyncStatus(s) {
@@ -2402,7 +2572,7 @@
         model_label: entry.modelLabel || '',
         saved_at: entry.savedAt,
         updated_at: new Date().toISOString(),
-        data: entry.data
+        data: kfPackFormPayload(entry.data, entry.notes)
       }, 'id');
       return true;
     } catch(e) { console.warn('[KaliteX] kf_forms UPSERT hatası:', e.message||e); }
@@ -2417,6 +2587,44 @@
     } catch(e) { console.warn('[KaliteX] kf_forms DELETE hatası:', e.message||e); }
   }
 
+  function kfMergeFormRows(rows, local) {
+    const merged = {};
+    local.forEach(f => { merged[f.id] = f; });
+    rows.forEach(r => {
+      const unpacked = kfUnpackFormPayload(r.data);
+      const sbEntry = {
+        id: r.id, name: r.name,
+        modelId: r.model_id, modelLabel: r.model_label,
+        savedAt: r.saved_at, updatedAt: r.updated_at,
+        data: unpacked.rows,
+        notes: unpacked.notes
+      };
+      const loc = merged[r.id];
+      if (!loc) {
+        merged[r.id] = sbEntry;
+      } else {
+        const sbTime = new Date(r.updated_at || r.saved_at).getTime();
+        const locTime = new Date(loc.updatedAt || loc.savedAt).getTime();
+        merged[r.id] = sbTime > locTime ? sbEntry : loc;
+      }
+    });
+    return Object.values(merged).sort((a,b) => new Date(b.savedAt)-new Date(a.savedAt));
+  }
+
+  // Yükle modalı için: sadece çek, Supabase'e yazma (editör girişinde modal bozulmasın)
+  async function kfSbFetchForms() {
+    if (!navigator.onLine) return kfGetForms();
+    try {
+      const rows = await sbGet('kf_forms', 'select=id,name,model_id,model_label,saved_at,updated_at,data&order=updated_at.desc');
+      const finalList = kfMergeFormRows(rows, kfGetForms());
+      kfSvForms(finalList);
+      return finalList;
+    } catch(e) {
+      console.warn('[KaliteX] kf_forms fetch hatası:', e.message||e);
+      return kfGetForms();
+    }
+  }
+
   // Tüm formları Supabase'den çek, localStorage ile merge et
   // Kural: her id için updated_at daha yeni olan kazanır
   async function kfSbSync() {
@@ -2424,29 +2632,7 @@
     try {
       const rows = await sbGet('kf_forms', 'select=id,name,model_id,model_label,saved_at,updated_at,data&order=updated_at.desc');
       const local = kfGetForms();
-      const merged = {};
-      // Önce local'ı al
-      local.forEach(f => { merged[f.id] = f; });
-      // Supabase'den gelenleri karşılaştır
-      rows.forEach(r => {
-        const sbEntry = {
-          id: r.id, name: r.name,
-          modelId: r.model_id, modelLabel: r.model_label,
-          savedAt: r.saved_at, updatedAt: r.updated_at,
-          data: r.data,
-          notes: r.notes || {aksilikler:[],revizeler:[]}
-        };
-        const loc = merged[r.id];
-        if (!loc) {
-          merged[r.id] = sbEntry;
-        } else {
-          // updated_at daha yeni olanı al
-          const sbTime = new Date(r.updated_at || r.saved_at).getTime();
-          const locTime = new Date(loc.updatedAt || loc.savedAt).getTime();
-          // Supabase daha yeniyse onu al, ama local notları koru (notes Supabase'e yazılmadığı için)
-          if (sbTime > locTime) merged[r.id] = { ...sbEntry, notes: loc.notes || sbEntry.notes };
-        }
-      });
+      const finalList = kfMergeFormRows(rows, local);
       // Local'de Supabase'den daha yeni veya hiç olmayan → editor ise Supabase'e gönder
       if (isEditor()) {
         const sbTimestamps = new Map(rows.map(r => [r.id, new Date(r.updated_at || r.saved_at).getTime()]));
@@ -2456,7 +2642,6 @@
           if (sbTime === undefined || locTime > sbTime) await kfSbUpsertForm(f);
         }
       }
-      const finalList = Object.values(merged).sort((a,b) => new Date(b.savedAt)-new Date(a.savedAt));
       kfSvForms(finalList);
       return finalList;
     } catch(e) {
@@ -2626,6 +2811,12 @@
     }
   }
 
+  function kfToggleLoadGroup(hdr) {
+    const group = hdr.closest('.kfm-group');
+    if (!group) return;
+    group.classList.toggle('open');
+  }
+
   async function kfShowLoadModal() {
     const overlay = document.getElementById('kf-modal-overlay');
     const box = document.getElementById('kf-modal-box');
@@ -2636,7 +2827,7 @@
     // Supabase ile sync
     let forms;
     if (navigator.onLine) {
-      const synced = await kfSbSync();
+      const synced = await kfSbFetchForms();
       forms = synced || kfGetForms();
     } else {
       forms = kfGetForms();
@@ -2647,35 +2838,41 @@
       list = '<div class="kfm-empty">Kay&#305;tl&#305; form bulunamad&#305;.</div>';
     } else {
       const groups = {};
+      if (typeof KH_MODELS !== 'undefined') {
+        KH_MODELS.forEach(m => { groups[m.id] = { label: m.label, forms: [] }; });
+      }
+      groups['__none__'] = { label: 'Model Belirtilmemiş', forms: [] };
       [...forms].sort((a,b) => new Date(b.savedAt)-new Date(a.savedAt)).forEach(f => {
         const key = f.modelId || '__none__';
         if (!groups[key]) groups[key] = { label: f.modelLabel || 'Model Belirtilmemiş', forms: [] };
         groups[key].forms.push(f);
       });
-      const modelOrder = (typeof KH_MODELS !== 'undefined') ? KH_MODELS.map(m => m.id) : [];
-      const sortedKeys = Object.keys(groups).sort((a, b) => {
-        if (a === '__none__') return 1; if (b === '__none__') return -1;
-        const ai = modelOrder.indexOf(a), bi = modelOrder.indexOf(b);
-        if (ai === -1 && bi === -1) return 0; if (ai === -1) return 1; if (bi === -1) return -1;
-        return ai - bi;
-      });
-      sortedKeys.forEach((key, gi) => {
+      const sortedKeys = (typeof KH_MODELS !== 'undefined')
+        ? KH_MODELS.map(m => m.id).concat(Object.keys(groups).filter(k => k !== '__none__' && !KH_MODELS.find(m => m.id === k)))
+        : Object.keys(groups);
+      if (groups['__none__']?.forms.length) sortedKeys.push('__none__');
+      sortedKeys.forEach((key) => {
         const g = groups[key];
+        if (!g || !g.forms.length) return;
         let items = '';
         g.forms.forEach(f => {
           const dt = new Date(f.savedAt);
           const ds = dt.toLocaleDateString('tr-TR') + ' ' + dt.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
           const syncIcon = f.updatedAt ? '🌐' : '📴';
-          items += `<div class="kfm-item" onclick="kfDoLoad('${f.id}')"><div class="kfm-item-info"><div class="kfm-item-name">${kfHEsc(f.name)}</div><div class="kfm-item-meta">${syncIcon} ${ds}</div></div><button class="kfm-del" onclick="event.stopPropagation();kfConfirmDelete('${f.id}')">Sil</button></div>`;
+          const delBtn = isEditor()
+            ? `<button class="kfm-del" onclick="event.stopPropagation();kfConfirmDelete('${f.id}')">Sil</button>`
+            : '';
+          items += `<div class="kfm-item" onclick="kfDoLoad('${f.id}')"><div class="kfm-item-info"><div class="kfm-item-name">${kfHEsc(f.name)}</div><div class="kfm-item-meta">${syncIcon} ${ds}</div></div>${delBtn}</div>`;
         });
         list += `<div class="kfm-group">
-          <div class="kfm-group-hdr" onclick="(function(el){var b=el.nextElementSibling;var c=el.querySelector('.kfm-group-chevron');var open=b.style.display!=='none';b.style.display=open?'none':'flex';c.style.transform=open?'rotate(-90deg)':'rotate(0deg)';})(this)">
+          <div class="kfm-group-hdr" onclick="kfToggleLoadGroup(this)">
             <span class="kfm-group-name">${kfHEsc(g.label)}</span>
-            <span style="display:flex;align-items:center;gap:6px;"><span class="kfm-group-count">${g.forms.length}</span><span class="kfm-group-chevron">▾</span></span>
+            <span style="display:flex;align-items:center;gap:6px;flex-shrink:0;"><span class="kfm-group-count">${g.forms.length}</span><span class="kfm-group-chevron">▾</span></span>
           </div>
-          <div class="kfm-group-body" style="display:flex;">${items}</div>
+          <div class="kfm-group-body">${items}</div>
         </div>`;
       });
+      if (!list) list = '<div class="kfm-empty">Kay&#305;tl&#305; form bulunamad&#305;.</div>';
     }
     box.innerHTML = `<div class="kfm-title">&#128194; Kay&#305;tl&#305; Formlar <span style="font-size:11px;font-weight:600;color:#6b7280;">(${forms.length})</span></div><div class="kfm-list" style="gap:8px;">${list}</div><div class="kfm-btns"><button class="kfm-cancel" onclick="kfModalClose()">Kapat</button></div>`;
   }
@@ -2686,8 +2883,8 @@
     if (!f) return;
     window.kfCurrentSaveId = f.id; window.kfCurrentSaveName = f.name;
     window.kfCurrentModel = f.modelId; window.kfCurrentModelLabel = f.modelLabel;
-    window.kfData = JSON.parse(JSON.stringify(f.data));
-    window.kfNotes = kfNotesNormalize(f.notes);
+    window.kfData = JSON.parse(JSON.stringify(kfFormGetRows(f)));
+    window.kfNotes = kfFormGetNotes(f);
     const selLbl = document.getElementById('model-select-label');
     if (selLbl) selLbl.textContent = f.modelLabel || 'Model Seç';
     const slbl = document.getElementById('kf-save-name');
@@ -2831,8 +3028,9 @@
         if (window.kfCurrentSaveId && Array.isArray(forms)) {
           const updated = forms.find(f => f.id === window.kfCurrentSaveId);
           if (updated) {
-            window.kfData  = JSON.parse(JSON.stringify(updated.data));
-            window.kfNotes = kfNotesNormalize(updated.notes);
+            const unpacked = kfUnpackFormPayload(updated.data, updated.notes);
+            window.kfData  = unpacked.rows;
+            window.kfNotes = unpacked.notes;
             window.kfCurrentSaveName = updated.name;
             const tbody = document.getElementById('kf-tbody');
             if (tbody && typeof window.kfBuildRows === 'function') tbody.innerHTML = window.kfBuildRows();
@@ -2918,16 +3116,16 @@
   }
 
   function rpGetKaynakci(form) {
-    const row = (form.data || []).find(r => r[0] === 'K9011');
+    const row = kfFormGetRows(form).find(r => r[0] === 'K9011');
     return row ? String(row[3] || '') : '';
   }
   function rpGetMontajci(form) {
-    const row = (form.data || []).find(r => r[0] === 'K9012');
+    const row = kfFormGetRows(form).find(r => r[0] === 'K9012');
     return row ? String(row[3] || '') : '';
   }
 
   function rpAnalyzeForm(form) {
-    const dataRows = (form.data || []).filter(r => r[6] === 1);
+    const dataRows = kfFormGetRows(form).filter(r => r[6] === 1);
     // Hata: sadece T tipindeki HAYIR’lar (KD ve sayısal değerler hata sayılmaz)
     const tRows = dataRows.filter(r => (r[7] || '') === 'T');
     const evet  = tRows.filter(r => r[3] === 'EVET').length;
@@ -3096,7 +3294,7 @@
   function rpTabParam(panel, filtered) {
     const map = {};
     filtered.forEach(f => {
-      (f.data||[]).filter(r=>r[6]===1&&r[7]==='T').forEach(r => {
+      kfFormGetRows(f).filter(r=>r[6]===1&&r[7]==='T').forEach(r => {
         if (!r[0]) return;
         if (!map[r[0]]) map[r[0]] = { aciklama: r[1]||r[0], hayir:0, total:0 };
         map[r[0]].total++;
@@ -3237,7 +3435,7 @@
       const a = rpAnalyzeForm(f);
       const tarih = new Date(f.savedAt||f.updatedAt).toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric'});
       // Sadece T tipinde HAYIR olan satırlar
-      const hatalar = (f.data||[]).filter(r => r[6]===1 && (r[7]||'').toUpperCase().trim()==='T' && r[3]==='HAYIR');
+      const hatalar = kfFormGetRows(f).filter(r => r[6]===1 && (r[7]||'').toUpperCase().trim()==='T' && r[3]==='HAYIR');
       const hataHtml = hatalar.length === 0
         ? `<div style="font-size:11px;color:#16a34a;padding:4px 0;">✅ Bu formda hata yok</div>`
         : hatalar.map(r => `<div style="display:flex;gap:8px;align-items:flex-start;padding:4px 0;border-bottom:1px solid #f3f4f6;">
@@ -3293,7 +3491,7 @@
     const f = window._rpForms.find(x=>x.id===id); if (!f) return;
     const a = rpAnalyzeForm(f);
     const tarih = new Date(f.savedAt||f.updatedAt).toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    const trs = (f.data||[]).filter(r=>r[6]===1&&r[0]).map(r => {
+    const trs = kfFormGetRows(f).filter(r=>r[6]===1&&r[0]).map(r => {
       const s=r[3]||'—'; const c=s==='HAYIR'?'#dc2626':s==='EVET'?'#16a34a':'#6b7280';
       return `<tr><td style="font-weight:600;color:#374151;white-space:nowrap;">${r[0]}</td><td>${r[1]||''}</td><td style="text-align:center;">${r[2]||''}</td><td style="text-align:center;font-weight:700;color:${c};">${s}</td></tr>`;
     }).join('');

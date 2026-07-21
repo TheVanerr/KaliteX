@@ -9,6 +9,7 @@
   "theme_color": "#dc2626",
   "orientation": "landscape",
   "lang": "tr",
+  "permissions": ["microphone"],
   "icons": [
     {
       "src": "./icon-192.png",
