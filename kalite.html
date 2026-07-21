@@ -2257,17 +2257,32 @@
     window._kfNotesWired = true;
     const overlay = document.getElementById('kf-notes-overlay');
     if (!overlay) return;
+
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) kfNotesClose();
     });
-    overlay.querySelector('.kfnm-box')?.addEventListener('click', (e) => e.stopPropagation());
-    overlay.addEventListener('click', (e) => {
-      const addBtn = e.target.closest('[data-kfnm-add]');
-      if (addBtn) { e.preventDefault(); kfNotesAdd(addBtn.dataset.kfnmAdd); return; }
-      const micBtn = e.target.closest('[data-kfnm-mic]');
-      if (micBtn) { e.preventDefault(); kfNotesMic(micBtn.dataset.kfnmMic); return; }
-      const delBtn = e.target.closest('[data-kfnm-del]');
-      if (delBtn) { e.preventDefault(); kfNotesDel(delBtn.dataset.kfnmDel, +delBtn.dataset.kfnmIdx); return; }
+
+    overlay.querySelectorAll('[data-kfnm-add]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        kfNotesAdd(btn.getAttribute('data-kfnm-add'));
+      });
+    });
+    overlay.querySelectorAll('[data-kfnm-mic]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        kfNotesMic(btn.getAttribute('data-kfnm-mic'));
+      });
+    });
+    ['kfnm-list-a', 'kfnm-list-r'].forEach(id => {
+      document.getElementById(id)?.addEventListener('click', (e) => {
+        const delBtn = e.target.closest('[data-kfnm-del]');
+        if (!delBtn) return;
+        e.preventDefault();
+        kfNotesDel(delBtn.getAttribute('data-kfnm-del'), +delBtn.getAttribute('data-kfnm-idx'));
+      });
     });
     ['a', 'r'].forEach(side => {
       const inp = document.getElementById(kfNotesInpId(side));
@@ -2276,8 +2291,14 @@
         if (e.key === 'Enter') { e.preventDefault(); kfNotesAdd(side); }
       });
     });
-    document.getElementById('kfnm-cancel')?.addEventListener('click', (e) => { e.preventDefault(); kfNotesClose(); });
-    document.getElementById('kfnm-save')?.addEventListener('click', (e) => { e.preventDefault(); kfNotesSave(); });
+    document.getElementById('kfnm-cancel')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      kfNotesClose();
+    });
+    document.getElementById('kfnm-save')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      kfNotesSave();
+    });
   }
 
   function kfPackFormPayload(kfData, kfNotes) {
@@ -2341,7 +2362,7 @@
 
   function kfNotesAdd(side) {
     kfNotesEnsureWorking();
-    if (_kfnmSR) { try { _kfnmManualStop = true; _kfnmSR.stop(); } catch (e) {} }
+    if (_kfnmSR) kfNotesMicStop();
     const inp = document.getElementById(kfNotesInpId(side));
     if (!inp) return;
     const val = String(inp.value || '').trim();
@@ -2354,6 +2375,7 @@
     else _kfnw.revizeler.push(val);
     inp.value = '';
     kfNotesRenderList(side);
+    kfToast('Madde eklendi ✓', 1200);
     inp.focus();
   }
 
@@ -2367,93 +2389,109 @@
   let _kfnmSR = null;
   let _kfnmSRSide = null;
   let _kfnmManualStop = false;
+  let _kfnmMicStream = null;
 
-  async function kfNotesMicPerm() {
-    if (!navigator.mediaDevices?.getUserMedia) return true;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(t => t.stop());
-      return true;
-    } catch (e) {
-      kfToast('Mikrofon izni gerekli — Chrome ayarlarından izin verin.');
-      return false;
+  function kfNotesMicStop() {
+    _kfnmManualStop = true;
+    if (_kfnmSR) { try { _kfnmSR.abort(); } catch (e) {} _kfnmSR = null; }
+    _kfnmSRSide = null;
+    if (_kfnmMicStream) {
+      _kfnmMicStream.getTracks().forEach(t => t.stop());
+      _kfnmMicStream = null;
     }
+    document.querySelectorAll('.kfnm-mic.listening').forEach(b => b.classList.remove('listening'));
   }
 
   async function kfNotesMic(side) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
-      kfToast('Ses tanıma için Chrome kullanın (Google ses tanıma).');
+      kfToast('Ses tanıma için Chrome kullanın.');
       return;
     }
-    if (!window.isSecureContext && !/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)) {
-      console.warn('[KaliteX] HTTP üzerinden mikrofon kısıtlı olabilir — Chrome + HTTPS önerilir.');
-    }
-    if (_kfnmSR && _kfnmSRSide === side) {
-      _kfnmManualStop = true;
-      try { _kfnmSR.stop(); } catch (e) {}
-      return;
-    }
-    if (_kfnmSR) { try { _kfnmSR.abort(); } catch (e) {} _kfnmSR = null; }
-    if (!(await kfNotesMicPerm())) return;
 
+    if (_kfnmSR && _kfnmSRSide === side) {
+      kfNotesMicStop();
+      kfToast('Dinleme durduruldu');
+      return;
+    }
+    kfNotesMicStop();
     _kfnmManualStop = false;
+
     const inp = document.getElementById(kfNotesInpId(side));
     const btn = document.getElementById(kfNotesMicId(side));
     const mobile = kfNotesIsMobile();
+    const base = inp ? inp.value.trimEnd() : '';
+
+    if (navigator.mediaDevices?.getUserMedia) {
+      try {
+        _kfnmMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (e) {
+        kfToast('Mikrofon izni gerekli — Chrome ayarlarından izin verin.');
+        return;
+      }
+    }
 
     const sr = new SR();
     sr.lang = 'tr-TR';
-    sr.continuous = !mobile;
+    sr.continuous = true;
     sr.interimResults = true;
     sr.maxAlternatives = 1;
     _kfnmSR = sr;
     _kfnmSRSide = side;
-    const base = inp ? inp.value.trimEnd() : '';
-    let finalAccum = '';
 
     sr.onstart = () => {
       if (btn) btn.classList.add('listening');
-      if (inp) inp.placeholder = '🎤 Google dinliyor…';
+      if (inp) inp.placeholder = '🎤 Konuşun…';
+      kfToast('Dinleniyor — tekrar 🎤 ile durdurun', 1800);
     };
+
     sr.onresult = (e) => {
-      let newFinal = '', interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) newFinal += t;
-        else interim += t;
+      let chunk = '';
+      for (let i = 0; i < e.results.length; i++) {
+        chunk += e.results[i][0].transcript;
       }
-      if (newFinal) finalAccum += (finalAccum && !finalAccum.endsWith(' ') ? ' ' : '') + newFinal.trim();
-      const display = (base + (base && finalAccum ? ' ' : '') + finalAccum + (interim ? ' ' + interim.trim() : '')).trimStart();
-      if (inp) inp.value = display;
+      const merged = (base + (base && chunk ? ' ' : '') + chunk.trim()).trimStart();
+      if (inp) inp.value = merged;
     };
+
     sr.onend = () => {
-      if (!mobile && !_kfnmManualStop && _kfnmSR === sr) {
-        try { sr.start(); return; } catch (e) { /* yeniden başlatılamadı */ }
-      }
-      _kfnmSR = null;
-      _kfnmSRSide = null;
       if (btn) btn.classList.remove('listening');
       if (inp) {
         inp.placeholder = side === 'a' ? 'Aksiliği yaz, Enter veya Ekle...' : 'Öneriyi yaz, Enter veya Ekle...';
       }
+      if (_kfnmMicStream) {
+        _kfnmMicStream.getTracks().forEach(t => t.stop());
+        _kfnmMicStream = null;
+      }
+      if (!_kfnmManualStop && _kfnmSR === sr && !mobile) {
+        try { sr.start(); return; } catch (e) { /* masaüstü yeniden dinle */ }
+      }
+      if (_kfnmSR === sr) { _kfnmSR = null; _kfnmSRSide = null; }
     };
+
     sr.onerror = (e) => {
-      if (e.error === 'no-speech' || e.error === 'aborted') return;
+      if (e.error === 'no-speech') return;
+      if (e.error === 'aborted') return;
       _kfnmSR = null;
       _kfnmSRSide = null;
       if (btn) btn.classList.remove('listening');
+      if (_kfnmMicStream) {
+        _kfnmMicStream.getTracks().forEach(t => t.stop());
+        _kfnmMicStream = null;
+      }
       const msgs = {
         'not-allowed': 'Mikrofon izni reddedildi.',
-        'service-not-allowed': 'Google ses tanıma için Chrome + internet gerekli.',
+        'service-not-allowed': 'Ses tanıma çalışmıyor — Chrome + HTTPS veya localhost gerekli.',
         'network': 'Ses tanıma için internet gerekli.',
-        'audio-capture': 'Mikrofon bulunamadı veya kullanılamıyor.'
+        'audio-capture': 'Mikrofon bulunamadı.'
       };
-      kfToast(msgs[e.error] || ('Mikrofon hatası: ' + e.error));
+      kfToast(msgs[e.error] || ('Mikrofon: ' + e.error));
     };
+
     try {
       sr.start();
     } catch (e) {
+      kfNotesMicStop();
       kfToast('Mikrofon başlatılamadı: ' + (e.message || e));
     }
   }
@@ -2475,7 +2513,7 @@
   }
 
   function kfNotesClose() {
-    if (_kfnmSR) { _kfnmManualStop = true; try { _kfnmSR.stop(); } catch (e) {} }
+    kfNotesMicStop();
     const overlay = document.getElementById('kf-notes-overlay');
     if (overlay) overlay.style.display = 'none';
   }
