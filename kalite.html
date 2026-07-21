@@ -2458,19 +2458,27 @@
   }
 
   async function kxUploadXlsx(H, folderId, filename, blob, existingId) {
-    const metadata = { name: filename, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' };
-    if (!existingId) metadata.parents = [folderId];
-    const formData = new FormData();
-    formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-    formData.append('file', blob);
-    const url = existingId
-      ? `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=multipart`
-      : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-    const res = await fetch(url, {
-      method: existingId ? 'PATCH' : 'POST',
-      headers: { 'Authorization': H.Authorization },
-      body: formData
-    });
+    async function doUpload(fileId) {
+      const metadata = { name: filename, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' };
+      if (!fileId) metadata.parents = [folderId];
+      const formData = new FormData();
+      formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      formData.append('file', blob);
+      const url = fileId
+        ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
+        : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+      return fetch(url, {
+        method: fileId ? 'PATCH' : 'POST',
+        headers: { 'Authorization': H.Authorization },
+        body: formData
+      });
+    }
+    let res = existingId ? await doUpload(existingId) : await doUpload(null);
+    // Kayıtlı dosya silinmiş veya erişim yok — yeniden oluştur
+    if (!res.ok && existingId && (res.status === 404 || res.status === 403)) {
+      console.warn('[KaliteX] Drive dosyası bulunamadı, yeniden oluşturuluyor:', filename);
+      res = await doUpload(null);
+    }
     if (!res.ok) throw new Error('Drive yükleme hatası: ' + res.status + ' — ' + filename);
     return (await res.json()).id;
   }
@@ -2496,20 +2504,26 @@
       if (!forms.length) { kfToast('Aktarılacak form bulunamadı.'); return; }
       const exportLog = kxGetExportLog();
       const usedNames = {};
-      let written = 0;
+      let written = 0, skipped = 0;
       for (const f of forms) {
+        const stamp = f.updatedAt || f.savedAt || '';
+        const prev = exportLog[f.id];
+        if (prev?.fileId && prev.updatedAt === stamp) { skipped++; continue; }
         let base = String(f.name || 'Form').replace(/[\\\/\?\*\[\]\:]/g, '-').trim().substring(0, 90) || 'Form';
         let filename = base + '.xlsx';
         if (usedNames[filename]) filename = base + ' (' + f.id.slice(-6) + ').xlsx';
         usedNames[filename] = true;
         const blob = kxFormToXlsxBlob(f);
-        const existingId = exportLog[f.id]?.fileId || null;
+        const existingId = prev?.fileId || null;
         const fileId = await kxUploadXlsx(H, folderId, filename, blob, existingId);
-        exportLog[f.id] = { fileId, filename, updatedAt: f.updatedAt || f.savedAt || '' };
+        exportLog[f.id] = { fileId, filename, updatedAt: stamp };
         written++;
       }
       kxSaveExportLog(exportLog);
-      kfToast('\u2713 ' + written + ' form QUALITY FORMS klas\u00f6r\u00fcne aktar\u0131ld\u0131');
+      const msg = written
+        ? ('\u2713 ' + written + ' form aktar\u0131ld\u0131' + (skipped ? ' \u00b7 ' + skipped + ' de\u011fi\u015fmedi, atland\u0131' : ''))
+        : ('\u2713 T\u00fcm formlar g\u00fcncel' + (skipped ? ' (' + skipped + ' form)' : ''));
+      kfToast(msg);
       setTimeout(() => window.open('https://drive.google.com/drive/folders/' + folderId, '_blank'), 600);
     } catch (e) {
       if (e.message === 'AUTH_EXPIRED') {
