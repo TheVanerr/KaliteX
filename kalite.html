@@ -435,6 +435,11 @@
   let _khAutoRefreshInFlight = false;
   async function khRefreshIfNeeded(reason) {
     if (!navigator.onLine || _khSyncing || _khAutoRefreshInFlight) return false;
+    // Kaydedilmemiş yerel değişiklik varken sunucudan çekme — düzenlemeyi silmesin
+    if (KH._dirty || KH.editCell) {
+      console.log(`[KaliteX] KH yenileme atlandı (${reason}): kaydedilmemiş değişiklik`);
+      return false;
+    }
     _khAutoRefreshInFlight = true;
     try {
       console.log(`[KaliteX] KH yenileniyor (${reason})`);
@@ -692,6 +697,7 @@
       // ── ADIM 5: Silme kayıtlarını temizle, güncel halini belleğe al ────────
       khClearDeletedKodlar();
       khClearDeletedAtama();
+      KH._dirty = false;
       khSyncStatus('ok');
       console.log(`[KaliteX] Sync tamamlandı: ${mergedParams.length} parametre`);
       return true;
@@ -714,9 +720,18 @@
     el.textContent = map[s] || ''; el.style.color = col[s] || '#6b7280';
   }
 
-  function khSave() {
+  async function khSave() {
     if (!navigator.onLine) { khToast('⚠️ İnternet yok — kayıt yapılamaz', 3000); khSyncStatus('offline'); return; }
-    khSyncToSupabase();
+    if (_khSyncing) { khToast('Kayıt zaten devam ediyor…', 2000); return; }
+    if (KH.editCell) khCE();
+    const ok = await khSyncToSupabase();
+    if (ok) {
+      KH._dirty = false;
+      const isModelPage = KH_MODELS.some(m => m.id === currentPage);
+      if (currentPage === 'kalite-havuzu') { khBuildFR(); khVSR(); }
+      else if (isModelPage) renderPage();
+      khToast('Kaydedildi ✓');
+    }
   }
 
   function khExportJSON() {
@@ -1178,6 +1193,7 @@
       KH.assignments[mid] = newObj;
     }
     KH.sel = { r1: insertAt, c1: KH.sel.c1, r2: insertAt, c2: KH.sel.c2 };
+    KH._dirty = true;
     khBuildFR(); khVSR();
     khScrollTo(insertAt);
     khToast('Satır eklendi ✓');
@@ -3249,12 +3265,6 @@
     const isModelPage = KH_MODELS.some(m => m.id === currentPage);
     if (currentPage === 'kalite-havuzu' || isModelPage) khRefreshIfNeeded('visible').catch(() => {});
   });
-
-  setInterval(() => {
-    if (document.visibilityState !== 'visible') return;
-    const isModelPage = KH_MODELS.some(m => m.id === currentPage);
-    if (currentPage === 'kalite-havuzu' || isModelPage) khRefreshIfNeeded('interval').catch(() => {});
-  }, 45000);
 
   // Init
   const defaultConfig = {
