@@ -2350,6 +2350,19 @@
     } catch (e) { return false; }
   }
 
+  async function kxDriveFileOk(H, id) {
+    if (!id) return false;
+    try {
+      const res = await fetch(
+        'https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(id) + '?fields=id,trashed',
+        { headers: H }
+      );
+      if (!res.ok) return false;
+      const f = await res.json();
+      return !!f.id && !f.trashed;
+    } catch (e) { return false; }
+  }
+
   async function kxFindFileInFolder(H, folderId, filename) {
     const q = `'${folderId}' in parents and name='${String(filename).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}' and trashed=false`;
     const res = await fetch(
@@ -2539,16 +2552,22 @@
       for (const f of forms) {
         const stamp = f.updatedAt || f.savedAt || '';
         const prev = exportLog[f.id];
-        if (prev?.fileId && prev.updatedAt === stamp) { skipped++; continue; }
+        const canSkip = prev?.fileId
+          && prev.folderId === folderId
+          && prev.updatedAt === stamp
+          && await kxDriveFileOk(H, prev.fileId);
+        if (canSkip) { skipped++; continue; }
         let base = String(f.name || 'Form').replace(/[\\\/\?\*\[\]\:]/g, '-').trim().substring(0, 90) || 'Form';
         let filename = base + '.xlsx';
         if (usedNames[filename]) filename = base + ' (' + f.id.slice(-6) + ').xlsx';
         usedNames[filename] = true;
         const blob = kxFormToXlsxBlob(f);
-        let existingId = prev?.fileId || null;
-        if (!existingId) existingId = await kxFindFileInFolder(H, folderId, filename);
+        let existingId = (prev?.folderId === folderId && prev?.fileId) ? prev.fileId : null;
+        if (!existingId || !(await kxDriveFileOk(H, existingId))) {
+          existingId = await kxFindFileInFolder(H, folderId, filename);
+        }
         const fileId = await kxUploadXlsx(H, folderId, filename, blob, existingId);
-        exportLog[f.id] = { fileId, filename, updatedAt: stamp };
+        exportLog[f.id] = { fileId, filename, updatedAt: stamp, folderId };
         written++;
       }
       kxSaveExportLog(exportLog);
