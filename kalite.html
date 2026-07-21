@@ -76,11 +76,14 @@
     .kfm-group-empty{padding:14px 12px;font-size:12px;color:#9ca3af;text-align:center;font-style:italic;}
     /* Not modalı — global (sayfa yenilenmesinden etkilenmesin) */
     .kfnm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10050;display:none;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;}
-    .kfnm-box{background:#fff;border-radius:14px;padding:22px 24px;width:min(860px,97vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.25);}
-    .kfnm-title{font-size:15px;font-weight:800;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-    .kfnm-cols{display:flex;gap:14px;flex:1;min-height:0;margin-bottom:14px;}
-    @media(max-width:640px){.kfnm-cols{flex-direction:column;}}
-    .kfnm-col{flex:1;display:flex;flex-direction:column;gap:6px;min-height:0;}
+    .kfnm-box{background:#fff;border-radius:14px;width:min(860px,97vw);max-height:min(92dvh,92vh);display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.25);overflow:hidden;}
+    .kfnm-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 20px 10px;}
+    .kfnm-title{font-size:15px;font-weight:800;color:#111827;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+    .kfnm-status{min-height:0;font-size:11px;font-weight:600;color:#dc2626;text-align:center;margin-bottom:8px;line-height:1.4;}
+    .kfnm-status.on{min-height:16px;padding:6px 10px;background:#fef2f2;border-radius:6px;}
+    .kfnm-cols{display:flex;gap:14px;margin-bottom:4px;}
+    @media(max-width:768px){.kfnm-cols{flex-direction:column;gap:16px;}}
+    .kfnm-col{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;}
     .kfnm-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6b7280;}
     .kfnm-lbl-red{color:#dc2626;}
     .kfnm-lbl-blu{color:#2563eb;}
@@ -101,12 +104,22 @@
     .kfnm-mic:hover{background:#e5e7eb;color:#374151;}
     .kfnm-mic.listening{background:#fef2f2;color:#dc2626;animation:kfnm-pulse 0.8s ease-in-out infinite;}
     @keyframes kfnm-pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.35);}50%{box-shadow:0 0 0 5px rgba(220,38,38,0);}}
-    .kfnm-btns{display:flex;gap:8px;justify-content:flex-end;padding-top:4px;}
-    .kfnm-ok{background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .kfnm-btns{display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;padding:12px 20px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid #e5e7eb;background:#fff;box-shadow:0 -4px 14px rgba(0,0,0,0.05);}
+    .kfnm-ok{background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;min-height:44px;}
     .kfnm-ok:hover{background:#15803d;}
-    .kfnm-cancel{background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .kfnm-cancel{background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;min-height:44px;}
     .kfnm-cancel:hover{background:#e5e7eb;}
+    @media(max-width:768px){
+      .kfnm-overlay{align-items:flex-end;padding:0;}
+      .kfnm-box{width:100%;max-width:100%;border-radius:16px 16px 0 0;max-height:94dvh;}
+      .kfnm-body{padding:16px 16px 8px;}
+      .kfnm-list{max-height:100px;min-height:64px;flex:none;}
+      .kfnm-btns{gap:10px;padding:14px 16px calc(16px + env(safe-area-inset-bottom,0px));margin-top:0;}
+      .kfnm-cancel,.kfnm-ok{flex:1;padding:13px 16px;font-size:15px;}
+      .kfnm-mic,.kfnm-add-btn{min-height:44px;min-width:44px;}
+    }
     .kfhb-note-badge{position:absolute;top:3px;right:3px;width:7px;height:7px;background:#16a34a;border-radius:50%;display:none;}
+    #kf-toast-global{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:10060;max-width:92vw;text-align:center;}
   </style>
 
  </head>
@@ -237,24 +250,27 @@
   <!-- Form Notu modalı — page-content dışında, silinmez -->
   <div id="kf-notes-overlay" class="kfnm-overlay">
     <div class="kfnm-box">
-      <div class="kfnm-title">📝 Form Notu</div>
-      <div class="kfnm-cols">
-        <div class="kfnm-col">
-          <div class="kfnm-lbl kfnm-lbl-red">⚠️ Aksilikler</div>
-          <div id="kfnm-list-a" class="kfnm-list"></div>
-          <div class="kfnm-add-row">
-            <input id="kfnm-inp-a" class="kfnm-inp" type="text" enterkeyhint="done" autocomplete="off" placeholder="Aksiliği yaz, Enter veya Ekle...">
-            <button type="button" id="kfnm-mic-a" class="kfnm-mic" data-kfnm-mic="a" title="Google ses tanıma">🎤</button>
-            <button type="button" class="kfnm-add-btn kfnm-add-btn-r" data-kfnm-add="a">+ Ekle</button>
+      <div class="kfnm-body">
+        <div class="kfnm-title">📝 Form Notu</div>
+        <div id="kfnm-status" class="kfnm-status"></div>
+        <div class="kfnm-cols">
+          <div class="kfnm-col">
+            <div class="kfnm-lbl kfnm-lbl-red">⚠️ Aksilikler</div>
+            <div id="kfnm-list-a" class="kfnm-list"></div>
+            <div class="kfnm-add-row">
+              <input id="kfnm-inp-a" class="kfnm-inp" type="text" enterkeyhint="done" autocomplete="off" placeholder="Aksiliği yaz, Enter veya Ekle...">
+              <button type="button" id="kfnm-mic-a" class="kfnm-mic" data-kfnm-mic="a" title="Google ses tanıma">🎤</button>
+              <button type="button" class="kfnm-add-btn kfnm-add-btn-r" data-kfnm-add="a">+ Ekle</button>
+            </div>
           </div>
-        </div>
-        <div class="kfnm-col">
-          <div class="kfnm-lbl kfnm-lbl-blu">🔧 Revize Önerileri</div>
-          <div id="kfnm-list-r" class="kfnm-list"></div>
-          <div class="kfnm-add-row">
-            <input id="kfnm-inp-r" class="kfnm-inp" type="text" enterkeyhint="done" autocomplete="off" placeholder="Öneriyi yaz, Enter veya Ekle...">
-            <button type="button" id="kfnm-mic-r" class="kfnm-mic" data-kfnm-mic="r" title="Google ses tanıma">🎤</button>
-            <button type="button" class="kfnm-add-btn kfnm-add-btn-b" data-kfnm-add="r">+ Ekle</button>
+          <div class="kfnm-col">
+            <div class="kfnm-lbl kfnm-lbl-blu">🔧 Revize Önerileri</div>
+            <div id="kfnm-list-r" class="kfnm-list"></div>
+            <div class="kfnm-add-row">
+              <input id="kfnm-inp-r" class="kfnm-inp" type="text" enterkeyhint="done" autocomplete="off" placeholder="Öneriyi yaz, Enter veya Ekle...">
+              <button type="button" id="kfnm-mic-r" class="kfnm-mic" data-kfnm-mic="r" title="Google ses tanıma">🎤</button>
+              <button type="button" class="kfnm-add-btn kfnm-add-btn-b" data-kfnm-add="r">+ Ekle</button>
+            </div>
           </div>
         </div>
       </div>
@@ -264,6 +280,7 @@
       </div>
     </div>
   </div>
+  <div id="kf-toast-global"></div>
   <script>
   let currentPage = 'kalite-formu';
   let sidebarOpen = true;
@@ -2252,6 +2269,29 @@
   function kfNotesMicId(side) { return side === 'a' ? 'kfnm-mic-a' : 'kfnm-mic-r'; }
   function kfNotesIsMobile() { return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent); }
 
+  function kfNotesStatus(msg) {
+    const el = document.getElementById('kfnm-status');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.classList.toggle('on', !!msg);
+  }
+
+  function kfNotesBindTap(el, fn) {
+    if (!el || el._kfTapBound) return;
+    el._kfTapBound = true;
+    let last = 0;
+    const run = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const now = Date.now();
+      if (now - last < 350) return;
+      last = now;
+      fn();
+    };
+    el.addEventListener('click', run);
+    el.addEventListener('touchend', run, { passive: false });
+  }
+
   function kfNotesWireEvents() {
     if (window._kfNotesWired) return;
     window._kfNotesWired = true;
@@ -2263,18 +2303,10 @@
     });
 
     overlay.querySelectorAll('[data-kfnm-add]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        kfNotesAdd(btn.getAttribute('data-kfnm-add'));
-      });
+      kfNotesBindTap(btn, () => kfNotesAdd(btn.getAttribute('data-kfnm-add')));
     });
     overlay.querySelectorAll('[data-kfnm-mic]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        kfNotesMic(btn.getAttribute('data-kfnm-mic'));
-      });
+      kfNotesBindTap(btn, () => kfNotesMic(btn.getAttribute('data-kfnm-mic')));
     });
     ['kfnm-list-a', 'kfnm-list-r'].forEach(id => {
       document.getElementById(id)?.addEventListener('click', (e) => {
@@ -2291,14 +2323,10 @@
         if (e.key === 'Enter') { e.preventDefault(); kfNotesAdd(side); }
       });
     });
-    document.getElementById('kfnm-cancel')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      kfNotesClose();
-    });
-    document.getElementById('kfnm-save')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      kfNotesSave();
-    });
+    const cancelBtn = document.getElementById('kfnm-cancel');
+    const saveBtn = document.getElementById('kfnm-save');
+    if (cancelBtn) kfNotesBindTap(cancelBtn, kfNotesClose);
+    if (saveBtn) kfNotesBindTap(saveBtn, kfNotesSave);
   }
 
   function kfPackFormPayload(kfData, kfNotes) {
@@ -2405,12 +2433,21 @@
   async function kfNotesMic(side) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
+      kfNotesStatus('Ses tanıma desteklenmiyor — Chrome kullanın.');
       kfToast('Ses tanıma için Chrome kullanın.');
+      return;
+    }
+
+    if (!window.isSecureContext) {
+      const msg = 'Telefonda mikrofon için HTTPS gerekli. KaliteX-Baslat.bat ile HTTPS modunu kullanın.';
+      kfNotesStatus(msg);
+      kfToast(msg);
       return;
     }
 
     if (_kfnmSR && _kfnmSRSide === side) {
       kfNotesMicStop();
+      kfNotesStatus('');
       kfToast('Dinleme durduruldu');
       return;
     }
@@ -2422,18 +2459,21 @@
     const mobile = kfNotesIsMobile();
     const base = inp ? inp.value.trimEnd() : '';
 
-    if (navigator.mediaDevices?.getUserMedia) {
+    if (inp) inp.blur();
+
+    if (!mobile && navigator.mediaDevices?.getUserMedia) {
       try {
         _kfnmMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       } catch (e) {
-        kfToast('Mikrofon izni gerekli — Chrome ayarlarından izin verin.');
+        kfNotesStatus('Mikrofon izni reddedildi.');
+        kfToast('Mikrofon izni gerekli.');
         return;
       }
     }
 
     const sr = new SR();
     sr.lang = 'tr-TR';
-    sr.continuous = true;
+    sr.continuous = !mobile;
     sr.interimResults = true;
     sr.maxAlternatives = 1;
     _kfnmSR = sr;
@@ -2442,12 +2482,12 @@
     sr.onstart = () => {
       if (btn) btn.classList.add('listening');
       if (inp) inp.placeholder = '🎤 Konuşun…';
-      kfToast('Dinleniyor — tekrar 🎤 ile durdurun', 1800);
+      kfNotesStatus('Dinleniyor… (🎤 ile durdurun)');
     };
 
     sr.onresult = (e) => {
       let chunk = '';
-      for (let i = 0; i < e.results.length; i++) {
+      for (let i = e.resultIndex; i < e.results.length; i++) {
         chunk += e.results[i][0].transcript;
       }
       const merged = (base + (base && chunk ? ' ' : '') + chunk.trim()).trimStart();
@@ -2463,10 +2503,22 @@
         _kfnmMicStream.getTracks().forEach(t => t.stop());
         _kfnmMicStream = null;
       }
-      if (!_kfnmManualStop && _kfnmSR === sr && !mobile) {
-        try { sr.start(); return; } catch (e) { /* masaüstü yeniden dinle */ }
+      if (!_kfnmManualStop && _kfnmSR === sr) {
+        if (mobile) {
+          setTimeout(() => {
+            if (!_kfnmManualStop && _kfnmSR === sr) {
+              try { sr.start(); } catch (err) { /* mobil yeniden dinle */ }
+            }
+          }, 280);
+          return;
+        }
+        try { sr.start(); return; } catch (e) { /* masaüstü */ }
       }
-      if (_kfnmSR === sr) { _kfnmSR = null; _kfnmSRSide = null; }
+      if (_kfnmSR === sr) {
+        _kfnmSR = null;
+        _kfnmSRSide = null;
+        kfNotesStatus('');
+      }
     };
 
     sr.onerror = (e) => {
@@ -2481,18 +2533,22 @@
       }
       const msgs = {
         'not-allowed': 'Mikrofon izni reddedildi.',
-        'service-not-allowed': 'Ses tanıma çalışmıyor — Chrome + HTTPS veya localhost gerekli.',
-        'network': 'Ses tanıma için internet gerekli.',
+        'service-not-allowed': 'HTTPS + Chrome gerekli (http://IP ile çalışmaz).',
+        'network': 'İnternet bağlantısı gerekli.',
         'audio-capture': 'Mikrofon bulunamadı.'
       };
-      kfToast(msgs[e.error] || ('Mikrofon: ' + e.error));
+      const msg = msgs[e.error] || ('Mikrofon: ' + e.error);
+      kfNotesStatus(msg);
+      kfToast(msg);
     };
 
     try {
       sr.start();
     } catch (e) {
       kfNotesMicStop();
-      kfToast('Mikrofon başlatılamadı: ' + (e.message || e));
+      const msg = 'Mikrofon başlatılamadı: ' + (e.message || e);
+      kfNotesStatus(msg);
+      kfToast(msg);
     }
   }
 
@@ -2505,6 +2561,7 @@
     _kfnw = kfNotesNormalize(window.kfNotes);
     document.getElementById('kfnm-inp-a').value = '';
     document.getElementById('kfnm-inp-r').value = '';
+    kfNotesStatus('');
     overlay.style.display = 'flex';
     kfNotesRenderList('a');
     kfNotesRenderList('r');
@@ -3128,7 +3185,7 @@
   }
 
   function kfToast(msg) {
-    const t = document.getElementById('kf-toast');
+    const t = document.getElementById('kf-toast-global') || document.getElementById('kf-toast');
     if (!t) return;
     t.textContent = msg; t.style.opacity = '1';
     clearTimeout(t._t); t._t = setTimeout(() => t.style.opacity = '0', 2200);
