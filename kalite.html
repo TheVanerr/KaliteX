@@ -2337,6 +2337,30 @@
   function kxSaveExportLog(l) { localStorage.setItem(KX_XLSX_EXPORT_LOG_KEY, JSON.stringify(l)); }
   function kxGetQualityFormsFolderId() { return localStorage.getItem(KX_QUALITY_FORMS_FOLDER_KEY) || ''; }
 
+  async function kxDriveFolderOk(H, id) {
+    if (!id) return false;
+    try {
+      const res = await fetch(
+        'https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(id) + '?fields=id,mimeType,trashed',
+        { headers: H }
+      );
+      if (!res.ok) return false;
+      const f = await res.json();
+      return !!f.id && !f.trashed && f.mimeType === 'application/vnd.google-apps.folder';
+    } catch (e) { return false; }
+  }
+
+  async function kxFindFileInFolder(H, folderId, filename) {
+    const q = `'${folderId}' in parents and name='${String(filename).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}' and trashed=false`;
+    const res = await fetch(
+      'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id)&pageSize=1',
+      { headers: H }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.files?.[0]?.id || null;
+  }
+
   function kxRequestDriveToken(onToken, mode) {
     mode = mode || 'export';
     const isBackup = mode === 'backup';
@@ -2416,8 +2440,12 @@
   }
 
   async function kxEnsureExportFolder(H, token) {
-    const saved = kxGetQualityFormsFolderId();
-    if (saved) return saved;
+    let saved = kxGetQualityFormsFolderId();
+    if (saved && await kxDriveFolderOk(H, saved)) return saved;
+    if (saved) {
+      localStorage.removeItem(KX_QUALITY_FORMS_FOLDER_KEY);
+      console.warn('[KaliteX] Kay\u0131tl\u0131 QUALITY FORMS klas\u00f6r\u00fc ge\u00e7ersiz, yeniden ayarlan\u0131yor');
+    }
     if (KX_GDRIVE_API_KEY) {
       kfToast('QUALITY FORMS klas\u00f6r\u00fcn\u00fc se\u00e7in\u2026');
       return await kxPickQualityFormsFolder(token);
@@ -2479,6 +2507,9 @@
       console.warn('[KaliteX] Drive dosyası bulunamadı, yeniden oluşturuluyor:', filename);
       res = await doUpload(null);
     }
+    if (!res.ok && !existingId && res.status === 404) {
+      throw new Error('FOLDER_INVALID');
+    }
     if (!res.ok) throw new Error('Drive yükleme hatası: ' + res.status + ' — ' + filename);
     return (await res.json()).id;
   }
@@ -2489,7 +2520,7 @@
     kxRequestDriveToken(kxDoExportQualityForms, 'export');
   }
 
-  async function kxDoExportQualityForms(token) {
+  async function kxDoExportQualityForms(token, _folderRetry) {
     const btn = document.querySelector('.kfm-export');
     if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
     kfToast('Formlar Excel olarak aktarılıyor…');
@@ -2514,7 +2545,8 @@
         if (usedNames[filename]) filename = base + ' (' + f.id.slice(-6) + ').xlsx';
         usedNames[filename] = true;
         const blob = kxFormToXlsxBlob(f);
-        const existingId = prev?.fileId || null;
+        let existingId = prev?.fileId || null;
+        if (!existingId) existingId = await kxFindFileInFolder(H, folderId, filename);
         const fileId = await kxUploadXlsx(H, folderId, filename, blob, existingId);
         exportLog[f.id] = { fileId, filename, updatedAt: stamp };
         written++;
@@ -2524,8 +2556,15 @@
         ? ('\u2713 ' + written + ' form aktar\u0131ld\u0131' + (skipped ? ' \u00b7 ' + skipped + ' de\u011fi\u015fmedi, atland\u0131' : ''))
         : ('\u2713 T\u00fcm formlar g\u00fcncel' + (skipped ? ' (' + skipped + ' form)' : ''));
       kfToast(msg);
-      setTimeout(() => window.open('https://drive.google.com/drive/folders/' + folderId, '_blank'), 600);
+      if (await kxDriveFolderOk(H, folderId)) {
+        setTimeout(() => window.open('https://drive.google.com/drive/folders/' + folderId, '_blank'), 600);
+      }
     } catch (e) {
+      if (!_folderRetry && e.message === 'FOLDER_INVALID') {
+        localStorage.removeItem(KX_QUALITY_FORMS_FOLDER_KEY);
+        kfToast('Klas\u00f6r bulunamad\u0131, yeniden olu\u015fturuluyor\u2026');
+        return kxDoExportQualityForms(token, true);
+      }
       if (e.message === 'AUTH_EXPIRED') {
         _kxDriveTokenExport = null; _kxTokenClientExport = null;
         kfToast('Oturum süresi doldu, tekrar deneyin.');
