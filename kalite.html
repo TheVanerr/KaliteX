@@ -74,6 +74,39 @@
     .kfm-group-body .kfm-item{border-radius:0;border:none;border-bottom:1px solid #f0f0f0;background:#fff;}
     .kfm-group-body .kfm-item:last-child{border-bottom:none;}
     .kfm-group-empty{padding:14px 12px;font-size:12px;color:#9ca3af;text-align:center;font-style:italic;}
+    /* Not modalı — global (sayfa yenilenmesinden etkilenmesin) */
+    .kfnm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10050;display:none;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;}
+    .kfnm-box{background:#fff;border-radius:14px;padding:22px 24px;width:min(860px,97vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.25);}
+    .kfnm-title{font-size:15px;font-weight:800;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .kfnm-cols{display:flex;gap:14px;flex:1;min-height:0;margin-bottom:14px;}
+    @media(max-width:640px){.kfnm-cols{flex-direction:column;}}
+    .kfnm-col{flex:1;display:flex;flex-direction:column;gap:6px;min-height:0;}
+    .kfnm-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6b7280;}
+    .kfnm-lbl-red{color:#dc2626;}
+    .kfnm-lbl-blu{color:#2563eb;}
+    .kfnm-list{flex:1;min-height:120px;max-height:220px;overflow-y:auto;border:1.5px solid #e5e7eb;border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:3px;background:#fafafa;-webkit-overflow-scrolling:touch;}
+    .kfnm-item{display:flex;align-items:flex-start;gap:6px;background:#fff;border:1px solid #f0f0f0;border-radius:6px;padding:6px 8px;}
+    .kfnm-item-num{min-width:18px;height:18px;background:#e5e7eb;border-radius:4px;font-size:10px;font-weight:700;color:#6b7280;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+    .kfnm-item-txt{flex:1;font-size:12px;color:#1f2937;line-height:1.5;word-break:break-word;padding-top:1px;}
+    .kfnm-item-del{background:none;border:none;cursor:pointer;color:#d1d5db;font-size:16px;line-height:1;padding:0 2px;flex-shrink:0;font-family:inherit;margin-top:-1px;touch-action:manipulation;}
+    .kfnm-item-del:hover{color:#dc2626;}
+    .kfnm-empty{color:#d1d5db;font-size:12px;text-align:center;padding:24px 0;font-style:italic;}
+    .kfnm-add-row{display:flex;gap:6px;margin-top:2px;}
+    .kfnm-inp{flex:1;border:1.5px solid #d1d5db;border-radius:7px;padding:7px 10px;font-size:16px;font-family:inherit;outline:none;box-sizing:border-box;touch-action:manipulation;}
+    .kfnm-inp:focus{border-color:#dc2626;}
+    .kfnm-add-btn{border:none;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;touch-action:manipulation;}
+    .kfnm-add-btn-r{background:#dc2626;color:#fff;} .kfnm-add-btn-r:hover{background:#b91c1c;}
+    .kfnm-add-btn-b{background:#2563eb;color:#fff;} .kfnm-add-btn-b:hover{background:#1d4ed8;}
+    .kfnm-mic{border:none;border-radius:7px;padding:7px 10px;font-size:15px;cursor:pointer;background:#f3f4f6;color:#6b7280;transition:background .15s,color .15s;flex-shrink:0;touch-action:manipulation;}
+    .kfnm-mic:hover{background:#e5e7eb;color:#374151;}
+    .kfnm-mic.listening{background:#fef2f2;color:#dc2626;animation:kfnm-pulse 0.8s ease-in-out infinite;}
+    @keyframes kfnm-pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.35);}50%{box-shadow:0 0 0 5px rgba(220,38,38,0);}}
+    .kfnm-btns{display:flex;gap:8px;justify-content:flex-end;padding-top:4px;}
+    .kfnm-ok{background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .kfnm-ok:hover{background:#15803d;}
+    .kfnm-cancel{background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .kfnm-cancel:hover{background:#e5e7eb;}
+    .kfhb-note-badge{position:absolute;top:3px;right:3px;width:7px;height:7px;background:#16a34a;border-radius:50%;display:none;}
   </style>
 
  </head>
@@ -200,6 +233,36 @@
     <main id="page-content" class="flex-1 overflow-y-auto p-6 page-fade">
     </main>
    </div>
+  </div>
+  <!-- Form Notu modalı — page-content dışında, silinmez -->
+  <div id="kf-notes-overlay" class="kfnm-overlay">
+    <div class="kfnm-box">
+      <div class="kfnm-title">📝 Form Notu</div>
+      <div class="kfnm-cols">
+        <div class="kfnm-col">
+          <div class="kfnm-lbl kfnm-lbl-red">⚠️ Aksilikler</div>
+          <div id="kfnm-list-a" class="kfnm-list"></div>
+          <div class="kfnm-add-row">
+            <input id="kfnm-inp-a" class="kfnm-inp" type="text" enterkeyhint="done" autocomplete="off" placeholder="Aksiliği yaz, Enter veya Ekle...">
+            <button type="button" id="kfnm-mic-a" class="kfnm-mic" data-kfnm-mic="a" title="Google ses tanıma">🎤</button>
+            <button type="button" class="kfnm-add-btn kfnm-add-btn-r" data-kfnm-add="a">+ Ekle</button>
+          </div>
+        </div>
+        <div class="kfnm-col">
+          <div class="kfnm-lbl kfnm-lbl-blu">🔧 Revize Önerileri</div>
+          <div id="kfnm-list-r" class="kfnm-list"></div>
+          <div class="kfnm-add-row">
+            <input id="kfnm-inp-r" class="kfnm-inp" type="text" enterkeyhint="done" autocomplete="off" placeholder="Öneriyi yaz, Enter veya Ekle...">
+            <button type="button" id="kfnm-mic-r" class="kfnm-mic" data-kfnm-mic="r" title="Google ses tanıma">🎤</button>
+            <button type="button" class="kfnm-add-btn kfnm-add-btn-b" data-kfnm-add="r">+ Ekle</button>
+          </div>
+        </div>
+      </div>
+      <div class="kfnm-btns">
+        <button type="button" class="kfnm-cancel" id="kfnm-cancel">Vazgeç</button>
+        <button type="button" class="kfnm-ok" id="kfnm-save">Kaydet</button>
+      </div>
+    </div>
   </div>
   <script>
   let currentPage = 'kalite-formu';
@@ -1386,7 +1449,7 @@
               + '<td colspan="6" style="background:#fef2f2;border-bottom:1px solid #fca5a5;padding:0 10px;height:30px;">'
               + '<div style="display:flex;align-items:center;justify-content:space-between;">'
               + '<span style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.06em;">' + grupEsc + '</span>'
-              + '<button onclick="kfGroupAllEvet(this.closest(\'tr\').dataset.grup)" style="font-size:10px;font-weight:700;color:#16a34a;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:5px;padding:2px 9px;cursor:pointer;font-family:inherit;line-height:1.6;touch-action:manipulation;" title="Bu gruptaki tüm T tipi soruları EVET yap">\u2713 Tümü EVET</button>'
+              + '<button onclick="kfGroupAllEvet(this.closest(\'tr\').dataset.grup)" style="font-size:10px;font-weight:700;color:#16a34a;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:5px;padding:2px 9px;cursor:pointer;font-family:inherit;line-height:1.6;touch-action:manipulation;" title="Bu gruptaki boş T tipi soruları EVET yap (HAYIR/KD değişmez)">\u2713 Tümü EVET</button>'
               + '</div></td></tr>';
           }
           html += `<tr class="kf-row" data-ri="${ri}">`;
@@ -1621,7 +1684,6 @@
           </div>
           <div id="kf-kb" style="display:none;"></div>
           <div id="kf-modal-overlay" class="kfm-overlay" style="display:none;" onclick="if(event.target===this)kfModalClose()"><div id="kf-modal-box" class="kfm-box" onclick="event.stopPropagation()"></div></div>
-          <div id="kf-notes-overlay" class="kfnm-overlay" onclick="if(event.target===this)kfNotesClose()"><div class="kfnm-box" onclick="event.stopPropagation()"><div class="kfnm-title"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z'/><polyline points='15 3 15 9 21 9'/></svg> Form Notu</div><div class="kfnm-cols"><div class="kfnm-col"><div class="kfnm-lbl kfnm-lbl-red">⚠️ Aksilikler</div><div id="kfnm-list-a" class="kfnm-list"></div><div class="kfnm-add-row"><input id="kfnm-inp-a" class="kfnm-inp" placeholder="Aksiliği yaz, Enter veya Ekle..." onkeydown="if(event.key==='Enter'){event.preventDefault();kfNotesAdd('a');}"><button id="kfnm-mic-a" class="kfnm-mic" onclick="kfNotesMic('a')" title="Sesli yaz">🎤</button><button class="kfnm-add-btn kfnm-add-btn-r" onclick="kfNotesAdd('a')">+ Ekle</button></div></div><div class="kfnm-col"><div class="kfnm-lbl kfnm-lbl-blu">🔧 Revize Önerileri</div><div id="kfnm-list-r" class="kfnm-list"></div><div class="kfnm-add-row"><input id="kfnm-inp-r" class="kfnm-inp" placeholder="Öneriyi yaz, Enter veya Ekle..." onkeydown="if(event.key==='Enter'){event.preventDefault();kfNotesAdd('r');}"><button id="kfnm-mic-r" class="kfnm-mic" onclick="kfNotesMic('r')" title="Sesli yaz">🎤</button><button class="kfnm-add-btn kfnm-add-btn-b" onclick="kfNotesAdd('r')">+ Ekle</button></div></div></div><div class="kfnm-btns"><button class="kfnm-cancel" onclick="kfNotesClose()">Vazgeç</button><button class="kfnm-ok" onclick="kfNotesSave()">Kaydet</button></div></div></div>
           <div id="kf-toast" style="position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:7px 18px;border-radius:8px;font-size:12px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:10000;"></div>
         </div>
       `;
@@ -2021,25 +2083,26 @@
     }
   };
 
-  // Gruptaki tüm T tipindeki satırları EVET yap
+  // Gruptaki boş T tipi satırları EVET yap (HAYIR ve KD dokunulmaz)
   window.kfGroupAllEvet = function(grupAdi) {
     if (!window.kfData) return;
     let degistirilen = 0;
     window.kfData.forEach((row, ri) => {
-      if (row[6] !== 1) return;                      // parametre satırı değil
-      if ((row[2] || '') !== grupAdi) return;        // farklı grup
-      if ((row[7] || '').toUpperCase().trim() !== 'T') return; // sadece T tipi
-      if (row[3] === 'EVET') return;                 // zaten EVET
+      if (row[6] !== 1) return;
+      if ((row[2] || '') !== grupAdi) return;
+      if ((row[7] || '').toUpperCase().trim() !== 'T') return;
+      const val = String(row[3] || '').trim().toUpperCase();
+      if (val === 'EVET' || val === 'HAYIR' || val === 'KD') return;
+      if (val) return;
       window.kfSonucSet(ri, 'EVET');
-      // Ekrandaki select'i güncelle
       const sel = document.querySelector(`#kf-tbody .kf-row[data-ri="${ri}"] select.kf-sel`);
       if (sel) sel.value = 'EVET';
       degistirilen++;
     });
     if (degistirilen === 0) {
-      kfToast('Bu grupta zaten tümü EVET ✓');
+      kfToast('Bu grupta doldurulacak boş soru yok ✓');
     } else {
-      kfToast(`✓ ${grupAdi}: ${degistirilen} satır EVET yapıldı`);
+      kfToast(`✓ ${grupAdi}: ${degistirilen} boş satır EVET yapıldı`);
     }
   };
 
@@ -2169,14 +2232,52 @@
 
   // ── Kalite Formu Not Modalı ────────────────────────────────────────────────
   // Veri formatı: { aksilikler: ['madde1','madde2',...], revizeler: ['madde1',...] }
-  let _kfnw = {aksilikler:[], revizeler:[]}; // modal açıkken çalışan kopya
+  let _kfnw = { aksilikler: [], revizeler: [] };
 
   function kfNotesNormalize(n) {
-    // Eski format uyumu: {aksilik:'metin', revize:'metin'} → diziye çevir
-    if (!n) return {aksilikler:[], revizeler:[]};
-    if (Array.isArray(n.aksilikler)) return {aksilikler:[...n.aksilikler], revizeler:[...(n.revizeler||[])]};
-    const toArr = s => (s||'').split('\n').map(x=>x.trim()).filter(Boolean);
-    return {aksilikler: toArr(n.aksilik), revizeler: toArr(n.revize)};
+    if (!n) return { aksilikler: [], revizeler: [] };
+    if (Array.isArray(n.aksilikler)) return { aksilikler: [...n.aksilikler], revizeler: [...(n.revizeler || [])] };
+    const toArr = s => (s || '').split('\n').map(x => x.trim()).filter(Boolean);
+    return { aksilikler: toArr(n.aksilik), revizeler: toArr(n.revize) };
+  }
+
+  function kfNotesEnsureWorking() {
+    if (!_kfnw || !Array.isArray(_kfnw.aksilikler) || !Array.isArray(_kfnw.revizeler)) {
+      _kfnw = kfNotesNormalize(window.kfNotes);
+    }
+  }
+
+  function kfNotesInpId(side) { return side === 'a' ? 'kfnm-inp-a' : 'kfnm-inp-r'; }
+  function kfNotesListId(side) { return side === 'a' ? 'kfnm-list-a' : 'kfnm-list-r'; }
+  function kfNotesMicId(side) { return side === 'a' ? 'kfnm-mic-a' : 'kfnm-mic-r'; }
+  function kfNotesIsMobile() { return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent); }
+
+  function kfNotesWireEvents() {
+    if (window._kfNotesWired) return;
+    window._kfNotesWired = true;
+    const overlay = document.getElementById('kf-notes-overlay');
+    if (!overlay) return;
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) kfNotesClose();
+    });
+    overlay.querySelector('.kfnm-box')?.addEventListener('click', (e) => e.stopPropagation());
+    overlay.addEventListener('click', (e) => {
+      const addBtn = e.target.closest('[data-kfnm-add]');
+      if (addBtn) { e.preventDefault(); kfNotesAdd(addBtn.dataset.kfnmAdd); return; }
+      const micBtn = e.target.closest('[data-kfnm-mic]');
+      if (micBtn) { e.preventDefault(); kfNotesMic(micBtn.dataset.kfnmMic); return; }
+      const delBtn = e.target.closest('[data-kfnm-del]');
+      if (delBtn) { e.preventDefault(); kfNotesDel(delBtn.dataset.kfnmDel, +delBtn.dataset.kfnmIdx); return; }
+    });
+    ['a', 'r'].forEach(side => {
+      const inp = document.getElementById(kfNotesInpId(side));
+      if (!inp) return;
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); kfNotesAdd(side); }
+      });
+    });
+    document.getElementById('kfnm-cancel')?.addEventListener('click', (e) => { e.preventDefault(); kfNotesClose(); });
+    document.getElementById('kfnm-save')?.addEventListener('click', (e) => { e.preventDefault(); kfNotesSave(); });
   }
 
   function kfPackFormPayload(kfData, kfNotes) {
@@ -2214,131 +2315,190 @@
   }
 
   function kfNotesRenderList(side) {
-    const el = document.getElementById(side === 'a' ? 'kfnm-list-a' : 'kfnm-list-r');
+    kfNotesEnsureWorking();
+    const el = document.getElementById(kfNotesListId(side));
     const arr = side === 'a' ? _kfnw.aksilikler : _kfnw.revizeler;
     if (!el) return;
     if (!arr.length) { el.innerHTML = '<div class="kfnm-empty">Henüz madde yok.</div>'; return; }
     el.innerHTML = arr.map((txt, i) =>
-      `<div class="kfnm-item"><span class="kfnm-item-num">${i+1}</span><span class="kfnm-item-txt">${kfHEsc(txt)}</span><button class="kfnm-item-del" onclick="kfNotesDel('${side}',${i})" title="Sil">×</button></div>`
+      `<div class="kfnm-item"><span class="kfnm-item-num">${i + 1}</span><span class="kfnm-item-txt">${kfHEsc(txt)}</span><button type="button" class="kfnm-item-del" data-kfnm-del="${side}" data-kfnm-idx="${i}" title="Sil">×</button></div>`
     ).join('');
     el.scrollTop = el.scrollHeight;
   }
 
-  function kfNotesAdd(side) {
-    const inp = document.getElementById(side === 'a' ? 'kfnm-inp-a' : 'kfnm-inp-r');
-    if (!inp) return;
-    const val = inp.value.trim();
-    if (!val) { inp.style.borderColor='#dc2626'; setTimeout(()=>{ inp.style.borderColor=''; },600); return; }
-    if (side === 'a') _kfnw.aksilikler.push(val); else _kfnw.revizeler.push(val);
-    inp.value = ''; inp.focus();
+  function kfNotesFlushInput(side) {
+    kfNotesEnsureWorking();
+    const inp = document.getElementById(kfNotesInpId(side));
+    if (!inp) return false;
+    const val = String(inp.value || '').trim();
+    if (!val) return false;
+    if (side === 'a') _kfnw.aksilikler.push(val);
+    else _kfnw.revizeler.push(val);
+    inp.value = '';
     kfNotesRenderList(side);
+    return true;
+  }
+
+  function kfNotesAdd(side) {
+    kfNotesEnsureWorking();
+    if (_kfnmSR) { try { _kfnmManualStop = true; _kfnmSR.stop(); } catch (e) {} }
+    const inp = document.getElementById(kfNotesInpId(side));
+    if (!inp) return;
+    const val = String(inp.value || '').trim();
+    if (!val) {
+      inp.style.borderColor = '#dc2626';
+      setTimeout(() => { inp.style.borderColor = ''; }, 600);
+      return;
+    }
+    if (side === 'a') _kfnw.aksilikler.push(val);
+    else _kfnw.revizeler.push(val);
+    inp.value = '';
+    kfNotesRenderList(side);
+    inp.focus();
   }
 
   function kfNotesDel(side, idx) {
-    if (side === 'a') _kfnw.aksilikler.splice(idx,1); else _kfnw.revizeler.splice(idx,1);
+    kfNotesEnsureWorking();
+    if (side === 'a') _kfnw.aksilikler.splice(idx, 1);
+    else _kfnw.revizeler.splice(idx, 1);
     kfNotesRenderList(side);
   }
 
-  let _kfnmSR = null; // aktif SpeechRecognition instance
+  let _kfnmSR = null;
   let _kfnmSRSide = null;
   let _kfnmManualStop = false;
 
+  async function kfNotesMicPerm() {
+    if (!navigator.mediaDevices?.getUserMedia) return true;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(t => t.stop());
+      return true;
+    } catch (e) {
+      kfToast('Mikrofon izni gerekli — Chrome ayarlarından izin verin.');
+      return false;
+    }
+  }
+
   async function kfNotesMic(side) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { kfToast('Bu tarayıcı sesli yazmayı desteklemiyor. Chrome kullanın.'); return; }
+    if (!SR) {
+      kfToast('Ses tanıma için Chrome kullanın (Google ses tanıma).');
+      return;
+    }
+    if (!window.isSecureContext && !/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)) {
+      console.warn('[KaliteX] HTTP üzerinden mikrofon kısıtlı olabilir — Chrome + HTTPS önerilir.');
+    }
     if (_kfnmSR && _kfnmSRSide === side) {
       _kfnmManualStop = true;
       try { _kfnmSR.stop(); } catch (e) {}
       return;
     }
-    if (_kfnmSR) { try { _kfnmSR.abort(); } catch (e) {} }
-    _kfnmManualStop = false;
+    if (_kfnmSR) { try { _kfnmSR.abort(); } catch (e) {} _kfnmSR = null; }
+    if (!(await kfNotesMicPerm())) return;
 
-    const inp = document.getElementById(side === 'a' ? 'kfnm-inp-a' : 'kfnm-inp-r');
-    const btn = document.getElementById(side === 'a' ? 'kfnm-mic-a' : 'kfnm-mic-r');
+    _kfnmManualStop = false;
+    const inp = document.getElementById(kfNotesInpId(side));
+    const btn = document.getElementById(kfNotesMicId(side));
+    const mobile = kfNotesIsMobile();
 
     const sr = new SR();
     sr.lang = 'tr-TR';
-    sr.continuous = true;
+    sr.continuous = !mobile;
     sr.interimResults = true;
     sr.maxAlternatives = 1;
-    _kfnmSR = sr; _kfnmSRSide = side;
+    _kfnmSR = sr;
+    _kfnmSRSide = side;
     const base = inp ? inp.value.trimEnd() : '';
     let finalAccum = '';
-    sr.onstart = () => { if (btn) btn.classList.add('listening'); if (inp) inp.placeholder = '🎤 Dinleniyor...'; };
+
+    sr.onstart = () => {
+      if (btn) btn.classList.add('listening');
+      if (inp) inp.placeholder = '🎤 Google dinliyor…';
+    };
     sr.onresult = (e) => {
       let newFinal = '', interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) newFinal += t; else interim += t;
+        if (e.results[i].isFinal) newFinal += t;
+        else interim += t;
       }
       if (newFinal) finalAccum += (finalAccum && !finalAccum.endsWith(' ') ? ' ' : '') + newFinal.trim();
       const display = (base + (base && finalAccum ? ' ' : '') + finalAccum + (interim ? ' ' + interim.trim() : '')).trimStart();
       if (inp) inp.value = display;
     };
     sr.onend = () => {
-      if (!_kfnmManualStop && _kfnmSR === sr) {
+      if (!mobile && !_kfnmManualStop && _kfnmSR === sr) {
         try { sr.start(); return; } catch (e) { /* yeniden başlatılamadı */ }
       }
-      _kfnmSR = null; _kfnmSRSide = null;
+      _kfnmSR = null;
+      _kfnmSRSide = null;
       if (btn) btn.classList.remove('listening');
       if (inp) {
         inp.placeholder = side === 'a' ? 'Aksiliği yaz, Enter veya Ekle...' : 'Öneriyi yaz, Enter veya Ekle...';
-        inp.focus();
       }
     };
     sr.onerror = (e) => {
       if (e.error === 'no-speech' || e.error === 'aborted') return;
-      _kfnmSR = null; _kfnmSRSide = null;
+      _kfnmSR = null;
+      _kfnmSRSide = null;
       if (btn) btn.classList.remove('listening');
       const msgs = {
         'not-allowed': 'Mikrofon izni reddedildi.',
-        'service-not-allowed': 'Ses tanıma için HTTPS ve Chrome gerekli.',
-        'network': 'Ses tanıma için internet gerekli.'
+        'service-not-allowed': 'Google ses tanıma için Chrome + internet gerekli.',
+        'network': 'Ses tanıma için internet gerekli.',
+        'audio-capture': 'Mikrofon bulunamadı veya kullanılamıyor.'
       };
       kfToast(msgs[e.error] || ('Mikrofon hatası: ' + e.error));
     };
     try {
       sr.start();
     } catch (e) {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-          stream.getTracks().forEach(t => t.stop());
-          try { sr.start(); } catch (e2) { kfToast('Mikrofon başlatılamadı.'); }
-        }).catch(() => kfToast('Mikrofon izni gerekli.'));
-      } else {
-        kfToast('Mikrofon başlatılamadı: ' + (e.message || e));
-      }
+      kfToast('Mikrofon başlatılamadı: ' + (e.message || e));
     }
   }
 
   function kfShowNotesModal() {
     if (!isEditor()) { kfToast('Salt okunur modda not eklenemez.'); return; }
+    if (currentPage !== 'kalite-formu') { kfToast('Not eklemek için Kalite Formu sayfasına gidin.'); return; }
+    kfNotesWireEvents();
     const overlay = document.getElementById('kf-notes-overlay');
     if (!overlay) return;
     _kfnw = kfNotesNormalize(window.kfNotes);
+    document.getElementById('kfnm-inp-a').value = '';
+    document.getElementById('kfnm-inp-r').value = '';
     overlay.style.display = 'flex';
     kfNotesRenderList('a');
     kfNotesRenderList('r');
     const inp = document.getElementById('kfnm-inp-a');
-    if (inp) inp.focus();
+    if (inp) setTimeout(() => inp.focus(), 80);
   }
 
   function kfNotesClose() {
+    if (_kfnmSR) { _kfnmManualStop = true; try { _kfnmSR.stop(); } catch (e) {} }
     const overlay = document.getElementById('kf-notes-overlay');
     if (overlay) overlay.style.display = 'none';
   }
 
   function kfNotesSave() {
-    window.kfNotes = {aksilikler:[..._kfnw.aksilikler], revizeler:[..._kfnw.revizeler]};
+    kfNotesEnsureWorking();
+    kfNotesFlushInput('a');
+    kfNotesFlushInput('r');
+    window.kfNotes = { aksilikler: [..._kfnw.aksilikler], revizeler: [..._kfnw.revizeler] };
     kfNotesClose();
     kfNotesUpdateBadge();
+    kfTakeSnapshot?.();
     if (window.kfCurrentSaveId && isEditor()) {
       kfDoSave(window.kfCurrentSaveName, false);
     } else {
-      kfToast('Not kaydedildi \u2713');
+      kfToast('Not kaydedildi ✓');
     }
   }
+
+  window.kfNotesAdd = kfNotesAdd;
+  window.kfNotesMic = kfNotesMic;
+  window.kfNotesSave = kfNotesSave;
+  window.kfNotesClose = kfNotesClose;
 
   // ── Kalite Formu Kaydet / Yükle ─────────────────────────────────────────────
   // ── Google Drive / Google Sheets Yedek ───────────────────────────────
@@ -3411,14 +3571,14 @@
 
   function rpAnalyzeForm(form) {
     const dataRows = kfFormGetRows(form).filter(r => r[6] === 1);
-    // Hata: sadece T tipindeki HAYIR’lar (KD ve sayısal değerler hata sayılmaz)
-    const tRows = dataRows.filter(r => (r[7] || '') === 'T');
+    const tRows = dataRows.filter(r => (r[7] || '').toUpperCase().trim() === 'T');
     const evet  = tRows.filter(r => r[3] === 'EVET').length;
-    const hata  = tRows.filter(r => r[3] === 'HAYIR').length; // HAYIR = hata
+    const hata  = tRows.filter(r => r[3] === 'HAYIR').length;
     const kd    = tRows.filter(r => r[3] === 'KD').length;
     const total = tRows.length;
-    const passRate = total > 0 ? Math.round(evet / total * 100) : null;
-    return { evet, hata, hayir: hata, kd, total, passRate,
+    const graded = evet + hata; // geçme oranı yalnızca EVET + HAYIR üzerinden (KD hariç)
+    const passRate = graded > 0 ? Math.round(evet / graded * 100) : null;
+    return { evet, hata, hayir: hata, kd, total, graded, passRate,
       kaynakci:  rpGetKaynakci(form),
       montajci:  rpGetMontajci(form),
       hasAksilik: (form.notes?.aksilikler || []).length > 0 };
@@ -3528,7 +3688,7 @@
     const ac = avg===null?'#9ca3af':avg>=80?'#16a34a':avg>=60?'#d97706':'#dc2626';
     el.innerHTML = `
       <div class="rp-kpi rp-kpi-a"><div class="rp-kpi-v">${filtered.length}</div><div class="rp-kpi-l">Toplam Form</div><div class="rp-kpi-s">Seçili dönem</div></div>
-      <div class="rp-kpi rp-kpi-g"><div class="rp-kpi-v" style="color:${ac}">${avg!==null?'%'+avg:'—'}</div><div class="rp-kpi-l">Ort. Geçme</div><div class="rp-kpi-s">EVET / toplam T</div></div>
+      <div class="rp-kpi rp-kpi-g"><div class="rp-kpi-v" style="color:${ac}">${avg!==null?'%'+avg:'—'}</div><div class="rp-kpi-l">Ort. Geçme</div><div class="rp-kpi-s">EVET / (EVET + HAYIR)</div></div>
       <div class="rp-kpi rp-kpi-r"><div class="rp-kpi-v" style="color:${hataF>0?'#dc2626':'#16a34a'}">${hataF}</div><div class="rp-kpi-l">Hatalı Form</div><div class="rp-kpi-s">HAYIR içeren</div></div>
       <div class="rp-kpi rp-kpi-o"><div class="rp-kpi-v" style="color:${toplamHata>0?'#d97706':'#16a34a'}">${toplamHata}</div><div class="rp-kpi-l">Toplam Hata</div><div class="rp-kpi-s">Tüm formlardaki HAYIR</div></div>`;
   }
@@ -3579,20 +3739,20 @@
   function rpTabParam(panel, filtered) {
     const map = {};
     filtered.forEach(f => {
-      kfFormGetRows(f).filter(r=>r[6]===1&&r[7]==='T').forEach(r => {
+      kfFormGetRows(f).filter(r => r[6] === 1 && (r[7] || '').toUpperCase().trim() === 'T').forEach(r => {
         if (!r[0]) return;
-        if (!map[r[0]]) map[r[0]] = { aciklama: r[1]||r[0], hayir:0, total:0 };
-        map[r[0]].total++;
-        if (r[3]==='HAYIR') map[r[0]].hayir++;
+        if (!map[r[0]]) map[r[0]] = { aciklama: r[1] || r[0], hayir: 0, graded: 0 };
+        if (r[3] === 'HAYIR') { map[r[0]].hayir++; map[r[0]].graded++; }
+        else if (r[3] === 'EVET') map[r[0]].graded++;
       });
     });
-    const items = Object.entries(map).filter(([,v])=>v.hayir>0).sort((a,b)=>b[1].hayir-a[1].hayir).slice(0,25);
+    const items = Object.entries(map).filter(([, v]) => v.hayir > 0).sort((a, b) => b[1].hayir - a[1].hayir).slice(0, 25);
     if (!items.length) { panel.innerHTML = '<div class="rp-empty">✅ Seçili dönemde HAYIR kaydı yok.</div>'; return; }
     const mx = items[0][1].hayir;
     panel.innerHTML = `<div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:14px;">En fazla HAYIR alan parametreler (ilk 25)</div>` +
-      items.map(([kod,v]) => {
-        const pct = Math.round(v.hayir/mx*100);
-        const rate = Math.round(v.hayir/v.total*100);
+      items.map(([kod, v]) => {
+        const pct = Math.round(v.hayir / mx * 100);
+        const rate = v.graded > 0 ? Math.round(v.hayir / v.graded * 100) : 0;
         const color = rate>=50?'#dc2626':rate>=25?'#f59e0b':'#fca5a5';
         return `<div class="rp-bar">
           <div class="rp-bar-l" title="[${kod}] ${v.aciklama}">[${kod}] ${v.aciklama}</div>
@@ -3633,11 +3793,11 @@
       const lbl = f.modelLabel || '—';
       const addTo = (map, isim) => {
         if (!isim) return;
-        if (!map[isim]) map[isim] = { formSayisi:0, toplamHata:0, toplamEvet:0, toplamT:0, makineler:{} };
+        if (!map[isim]) map[isim] = { formSayisi: 0, toplamHata: 0, toplamEvet: 0, toplamGraded: 0, makineler: {} };
         map[isim].formSayisi++;
         map[isim].toplamHata += a.hata;
         map[isim].toplamEvet += a.evet;
-        map[isim].toplamT   += a.total;
+        map[isim].toplamGraded += a.graded;
         if (!map[isim].makineler[f.modelId||'__']) map[isim].makineler[f.modelId||'__'] = { lbl, sayi:0, hata:0 };
         map[isim].makineler[f.modelId||'__'].sayi++;
         map[isim].makineler[f.modelId||'__'].hata += a.hata;
@@ -3647,15 +3807,15 @@
     });
 
     const rpPersonelBlock = (title, color, map, rol) => {
-      const items = Object.entries(map).sort((a,b)=>{
-        const ar = a[1].toplamT>0?a[1].toplamHata/a[1].toplamT:0;
-        const br = b[1].toplamT>0?b[1].toplamHata/b[1].toplamT:0;
+      const items = Object.entries(map).sort((a, b) => {
+        const ar = a[1].toplamGraded > 0 ? a[1].toplamHata / a[1].toplamGraded : 0;
+        const br = b[1].toplamGraded > 0 ? b[1].toplamHata / b[1].toplamGraded : 0;
         return br - ar;
       });
       if (!items.length) return `<div style="color:#9ca3af;font-size:12px;padding:8px 0;">Veri yok.</div>`;
       return items.map(([isim, d]) => {
-        const basariOrani = d.toplamT > 0 ? Math.round(d.toplamEvet / d.toplamT * 100) : null;
-        const hataOrani   = d.toplamT > 0 ? Math.round(d.toplamHata / d.toplamT * 100) : 0;
+        const basariOrani = d.toplamGraded > 0 ? Math.round(d.toplamEvet / d.toplamGraded * 100) : null;
+        const hataOrani   = d.toplamGraded > 0 ? Math.round(d.toplamHata / d.toplamGraded * 100) : 0;
         const bc = basariOrani===null?'#9ca3af':basariOrani>=90?'#16a34a':basariOrani>=70?'#d97706':'#dc2626';
         const makineler = Object.values(d.makineler).sort((a,b)=>b.hata-a.hata)
           .map(m=>`<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:2px 7px;font-size:10px;margin:2px;font-weight:600;color:#374151;">${m.lbl} (${m.sayi} form${m.hata>0?', '+m.hata+' hata':''})</span>`).join('');
@@ -3857,6 +4017,7 @@
     app.style.display = 'flex';
     authUpdateUI();              // header butonlarını ayarla
     await khInit();
+    kfNotesWireEvents();
     renderPage(currentPage);
     lucide.createIcons();
   })();

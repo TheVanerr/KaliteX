@@ -4,7 +4,7 @@
 //   - CDN (Tailwind, Lucide, Fonts): Cache-first
 //   - Supabase REST API: Network-first, offline'da cache'den dön
 
-const CACHE = 'kalitex-v10';
+  const CACHE = 'kalitex-v11';
 
 const LOCAL_ASSETS = [
   './',
