@@ -18,6 +18,10 @@ KaliteX-Baslat.bat
 _convert.ps1
 *.ps1
 
+# Yerel HTTPS sertifikaları (KaliteX-Baslat.bat)
+kalitex-local.pem
+kalitex-local-key.pem
+
 # OS
 Thumbs.db
 .DS_Store

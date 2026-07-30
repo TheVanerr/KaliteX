@@ -3,7 +3,8 @@ import http.server
 import os
 import ssl
 import subprocess
-import sys
+import threading
+import webbrowser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -48,8 +49,12 @@ def main():
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     ctx.load_cert_chain(str(CERT), str(KEY))
     server.socket = ctx.wrap_socket(server.socket, server_side=True)
-    print(f"[KaliteX] HTTPS sunucu: https://0.0.0.0:{PORT}/kalite.html")
-    print("[KaliteX] Telefonda ilk acilista guvenlik uyarisi normal — Devam et deyin.")
+    url = f"https://localhost:{PORT}/kalite.html"
+    print(f"[KaliteX] HTTPS sunucu: {url}")
+    print("[KaliteX] Tarayici aciliyor...")
+    print("[KaliteX] Ilk seferde sertifika uyarisi: Gelismis -> Devam et")
+    print("[KaliteX] Telefonda: ayni ag + guvenlik uyarisi normal")
+    threading.Timer(0.8, lambda: webbrowser.open(url)).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:
