@@ -211,6 +211,12 @@
 
  </head>
  <body class="h-full">
+  <div id="kx-splash" style="position:fixed;inset:0;z-index:10080;background:#f9fafb;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:opacity .3s;font-family:system-ui,sans-serif;">
+   <style>@keyframes kxsplash{to{transform:rotate(360deg);}}</style>
+   <b style="font-size:52px;font-weight:900;color:#dc2626;letter-spacing:-.02em;line-height:1;">DOLFIN</b>
+   <small style="font-size:10px;font-weight:600;color:#6b7280;letter-spacing:.2em;text-transform:uppercase;">KaliteX · Kalite Kontrol</small>
+   <i style="width:26px;height:26px;border:3px solid #fee2e2;border-top-color:#dc2626;border-radius:50%;margin-top:18px;animation:kxsplash .8s linear infinite;"></i>
+  </div>
 
   <div id="app" class="h-full w-full flex bg-gray-50 overflow-hidden" style="display:none!important;"><!-- Sidebar -->
    <aside id="sidebar" class="sidebar-transition w-64 bg-white border-r border-gray-200 flex flex-col h-full shrink-0 z-30">
@@ -224,7 +230,7 @@
       </div>
      </div>
     </div>
-    <nav class="flex-1 flex flex-col min-h-0 p-3"><div class="flex-1 overflow-y-auto space-y-1 min-h-0"><button onclick="navigate('kalite-formu')" data-page="kalite-formu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Kalite Formu</button> <button onclick="navigate('proje-formu')" data-page="proje-formu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Proje Formu</button> <button onclick="navigate('kalite-havuzu')" data-page="kalite-havuzu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Kalite Havuzu</button> <button onclick="navigate('proje-havuzu')" data-page="proje-havuzu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Proje Havuzu</button> <button onclick="navigate('rapor')" data-page="rapor" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Rapor</button> <button onclick="navigate('test-cihazlari')" data-page="test-cihazlari" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Test Cihazları</button> <button onclick="navigate('ayarlar')" data-page="ayarlar" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Ayarlar</button> <button onclick="toggleSeries('lym')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>LYM Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-lym transition-transform"></i> </button>
+    <nav class="flex-1 flex flex-col min-h-0 p-3"><div class="flex-1 overflow-y-auto space-y-1 min-h-0"><button onclick="navigate('ana-sayfa')" data-page="ana-sayfa" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Ana Sayfa</button> <button onclick="navigate('kalite-formu')" data-page="kalite-formu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Kalite Formu</button> <button onclick="navigate('proje-formu')" data-page="proje-formu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Proje Formu</button> <button onclick="navigate('kalite-havuzu')" data-page="kalite-havuzu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Kalite Havuzu</button> <button onclick="navigate('proje-havuzu')" data-page="proje-havuzu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Proje Havuzu</button> <button onclick="navigate('rapor')" data-page="rapor" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Rapor</button> <button onclick="navigate('test-cihazlari')" data-page="test-cihazlari" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Test Cihazları</button> <button onclick="navigate('ayarlar')" data-page="ayarlar" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Ayarlar</button> <button onclick="toggleSeries('lym')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>LYM Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-lym transition-transform"></i> </button>
      <div id="lym-models" class="space-y-0"><button onclick="navigate('lym-950')" data-page="lym-950" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">LYM 950</button> <button onclick="navigate('lym-1150')" data-page="lym-1150" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">LYM 1150</button> <button onclick="navigate('lym-1350')" data-page="lym-1350" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">LYM 1350</button> <button onclick="navigate('lym-1500')" data-page="lym-1500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">LYM 1500</button>
      </div><button onclick="toggleSeries('vdl')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>VDL Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-vdl transition-transform"></i> </button>
      <div id="vdl-models" class="space-y-0"><button onclick="navigate('vdl-2500')" data-page="vdl-2500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 2500</button> <button onclick="navigate('vdl-3500')" data-page="vdl-3500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 3500</button> <button onclick="navigate('vdl-4250')" data-page="vdl-4250" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 4250</button> <button onclick="navigate('vdl-5500')" data-page="vdl-5500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 5500</button> <button onclick="navigate('vdl-6500')" data-page="vdl-6500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 6500</button>
@@ -254,12 +260,11 @@
       <!-- KF Header Bar: sadece kalite-formu sayfasında görünür -->
       <div id="kf-header-bar" style="display:none;flex:1;" class="flex items-center gap-1">
         <button onclick="handleFormAction('save')" class="kfhb kfhb-red" title="Kaydet"><i data-lucide="save" class="w-4 h-4"></i><span class="kfhb-lbl">Kaydet</span></button>
-        <button onclick="handleFormAction('save-as')" class="kfhb kfhb-org" title="Farklı Kaydet"><i data-lucide="copy" class="w-4 h-4"></i><span class="kfhb-lbl">Farklı</span></button>
         <button onclick="handleFormAction('load')" class="kfhb kfhb-blu" title="Yükle"><i data-lucide="upload" class="w-4 h-4"></i><span class="kfhb-lbl">Yükle</span></button>
         <button onclick="handleFormAction('notes')" class="kfhb kfhb-grn" title="Not" style="position:relative;"><i data-lucide="sticky-note" class="w-4 h-4"></i><span class="kfhb-lbl">Not</span><span id="kf-note-badge" class="kfhb-note-badge"></span></button>
         <button onclick="kxPhotoOpen(null)" class="kfhb kfhb-pur" title="Fotoğraflar"><i data-lucide="camera" class="w-4 h-4"></i><span class="kfhb-lbl">Foto</span></button>
         <button id="kf-status-btn" onclick="kfStatusClick()" class="kfhb" style="display:none;background:#f59e0b;color:#fff;" title="Form durumu"></button>
-        <button onclick="kfPrintCurrent()" class="kfhb kfhb-blu" title="PDF kalite belgesi"><i data-lucide="printer" class="w-4 h-4"></i><span class="kfhb-lbl">PDF</span></button>
+        <button onclick="kfFormMenu(this)" class="kfhb kfhb-more" title="Diğer: Farklı kaydet, PDF kalite belgesi"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
         <div style="position:relative;">
           <button id="model-select-btn" onclick="toggleModelDropdown()" class="kfhb kfhb-tel" title="Model Seç">
             <i data-lucide="filter" class="w-4 h-4"></i><span class="kfhb-lbl" id="model-select-label">Model</span>
@@ -338,12 +343,11 @@
       <!-- PF Header Bar: sadece proje-formu sayfasında görünür -->
       <div id="pf-header-bar" style="display:none;flex:1;" class="flex items-center gap-1">
         <button onclick="handleFormAction('save')" class="kfhb kfhb-red" title="Kaydet"><i data-lucide="save" class="w-4 h-4"></i><span class="kfhb-lbl">Kaydet</span></button>
-        <button onclick="handleFormAction('save-as')" class="kfhb kfhb-org" title="Farklı Kaydet"><i data-lucide="copy" class="w-4 h-4"></i><span class="kfhb-lbl">Farklı</span></button>
         <button onclick="handleFormAction('load')" class="kfhb kfhb-blu" title="Yükle"><i data-lucide="upload" class="w-4 h-4"></i><span class="kfhb-lbl">Yükle</span></button>
         <button onclick="handleFormAction('notes')" class="kfhb kfhb-grn" title="Not" style="position:relative;"><i data-lucide="sticky-note" class="w-4 h-4"></i><span class="kfhb-lbl">Not</span><span id="pf-note-badge" class="kfhb-note-badge"></span></button>
         <button onclick="kxPhotoOpen(null)" class="kfhb kfhb-pur" title="Fotoğraflar"><i data-lucide="camera" class="w-4 h-4"></i><span class="kfhb-lbl">Foto</span></button>
         <button id="pf-status-btn" onclick="kfStatusClick()" class="kfhb" style="display:none;background:#f59e0b;color:#fff;" title="Form durumu"></button>
-        <button onclick="kfPrintCurrent()" class="kfhb kfhb-blu" title="PDF kalite belgesi"><i data-lucide="printer" class="w-4 h-4"></i><span class="kfhb-lbl">PDF</span></button>
+        <button onclick="kfFormMenu(this)" class="kfhb kfhb-more" title="Diğer: Farklı kaydet, PDF kalite belgesi"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
         <div style="position:relative;">
           <button id="project-select-btn" onclick="toggleProjectDropdown()" class="kfhb kfhb-tel" title="Proje Seç">
             <i data-lucide="filter" class="w-4 h-4"></i><span class="kfhb-lbl" id="project-select-label">Proje</span>
@@ -434,10 +438,11 @@
   <div id="kf-print"></div>
   <div id="kf-toast-global"></div>
   <script>
-  let currentPage = 'kalite-formu';
+  let currentPage = 'ana-sayfa';
   let sidebarOpen = false; // sol menü kapalı başlar, ☰ ile açılır
 
   const pageContents = {
+    'ana-sayfa': { title: 'Ana Sayfa', desc: 'Günün özeti.' },
     'kalite-formu': { title: 'Kalite Formu', desc: 'Üretim kalite kontrol formlarını buradan yönetin.' },
     'proje-formu': { title: 'Proje Formu', desc: 'Özel proje kalite kontrol formlarını buradan yönetin.' },
     'kalite-havuzu': { title: 'Kalite Havuzu', desc: 'Tüm kalite kayıtlarını görüntüleyin ve analiz edin.' },
@@ -2155,11 +2160,12 @@
           if (row[6] === 1 && row[2] && row[2] !== lastGrup) {
             lastGrup = row[2];
             const grupEsc = kfEsc(row[2]);
+            const _gs = kfGrupSayac();
             html += '<tr class="kf-grup-hdr" data-grup="' + grupEsc + '">'
               + '<td class="kf-rn" style="background:#fef2f2;"></td>'
               + '<td class="kf-gh-td" colspan="7" style="background:#fef2f2;border-bottom:1px solid #fca5a5;padding:0 10px;height:30px;">'
               + '<div class="kf-gh" style="display:flex;align-items:center;justify-content:space-between;">'
-              + '<span style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.06em;">' + grupEsc + '</span>'
+              + '<span style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.06em;">' + grupEsc + '<span class="kf-gh-prog">' + kfGrupProgHtml(_gs[row[2]]) + '</span></span>'
               + '<span style="display:flex;align-items:center;gap:4px;"><span style="font-size:10px;font-weight:700;color:#9ca3af;">Tümü:</span>'
               + kfGroupBtn('EVET', '✓ EVET', '#16a34a', '#f0fdf4', '#bbf7d0')
               + kfGroupBtn('HAYIR', '✗ HAYIR', '#dc2626', '#fff', '#fecaca')
@@ -2170,7 +2176,7 @@
           const _empty = window._kfShowEmpty && row[6] === 1 && row[0] && !String(row[3] || '').trim();
           const _res = row[6] === 1 ? kfResClass(row[3]) : '';
           const _free = row[6] !== 1 && !row.slice(0, 6).some(v => String(v || '').trim()) ? ' kf-row-free' : '';
-          html += `<tr class="kf-row${_empty ? ' kf-row-empty' : ''}${_res}${_free}" data-ri="${ri}">`;
+          html += `<tr class="kf-row${_empty ? ' kf-row-empty' : ''}${_res}${_free}${kfSatirDolu(row) ? ' kf-r-dolu' : ''}" data-ri="${ri}">`;
           html += `<td class="kf-rn">${ri + 1}</td>`;
           for (let ci = 0; ci < 6; ci++) {
             const ro = row[6] === 1 && ci < 3;
@@ -2204,7 +2210,8 @@
                 html += `<td class="kf-cell" data-ri="${ri}" data-ci="${ci}" ondblclick="kfDblClick(event,${ri},${ci})"><div class="kf-cv kf-cv-c">${kfEsc(raw)}</div></td>`;
               }
             } else {
-              html += `<td class="kf-cell" data-ri="${ri}" data-ci="${ci}" ondblclick="kfDblClick(event,${ri},${ci})"><div class="kf-cv${ctr}">${kfEsc(row[ci])}</div></td>`;
+              const _tap = ci === 4 ? ` onclick="kfDurumTap(event,${ri},${ci})"` : '';
+              html += `<td class="kf-cell" data-ri="${ri}" data-ci="${ci}" ondblclick="kfDblClick(event,${ri},${ci})"${_tap}><div class="kf-cv${ctr}">${kfEsc(row[ci])}</div></td>`;
             }
           }
           // Fotoğraf hücresi — sadece parametre satırları
@@ -2220,6 +2227,7 @@
           html = `<tr class="kf-hint"><td colspan="8">Kontrole başlamak için üstteki <b>Model</b> (Proje Formu'nda <b>Proje</b>) butonundan makineyi seçin.</td></tr>` + html;
         }
         kfStatusRender();
+        setTimeout(kfNavYenile, 0);
         return html;
       }
       window.kfBuildRows = kfBuildRows;
@@ -2338,7 +2346,7 @@
             .kf-tbl tr.kf-row td[data-ci="4"] .kf-cv, .kf-tbl tr.kf-row td[data-ci="5"] .kf-cv { padding:4px 0 0; font-size:11px; color:#6b7280; text-align:left; }
             .kf-tbl tr.kf-row td[data-ci="5"] .kf-cv { text-align:right; }
             .kf-tbl tr.kf-row td[data-ci="5"] .kf-cv:not(:empty)::before { content:'Geçmiş: '; color:#9ca3af; }
-            .kf-tbl tr.kf-row td[data-ci="4"] .kf-cv:empty::before { content:'+ durum notu (çift dokun)'; color:#cbd5e1; }
+            .kf-tbl tr.kf-row td[data-ci="4"] .kf-cv:empty::before { content:'+ durum notu (dokun)'; color:#cbd5e1; }
             .kf-tbl tr.kf-row .kf-ph-cell { grid-area:foto; padding:2px 4px; font-size:15px; border:none !important; }
             .kf-segs { padding:4px 0 2px; gap:6px; }
             .kf-seg { height:44px; font-size:14px; border-radius:10px; }
@@ -2424,6 +2432,14 @@
           .kfkb-space{flex:4!important;font-size:11px;letter-spacing:.06em;}
         </style>
         <div class="kf-page page-fade">
+          <div id="kf-nav" class="kf-nav" style="display:none;">
+            <div class="kf-nav-seg">
+              <button type="button" data-f="" class="${window._kfFiltre ? '' : 'on'}" onclick="kfFiltre('')">Tümü</button>
+              <button type="button" data-f="bos" class="${window._kfFiltre === 'bos' ? 'on' : ''}" onclick="kfFiltre('bos')">Boşlar <b id="kf-nav-bos">0</b></button>
+              <button type="button" data-f="hayir" class="${window._kfFiltre === 'hayir' ? 'on' : ''}" onclick="kfFiltre('hayir')">HAYIR <b id="kf-nav-hayir">0</b></button>
+            </div>
+            <button type="button" id="kf-nav-next" class="kf-nav-next" onclick="kfSonrakiBos()">Sonraki boş ↓</button>
+          </div>
           <div class="kf-tbl-wrap">
             <table class="kf-tbl">
               <thead>
@@ -2509,6 +2525,8 @@
         `;
         lucide.createIcons();
 
+      } else if (currentPage === 'ana-sayfa') {
+        dsRenderPage();
       } else if (currentPage === 'rapor') {
         rpRenderPage();
       } else if (currentPage === 'test-cihazlari') {
@@ -3309,6 +3327,7 @@
       b.title = done ? 'Tamamlandı' + (_sure ? ' · kontrol süresi ' + kxSureMetin(_sure) : '') + ' — taslağa almak için tıkla'
                      : (pr.empty + ' madde boş — tamamlamak için tıkla');
     });
+    kfNavYenile();
   }
 
   function kfRebuildTbody() {
@@ -4480,7 +4499,8 @@
           const delBtn = isEditor()
             ? `<button class="kfm-del" onclick="event.stopPropagation();kfConfirmDelete('${f.id}')">Sil</button>`
             : '';
-          items += `<div class="kfm-item" onclick="kfDoLoad('${f.id}')"><div class="kfm-item-info"><div class="kfm-item-name">${kfHEsc(f.name)}</div><div class="kfm-item-meta">${syncIcon} ${ds}${stB}${phB}</div></div>${delBtn}</div>`;
+          const _ara = kfHEsc([f.name, f.modelLabel, g.label].join(' ').toLocaleLowerCase('tr-TR'));
+          items += `<div class="kfm-item" data-ara="${_ara}" data-durum="${_st === 'tamamlandi' ? 'tamamlandi' : 'taslak'}" onclick="kfDoLoad('${f.id}')"><div class="kfm-item-info"><div class="kfm-item-name">${kfHEsc(f.name)}</div><div class="kfm-item-meta">${syncIcon} ${ds}${stB}${phB}</div></div>${delBtn}</div>`;
         });
         list += `<div class="kfm-group">
           <div class="kfm-group-hdr" onclick="kfToggleLoadGroup(this)">
@@ -4495,7 +4515,10 @@
     const exportBtn = isEditor()
       ? `<button class="kfm-export" title="Sadece se\u00e7ti\u011finiz QUALITY FORMS klas\u00f6r\u00fcne yazar (dar izin). \u0130lk seferde klas\u00f6r se\u00e7ilir." onclick="kfExportAllForms()">&#128228; D&#305;&#351;ar&#305; Aktar</button>`
       : `<span></span>`;
-    box.innerHTML = `<div class="kfm-title">&#128194; Kay&#305;tl&#305; Formlar <span style="font-size:11px;font-weight:600;color:#6b7280;">(${forms.length})</span></div><div class="kfm-list" style="gap:8px;">${list}</div>${isEditor() ? kxPhotoMeterHtml(forms) : ''}<div class="kfm-btns" style="justify-content:space-between;">${exportBtn}<button class="kfm-cancel" onclick="kfModalClose()">Kapat</button></div>`;
+    window._kfmDurum = '';
+    const araHtml = forms.length ? `<div class="kfm-ara"><input id="kfm-ara-inp" type="search" placeholder="Seri no veya model ara…" oninput="kfmAra()" autocomplete="off">
+      <div class="kfm-chips"><button type="button" class="kfm-chip on" onclick="kfmDurum('',this)">Tümü</button><button type="button" class="kfm-chip" onclick="kfmDurum('taslak',this)">Taslak</button><button type="button" class="kfm-chip" onclick="kfmDurum('tamamlandi',this)">Tamamlandı</button></div></div>` : '';
+    box.innerHTML = `<div class="kfm-title">&#128194; Kay&#305;tl&#305; Formlar <span style="font-size:11px;font-weight:600;color:#6b7280;">(${forms.length})</span></div>${araHtml}<div class="kfm-list" style="gap:8px;">${list}<div id="kfm-ara-bos" class="kfm-empty" style="display:none;">Eşleşen form yok.</div></div>${isEditor() ? kxPhotoMeterHtml(forms) : ''}<div class="kfm-btns" style="justify-content:space-between;">${exportBtn}<button class="kfm-cancel" onclick="kfModalClose()">Kapat</button></div>`;
   }
 
   function kfDoLoad(id) {
@@ -4677,6 +4700,15 @@
     const _btn = document.querySelector('button[onclick="hardRefreshApp()"]');
     const _btnDisable = () => { if (_btn) { _btn.style.opacity = '0.4'; _btn.style.pointerEvents = 'none'; } };
     const _btnEnable  = () => { if (_btn) { _btn.style.opacity = ''; _btn.style.pointerEvents = ''; } };
+
+    // ── Ana sayfa: form listesini güncelle, özeti yeniden çiz ─────────────
+    if (currentPage === 'ana-sayfa') {
+      if (!navigator.onLine) { kfToast('İnternet bağlantısı yok.'); return; }
+      _btnDisable();
+      try { await kfSbSync(); kxNetRender(); dsRenderPage(); kfToast('Güncellendi ✓'); }
+      finally { _btnEnable(); }
+      return;
+    }
 
     // ── Kalite Formu sayfası: Supabase'den son formları çek, ekranı güncelle ─
     if (currentPage === 'kalite-formu') {
@@ -7508,6 +7540,382 @@
     @media(max-width:640px){.kxm-grid{grid-template-columns:1fr;}}
   </style>`);
 
+  // ═════════════════════════════════════════════════════════════════════════
+  // ANA SAYFA — günün özeti: devam eden taslaklar, tamamlananlar, uyarılar
+  // ═════════════════════════════════════════════════════════════════════════
+  let _dsYenilendi = false;
+  function dsGoreli(d) {
+    const ms = Date.now() - new Date(d).getTime();
+    if (!(ms >= 0)) return '';
+    const dk = Math.round(ms / 60000);
+    if (dk < 1) return 'az önce';
+    if (dk < 60) return dk + ' dk önce';
+    const sa = Math.round(dk / 60);
+    if (sa < 24) return sa + ' saat önce';
+    const g = Math.round(sa / 24);
+    return g === 1 ? 'dün' : g + ' gün önce';
+  }
+  function dsHaftaBasi() {
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // pazartesi
+    return d;
+  }
+  function dsAc(id) {
+    if (window.kfCurrentSaveId !== id && kfHasUnsavedWork()
+      && !window.confirm('Açık formda kaydedilmemiş değişiklikler var.\nBaşka form açılırsa bu değişiklikler kaybolur.\n\nDevam edilsin mi?')) return;
+    kfDoLoad(id);
+  }
+  // Temiz yeni form: açık formda kaydedilmemiş iş varsa önce sor
+  function dsYeniForm(tur) {
+    if (kfHasUnsavedWork() && !window.confirm('Açık formda kaydedilmemiş değişiklikler var.\nYeni forma geçilirse bu değişiklikler kaybolur.\n\nDevam edilsin mi?')) return;
+    window.kfData = [];
+    window.kfCurrentSaveId = null; window.kfCurrentSaveName = '';
+    window.kfCurrentModel = ''; window.kfCurrentModelLabel = '';
+    window.kfCurrentProject = ''; window.kfCurrentProjectLabel = '';
+    window.kfNotes = { aksilikler: [], revizeler: [] };
+    kfResetFormExtras();
+    window._kfFiltre = '';
+    const ml = document.getElementById('model-select-label'); if (ml) ml.textContent = 'Model';
+    const pl = document.getElementById('project-select-label'); if (pl) pl.textContent = 'Proje';
+    ['kf-save-name', 'pf-save-name'].forEach(id => { const s = document.getElementById(id); if (s) s.style.display = 'none'; });
+    kfNotesUpdateBadge();
+    kfTakeSnapshot();
+    navigate(tur === 'proje' ? 'proje-formu' : 'kalite-formu');
+    setTimeout(() => { tur === 'proje' ? toggleProjectDropdown() : toggleModelDropdown(); }, 60);
+  }
+  function dsRenderPage() {
+    const pc = document.getElementById('page-content');
+    if (!pc) return;
+    const esc = kfHEsc;
+    const forms = kfGetForms();
+    const now = new Date();
+    const saat = now.getHours();
+    const selam = saat < 11 ? 'Günaydın' : saat < 18 ? 'İyi günler' : 'İyi akşamlar';
+    const ad = currentUser ? String(currentUser.name || '').split(' ')[0] : '';
+    const tarih = now.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const zaman = f => f.updatedAt || f.savedAt;
+    const hb = dsHaftaBasi();
+    const ayBasi = new Date(now.getFullYear(), now.getMonth(), 1);
+    const taslak = forms.filter(f => kfFormGetStatus(f) !== 'tamamlandi').sort((a, b) => new Date(zaman(b)) - new Date(zaman(a)));
+    const tamam = forms.filter(f => kfFormGetStatus(f) === 'tamamlandi').sort((a, b) => new Date(zaman(b)) - new Date(zaman(a)));
+    const buHafta = tamam.filter(f => new Date((kfFormGetSure(f) || {}).end || zaman(f)) >= hb);
+    let ayH = 0, ayG = 0;
+    forms.filter(f => new Date(f.savedAt || 0) >= ayBasi).forEach(f => { const a = rpAnalyzeForm(f); ayH += a.hata; ayG += a.graded; });
+    const ayOran = ayG ? Math.round(ayH / ayG * 1000) / 10 : null;
+    const bekleyenForm = isEditor() ? forms.filter(f => !f.synced).length : 0;
+    // Son 14 günün HAYIR maddeleri
+    const sinir = now.getTime() - 14 * 86400000;
+    const hayirlar = [];
+    forms.filter(f => new Date(zaman(f)).getTime() >= sinir).forEach(f => {
+      kfFormGetRows(f).forEach(r => { if (r && r[6] === 1 && String(r[3] || '').toUpperCase().trim() === 'HAYIR') hayirlar.push({ f, r }); });
+    });
+    hayirlar.sort((a, b) => new Date(zaman(b.f)) - new Date(zaman(a.f)));
+    const kal = (typeof TEST_DEVICES !== 'undefined' ? TEST_DEVICES : [])
+      .map(d => ({ d, s: kxKalDurum(d.id) })).filter(x => x.s.seviye === 'critical' || x.s.seviye === 'warning');
+
+    const tile = (deger, etiket, alt, renk) => `<div class="ds-tile"><div class="ds-tile-v"${renk ? ` style="color:${renk}"` : ''}>${deger}</div><div class="ds-tile-l">${etiket}</div><div class="ds-tile-s">${alt}</div></div>`;
+    const formSatir = (f, sag) => {
+      const pr = kfFormProgress(kfFormGetRows(f));
+      const yuzde = pr.total ? Math.round(pr.filled / pr.total * 100) : 0;
+      return `<button type="button" class="ds-row" onclick="dsAc('${esc(f.id)}')">
+        <span class="ds-row-main"><b>${esc(f.name || 'Adsız form')}</b><small>${esc(f.modelLabel || '—')} · ${esc(dsGoreli(zaman(f)))}</small></span>
+        ${sag(f, pr, yuzde)}</button>`;
+    };
+    const uyarilar = [];
+    kal.forEach(x => uyarilar.push(`<div class="ds-alert ds-alert-${x.s.seviye}"><span>${x.s.ikon}</span><span><b>${esc(x.d.marka + ' ' + x.d.model)}</b> kalibrasyonu: ${esc(x.s.metin)}</span><a href="#" onclick="navigate('test-cihazlari');return false;">Gör →</a></div>`));
+    if (bekleyenForm) uyarilar.push(`<div class="ds-alert ds-alert-warning"><span>⏳</span><span><b>${bekleyenForm} form</b> buluta yüklenmeyi bekliyor${navigator.onLine ? ' — ⟳ ile yükleyin' : ' — internet gelince otomatik yüklenir'}</span></div>`);
+    if (isEditor() && _kxAyarTablo === 'yok') uyarilar.push(`<div class="ds-alert ds-alert-critical"><span>🛡️</span><span>Veritabanı güvenlik ayarı eksik: <b>supabase-guvenlik.sql</b> çalıştırılmalı</span><a href="#" onclick="navigate('ayarlar');return false;">Ayarlar →</a></div>`);
+
+    pc.innerHTML = `
+      <div class="ds-wrap page-fade">
+        <div class="ds-head">
+          <div><h1>${selam}${ad ? ', ' + esc(ad) : ''}</h1><p>${esc(tarih)}</p></div>
+          <div class="ds-actions">
+            <button type="button" class="ds-btn ds-btn-p" onclick="dsYeniForm('kalite')">+ Yeni kalite formu</button>
+            <button type="button" class="ds-btn" onclick="dsYeniForm('proje')">+ Proje formu</button>
+          </div>
+        </div>
+        <div class="ds-tiles">
+          ${tile(buHafta.length, 'Bu hafta tamamlanan', 'makine')}
+          ${tile(taslak.length, 'Devam eden', 'taslak form', taslak.length ? '#d97706' : '')}
+          ${tile(ayOran == null ? '—' : '%' + ayOran, 'Bu ay HAYIR oranı', ayG ? ayH + ' HAYIR / ' + ayG + ' cevap' : 'bu ay cevap yok')}
+          ${tile(kal.length, 'Kalibrasyon uyarısı', kal.length ? 'süresi geçen / yaklaşan' : 'sorun yok', kal.length ? '#b91c1c' : '')}
+        </div>
+        ${uyarilar.length ? `<div class="ds-alerts">${uyarilar.join('')}</div>` : ''}
+        <div class="ds-grid">
+          <section class="ds-card">
+            <div class="ds-card-t">Devam eden formlar <span>${taslak.length}</span></div>
+            ${taslak.length ? taslak.slice(0, 6).map(f => formSatir(f, (f, pr, y) =>
+              `<span class="ds-prog"><span class="ds-prog-bar"><i style="width:${y}%"></i></span><small>${pr.filled}/${pr.total}</small></span>`)).join('')
+              : '<div class="ds-empty">Yarım kalan form yok 👍</div>'}
+            ${taslak.length > 6 ? `<div class="ds-more">+${taslak.length - 6} form daha — Yükle penceresinden açılabilir</div>` : ''}
+          </section>
+          <section class="ds-card">
+            <div class="ds-card-t">Son tamamlananlar</div>
+            ${tamam.length ? tamam.slice(0, 6).map(f => formSatir(f, f => {
+              const h = rpAnalyzeForm(f).hata, s = kxSure(kfFormGetSure(f));
+              return `<span class="ds-tags">${h ? `<span class="ds-tag ds-tag-r">${h} HAYIR</span>` : '<span class="ds-tag ds-tag-g">✓ Hatasız</span>'}${s ? `<span class="ds-tag">${esc(kxSureMetin(s))}</span>` : ''}</span>`;
+            })).join('') : '<div class="ds-empty">Henüz tamamlanan form yok</div>'}
+          </section>
+          <section class="ds-card ds-card-wide">
+            <div class="ds-card-t">Son 14 günün HAYIR maddeleri <span>${hayirlar.length}</span></div>
+            ${hayirlar.length ? '<div class="ds-hayir">' + hayirlar.slice(0, 10).map(x => `<button type="button" class="ds-hrow" onclick="dsAc('${esc(x.f.id)}')">
+                <span class="ds-kod">${esc(x.r[0])}</span><span class="ds-h-ac">${esc(x.r[1] || '')}</span>
+                <span class="ds-h-f">${esc(x.f.name || '')} · ${esc(x.f.modelLabel || '')}</span></button>`).join('') + '</div>'
+              + (hayirlar.length > 10 ? `<div class="ds-more">+${hayirlar.length - 10} madde daha — Rapor → Parametre Analizi</div>` : '')
+              : '<div class="ds-empty">Son 14 günde HAYIR yok ✓</div>'}
+          </section>
+        </div>
+      </div>`;
+    // Güncel listeyi bir kez çek (salt okunur) ve yeniden çiz
+    if (navigator.onLine && !_dsYenilendi) {
+      _dsYenilendi = true;
+      kfSbFetchForms().then(() => { if (currentPage === 'ana-sayfa') dsRenderPage(); }).catch(() => {});
+    }
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // FORM İÇİNDE GEZİNME — grup ilerlemesi, filtre, sonraki boş madde
+  // ═════════════════════════════════════════════════════════════════════════
+  window._kfFiltre = '';
+  function kfGrupSayac() {
+    const m = {};
+    (window.kfData || []).forEach(r => {
+      if (!r || r[6] !== 1 || !r[0]) return;
+      const g = r[2] || '';
+      m[g] = m[g] || { t: 0, d: 0 };
+      m[g].t++;
+      if (String(r[3] || '').trim()) m[g].d++;
+    });
+    return m;
+  }
+  function kfGrupProgHtml(c) {
+    if (!c) return '';
+    return c.d >= c.t ? `<span class="kf-gp kf-gp-ok">✓ ${c.d}/${c.t}</span>` : `<span class="kf-gp">${c.d}/${c.t}</span>`;
+  }
+  // Satır "dolu" mu — Boşlar filtresi bunları gizler (serbest satırlar her zaman dolu sayılır)
+  function kfSatirDolu(r) { return !r || r[6] !== 1 || !r[0] || !!String(r[3] || '').trim(); }
+  // Sonuç her değiştiğinde (kfStatusRender üzerinden): sayaçlar, grup ilerlemesi, filtre
+  let _kfDoluZaman = null;
+  function kfNavYenile() {
+    const tb = document.getElementById('kf-tbody');
+    const nav = document.getElementById('kf-nav');
+    if (!tb || !nav) return;
+    const pr = kfFormProgress(window.kfData);
+    nav.style.display = pr.total ? '' : 'none';
+    const hayir = (window.kfData || []).filter(r => r && r[6] === 1 && String(r[3] || '').trim().toUpperCase() === 'HAYIR').length;
+    const b = document.getElementById('kf-nav-bos'), h = document.getElementById('kf-nav-hayir');
+    if (b) b.textContent = pr.empty;
+    if (h) h.textContent = hayir;
+    const nx = document.getElementById('kf-nav-next');
+    if (nx) nx.disabled = !pr.empty;
+    const say = kfGrupSayac();
+    tb.querySelectorAll('tr.kf-grup-hdr').forEach(tr => {
+      const el = tr.querySelector('.kf-gh-prog');
+      if (el) el.innerHTML = kfGrupProgHtml(say[tr.dataset.grup || '']);
+    });
+    tb.classList.toggle('kf-f-bos', window._kfFiltre === 'bos');
+    tb.classList.toggle('kf-f-hayir', window._kfFiltre === 'hayir');
+    // Boşlar filtresinde doldurulan satır hemen kaybolmasın — dokunurken liste kaymasın
+    clearTimeout(_kfDoluZaman);
+    const senkron = () => {
+      tb.querySelectorAll('tr.kf-row').forEach(tr => tr.classList.toggle('kf-r-dolu', kfSatirDolu((window.kfData || [])[+tr.dataset.ri])));
+      kfFiltreGruplar();
+    };
+    if (window._kfFiltre === 'bos') _kfDoluZaman = setTimeout(senkron, 750); else senkron();
+  }
+  function kfFiltre(f) {
+    window._kfFiltre = f || '';
+    const tb = document.getElementById('kf-tbody');
+    if (tb) {
+      tb.classList.toggle('kf-f-bos', f === 'bos');
+      tb.classList.toggle('kf-f-hayir', f === 'hayir');
+      tb.querySelectorAll('tr.kf-row').forEach(tr => tr.classList.toggle('kf-r-dolu', kfSatirDolu((window.kfData || [])[+tr.dataset.ri])));
+    }
+    document.querySelectorAll('#kf-nav .kf-nav-seg button').forEach(b => b.classList.toggle('on', (b.dataset.f || '') === window._kfFiltre));
+    kfFiltreGruplar();
+    const w = document.querySelector('.kf-tbl-wrap');
+    if (w) w.scrollTop = 0;
+  }
+  // Filtrede hiç satırı görünmeyen grup başlıklarını gizle
+  function kfFiltreGruplar() {
+    const tb = document.getElementById('kf-tbody');
+    if (!tb) return;
+    let hdr = null, gorunen = false;
+    const kapat = () => { if (hdr) hdr.classList.toggle('kf-gh-gizli', !!window._kfFiltre && !gorunen); };
+    [...tb.children].forEach(tr => {
+      if (tr.classList.contains('kf-grup-hdr')) { kapat(); hdr = tr; gorunen = false; return; }
+      if (tr.classList.contains('kf-row') && getComputedStyle(tr).display !== 'none') gorunen = true;
+    });
+    kapat();
+  }
+  function kfSonrakiBos() {
+    if (window._kfFiltre === 'hayir') kfFiltre('');
+    const w = document.querySelector('.kf-tbl-wrap');
+    const satirlar = [...document.querySelectorAll('#kf-tbody tr.kf-row')].filter(tr => {
+      const r = (window.kfData || [])[+tr.dataset.ri];
+      return r && r[6] === 1 && r[0] && !String(r[3] || '').trim();
+    });
+    if (!satirlar.length) { kfToast('✓ Boş madde kalmadı'); return; }
+    const ust = w ? w.getBoundingClientRect().top : 0;
+    const hedef = satirlar.find(tr => tr.getBoundingClientRect().top > ust + 70) || satirlar[0];
+    hedef.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    hedef.classList.remove('kf-flash'); void hedef.offsetWidth; hedef.classList.add('kf-flash');
+  }
+  // Kart görünümünde durum notu tek dokunuşla açılsın
+  function kfDurumTap(e, ri, ci) {
+    if (window.kfEdit) return;
+    if (!window.matchMedia('(max-width:900px)').matches) return;
+    window.kfDblClick(e, ri, ci);
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // GÖRSEL — "⋯" menüsü, Yükle penceresinde arama
+  // ═════════════════════════════════════════════════════════════════════════
+  function kxMenuAc(btn, items) {
+    kxMenuKapat();
+    const r = btn.getBoundingClientRect();
+    const m = document.createElement('div');
+    m.id = 'kx-menu';
+    m.className = 'kx-menu';
+    items.forEach(([ikon, etiket, fn]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.innerHTML = '<span>' + ikon + '</span>';
+      b.appendChild(document.createTextNode(etiket));
+      b.onclick = () => { kxMenuKapat(); fn(); };
+      m.appendChild(b);
+    });
+    document.body.appendChild(m);
+    const w = m.offsetWidth;
+    m.style.top = (r.bottom + 6) + 'px';
+    m.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + 'px';
+    setTimeout(() => document.addEventListener('pointerdown', kxMenuDisari, true), 0);
+  }
+  function kxMenuDisari(e) { const m = document.getElementById('kx-menu'); if (m && !m.contains(e.target)) kxMenuKapat(); }
+  function kxMenuKapat() { document.getElementById('kx-menu')?.remove(); document.removeEventListener('pointerdown', kxMenuDisari, true); }
+  function kfFormMenu(btn) {
+    kxMenuAc(btn, [
+      ['📄', 'Farklı kaydet (kopya)', () => handleFormAction('save-as')],
+      ['🖨️', 'PDF kalite belgesi', () => kfPrintCurrent()],
+    ]);
+  }
+
+  window._kfmDurum = '';
+  function kfmAra() {
+    const q = String(document.getElementById('kfm-ara-inp')?.value || '').trim().toLocaleLowerCase('tr-TR');
+    const d = window._kfmDurum;
+    const aktif = !!(q || d);
+    document.querySelectorAll('#kf-modal-box .kfm-group').forEach(g => {
+      let n = 0;
+      g.querySelectorAll('.kfm-item').forEach(it => {
+        const ok = (!q || (it.dataset.ara || '').includes(q)) && (!d || it.dataset.durum === d);
+        it.style.display = ok ? '' : 'none';
+        if (ok) n++;
+      });
+      g.style.display = n ? '' : 'none';
+      if (aktif) g.classList.toggle('open', n > 0);
+      const c = g.querySelector('.kfm-group-count');
+      if (c) c.textContent = n;
+    });
+    const bos = document.getElementById('kfm-ara-bos');
+    if (bos) bos.style.display = aktif && ![...document.querySelectorAll('#kf-modal-box .kfm-group')].some(g => g.style.display !== 'none') ? '' : 'none';
+  }
+  function kfmDurum(d, btn) {
+    window._kfmDurum = d;
+    document.querySelectorAll('#kf-modal-box .kfm-chip').forEach(b => b.classList.toggle('on', b === btn));
+    kfmAra();
+  }
+
+  function kxSplashKapat() {
+    const s = document.getElementById('kx-splash');
+    if (!s) return;
+    s.style.opacity = '0';
+    setTimeout(() => s.remove(), 300);
+  }
+  setTimeout(kxSplashKapat, 12000); // her ihtimale karşı (ağ takılırsa)
+
+  document.head.insertAdjacentHTML('beforeend', `<style>
+    /* Sade araç çubuğu: Kaydet kırmızı kalır, diğerleri beyaz; simgeler işlev rengini korur */
+    .kfhb.kfhb-org,.kfhb.kfhb-blu,.kfhb.kfhb-grn,.kfhb.kfhb-pur,.kfhb.kfhb-tel,.kfhb.kfhb-more{background:#fff;color:#374151;border:1.5px solid #e5e7eb;}
+    .kfhb.kfhb-org:hover,.kfhb.kfhb-blu:hover,.kfhb.kfhb-grn:hover,.kfhb.kfhb-pur:hover,.kfhb.kfhb-tel:hover,.kfhb.kfhb-more:hover{opacity:1;background:#f9fafb;border-color:#cbd5e1;}
+    .kfhb-grn svg{color:#16a34a;} .kfhb-pur svg{color:#7c3aed;} .kfhb-blu svg{color:#2563eb;} .kfhb-org svg{color:#ea580c;} .kfhb-tel svg{color:#0d9488;}
+    .kfhb.kfhb-red{border:1.5px solid #dc2626;}
+    #kf-status-btn,#pf-status-btn{border:1.5px solid transparent;}
+    #model-select-btn,#project-select-btn{border-color:#99f6e4;color:#0f766e;}
+    .kfhb.kfhb-more{padding:5px 8px;}
+    .kx-menu{position:fixed;z-index:10046;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(17,24,39,.15);padding:5px;min-width:200px;}
+    .kx-menu button{display:flex;align-items:center;gap:10px;width:100%;border:none;background:none;padding:9px 12px;border-radius:7px;font-size:13px;font-weight:600;color:#1f2937;cursor:pointer;font-family:inherit;text-align:left;}
+    .kx-menu button:hover{background:#f3f4f6;}
+    /* Yükle penceresi: arama */
+    .kfm-ara{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+    .kfm-ara input{width:100%;box-sizing:border-box;border:1.5px solid #d1d5db;border-radius:9px;padding:9px 12px;font-size:14px;font-family:inherit;}
+    .kfm-ara input:focus{outline:none;border-color:#dc2626;}
+    .kfm-chips{display:flex;gap:6px;}
+    .kfm-chip{border:1.5px solid #e5e7eb;background:#fff;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit;}
+    .kfm-chip.on{background:#111827;border-color:#111827;color:#fff;}
+    /* Form gezinme çubuğu */
+    .kf-nav{flex-shrink:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:8px;}
+    .kf-nav-seg{display:inline-flex;border:1.5px solid #e5e7eb;border-radius:9px;overflow:hidden;}
+    .kf-nav-seg button{border:none;background:#fff;padding:6px 12px;font-size:12px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;touch-action:manipulation;}
+    .kf-nav-seg button + button{border-left:1.5px solid #e5e7eb;}
+    .kf-nav-seg button b{font-size:11px;background:#f3f4f6;color:#374151;border-radius:999px;padding:0 7px;}
+    .kf-nav-seg button.on{background:#111827;color:#fff;} .kf-nav-seg button.on b{background:rgba(255,255,255,.2);color:#fff;}
+    .kf-nav-next{margin-left:auto;border:none;background:#dc2626;color:#fff;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .kf-nav-next:disabled{background:#d1d5db;cursor:default;}
+    #kf-tbody.kf-f-bos tr.kf-row.kf-r-dolu,#kf-tbody.kf-f-bos tr.kf-row-free,#kf-tbody.kf-f-hayir tr.kf-row:not(.kf-r-hayir),#kf-tbody tr.kf-gh-gizli{display:none!important;}
+    .kf-gp{font-size:10px;font-weight:800;color:#9ca3af;margin-left:8px;letter-spacing:0;text-transform:none;}
+    .kf-gp-ok{color:#16a34a;}
+    @keyframes kfflash{0%{box-shadow:inset 0 0 0 3px #dc2626;}100%{box-shadow:inset 0 0 0 3px transparent;}}
+    tr.kf-flash td{animation:kfflash 1.4s ease-out;}
+    @media(max-width:900px){ .kf-tbl tr.kf-row.kf-flash{animation:kfflash 1.4s ease-out;} .kf-nav{margin:0 6px 6px;} }
+    /* Ana sayfa */
+    .ds-wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px;}
+    .ds-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+    .ds-head h1{font-size:28px;font-weight:900;color:#111827;letter-spacing:-.01em;line-height:1.1;}
+    .ds-head p{font-size:13px;color:#6b7280;margin-top:3px;}
+    .ds-actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .ds-btn{border:1.5px solid #e5e7eb;background:#fff;color:#374151;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .ds-btn:hover{border-color:#cbd5e1;background:#f9fafb;}
+    .ds-btn-p{background:#dc2626;border-color:#dc2626;color:#fff;} .ds-btn-p:hover{background:#b91c1c;border-color:#b91c1c;}
+    .ds-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    .ds-tile{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+    .ds-tile-v{font-size:30px;font-weight:900;color:#111827;line-height:1;}
+    .ds-tile-l{font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-top:6px;}
+    .ds-tile-s{font-size:11px;color:#9ca3af;margin-top:1px;}
+    .ds-alerts{display:flex;flex-direction:column;gap:6px;}
+    .ds-alert{display:flex;align-items:center;gap:10px;font-size:13px;color:#374151;background:#fff;border:1px solid #e5e7eb;border-left:4px solid #d1d5db;border-radius:10px;padding:9px 12px;}
+    .ds-alert a{margin-left:auto;font-size:12px;font-weight:700;color:#2563eb;text-decoration:none;white-space:nowrap;}
+    .ds-alert-warning{border-left-color:#fab219;} .ds-alert-critical{border-left-color:#d03b3b;}
+    .ds-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .ds-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px 16px;box-shadow:0 4px 24px rgba(17,24,39,.04);min-width:0;}
+    .ds-card-wide{grid-column:1/-1;}
+    .ds-card-t{font-size:14px;font-weight:900;color:#111827;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+    .ds-card-t span{font-size:11px;font-weight:800;color:#6b7280;background:#f3f4f6;border-radius:999px;padding:1px 8px;}
+    .ds-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:none;border-top:1px solid #f3f4f6;padding:10px 4px;cursor:pointer;font-family:inherit;border-radius:8px;}
+    .ds-row:hover{background:#fef2f2;}
+    .ds-row-main{flex:1;min-width:0;display:flex;flex-direction:column;}
+    .ds-row-main b{font-size:13.5px;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .ds-row-main small{font-size:11px;color:#9ca3af;}
+    .ds-prog{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+    .ds-prog-bar{width:90px;height:6px;background:#f3f4f6;border-radius:3px;overflow:hidden;}
+    .ds-prog-bar i{display:block;height:100%;background:#f59e0b;border-radius:3px;}
+    .ds-prog small{font-size:11px;font-weight:700;color:#6b7280;min-width:52px;text-align:right;font-variant-numeric:tabular-nums;}
+    .ds-tags{display:flex;gap:6px;flex-shrink:0;}
+    .ds-tag{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:#f3f4f6;color:#4b5563;white-space:nowrap;}
+    .ds-tag-r{background:#fef2f2;color:#b91c1c;} .ds-tag-g{background:#f0fdf4;color:#006300;}
+    .ds-empty{font-size:13px;color:#9ca3af;padding:14px 4px;}
+    .ds-more{font-size:11px;color:#9ca3af;padding:8px 4px 0;}
+    .ds-hayir{display:flex;flex-direction:column;}
+    .ds-hrow{display:grid;grid-template-columns:70px 1fr auto;gap:10px;align-items:center;text-align:left;border:none;background:none;border-top:1px solid #f3f4f6;padding:9px 4px;cursor:pointer;font-family:inherit;}
+    .ds-hrow:hover{background:#fef2f2;}
+    .ds-kod{font-size:11px;font-weight:800;color:#b91c1c;}
+    .ds-h-ac{font-size:12.5px;color:#1f2937;}
+    .ds-h-f{font-size:11px;color:#9ca3af;white-space:nowrap;}
+    @media(max-width:900px){ .ds-tiles{grid-template-columns:repeat(2,1fr);} .ds-grid{grid-template-columns:1fr;} }
+    @media(max-width:640px){ .ds-head h1{font-size:22px;} .ds-hrow{grid-template-columns:60px 1fr;} .ds-h-f{grid-column:2;white-space:normal;} .ds-prog-bar{width:56px;} .ds-btn{flex:1;} .ds-actions{width:100%;} }
+  </style>`);
+
   applyConfig(defaultConfig);
   lucide.createIcons();
 
@@ -7527,17 +7935,20 @@
     }
     kfNotesWireEvents();
     renderPage(currentPage);
+    updateNav();
     lucide.createIcons();
+    kxSplashKapat();
     kxNetRender();
     kxKalBadge();
     kxAyarYukle().then(() => {
       kxKalBadge();
       if (currentPage === 'ayarlar') axRenderPage();
       else if (currentPage === 'test-cihazlari') tcRenderPage();
+      else if (currentPage === 'ana-sayfa') dsRenderPage();
       else if ((currentPage === 'kalite-formu' || currentPage === 'proje-formu') && !window.kfEdit) kfRebuildTbody();
     });
     // Çevrimdışıyken kaydedilmiş formlar varsa yükle (uygulama yeniden açıldığında)
-    if (navigator.onLine && isEditor() && kfGetForms().some(f => !f.synced)) kfSbSync().then(() => kxNetRender());
+    if (navigator.onLine && isEditor() && kfGetForms().some(f => !f.synced)) kfSbSync().then(() => { kxNetRender(); if (currentPage === 'ana-sayfa') dsRenderPage(); });
     kxPhotoStartupCleanup().then(() => kxPhotoProcessQueue());
   })();
 
