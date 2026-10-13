@@ -5801,6 +5801,7 @@
       model: 'PAT-820',
       tur: 'Elektriksel Güvenlik Test Cihazı',
       foto: './img/sonel-pat-820.webp',
+      sira: true, // testler bu sırayla yapılmalı
       ozet: 'Makinelerin elektriksel güvenliğini sevkiyattan önce doğrulamak için kullanılan çok fonksiyonlu test cihazı. '
         + 'Koruyucu iletken (topraklama) direnci, izolasyon direnci ve yüksek gerilim (flash) testini tek cihazda yapar; '
         + 'sonuçları hafızaya kaydeder, USB ile bilgisayara aktarır.',
@@ -5917,6 +5918,440 @@
           ]
         }
       ]
+    },
+    {
+      id: 'uni-t-ut139c',
+      marka: 'UNI-T',
+      model: 'UT139C',
+      tur: 'Dijital Multimetre (True RMS)',
+      foto: './img/uni-t-ut139c.webp',
+      ozet: "Elektriksel hataları bulmak için kullanılan genel amaçlı ölçü aleti. Besleme ve kumanda gerilimlerini, kablo ve sigorta sürekliliğini, "
+        + "rezistans ve motor sargı dirençlerini ölçer. CAT III 600 V olduğu için panodaki 400 V'luk hatlarda gerilim ölçümü bu cihazla yapılmalıdır.",
+      ozellikler: [
+        ["Gerilim", "AC / DC 600 V — True RMS"],
+        ["Akım", "AC / DC 10 A"],
+        ["Direnç", "60 MΩ'a kadar · süreklilik (buzzer)"],
+        ["Diğer", "Kapasite · frekans · diyot · NCV"],
+        ["Sıcaklık", "Prob ile −40…1000 °C"],
+        ["Güvenlik", "CAT III 600 V · 6000 sayım"]
+      ],
+      kaynaklar: [
+        ["Üretici sayfası (UT139 serisi)", "https://meters.uni-trend.com/product/ut139-series/"],
+        ["Kullanım kılavuzu", "https://meters.uni-trend.com/download/ut139a-b-c-user-manual/"]
+      ],
+      testler: [
+        {
+          id: 'gerilim',
+          ad: 'Gerilim Kontrolü',
+          en: 'Besleme ve kumanda gerilimleri — V~ / V⎓',
+          ikon: 'zap',
+          renk: '#ea580c',
+          acik: '#fff7ed',
+          amac: "Makineye gelen şebeke geriliminin ve kumanda devresini besleyen 24 V DC'nin doğru olduğunu doğrular. "
+            + "Eksik faz, ters bağlanmış nötr veya ayarı kaymış bir güç kaynağı; motorların zorlanmasına, PLC'nin rastgele hata vermesine yol açar.",
+          degerler: [
+            ["Faz – faz", "≈ 400 V AC (L1-L2, L2-L3, L1-L3)"],
+            ["Faz – nötr", "≈ 230 V AC"],
+            ["Kumanda", "24 V DC güç kaynağı çıkışı"],
+            ["Form", "K3099 besleme · K3100 24 V DC"]
+          ],
+          kabul: "Üç faz–faz gerilimi birbirine yakın olmalıdır (biri belirgin düşükse faz eksik ya da gevşek bağlantı vardır). "
+            + "24 V DC çıkışı için öneri: etiket değerinin ±%5'i. N–PE arasında belirgin gerilim okunursa nötr ve topraklama bağlantılarını kontrol edin.",
+          adimlar: [
+            "Kadranı <b>V~</b> konumuna alın, siyah kabloyu <b>COM</b>'a, kırmızıyı <b>VΩ</b> girişine takın.",
+            "Pano kapağı açıkken yalnızca yetkili kişi çalışsın; probları ana şalter çıkışındaki klemenslere dokundurun.",
+            "Sırayla <b>L1–L2, L2–L3, L1–L3</b> (faz–faz), <b>L1–N, L2–N, L3–N</b> (faz–nötr) ve <b>N–PE</b> ölçün.",
+            "Kadranı <b>V⎓</b>'ye alın; 24 V güç kaynağının <b>+</b> ve <b>−</b> çıkışlarını ölçün.",
+            "Besleme gerilimini <b>K3099</b>, 24 V DC değerini <b>K3100</b> maddesine yazın."
+          ],
+          dikkat: [
+            "Ölçüm sırasında prob uçlarından başka metale dokunmayın; tek elle ölçmek daha güvenlidir.",
+            "Kırmızı kablo <b>A</b> (akım) girişindeyken gerilim ölçmeyin — sigorta atar, cihaz zarar görür.",
+            "NCV (temassız gerilim algılama) yalnızca uyarı amaçlıdır; “gerilim yok” demek için probla ölçün."
+          ]
+        },
+        {
+          id: 'sureklilik',
+          ad: 'Süreklilik ve Direnç',
+          en: 'Kablo, sigorta, rezistans ve motor sargısı — Ω',
+          ikon: 'link-2',
+          renk: '#0891b2',
+          acik: '#ecfeff',
+          amac: "Enerji yokken kopuk kablo, atık sigorta, yanmış rezistans elemanı ve dengesiz motor sargısı gibi hataları bulur. "
+            + "Rezistansın ölçülen direncini gücünden hesaplanan değerle karşılaştırmak, yanlış rezistans takılmasını da ortaya çıkarır.",
+          degerler: [
+            ["Süreklilik", "Düşük dirençte sesli uyarı"],
+            ["Rezistans", "R = U² / P (ör. 230 V, 3 kW → 17,6 Ω)"],
+            ["Motor sargısı", "Üç sargı birbirine eşit"],
+            ["Aralık", "60 MΩ'a kadar"]
+          ],
+          kabul: "Öneri: rezistansın ölçülen direnci hesaplanan değerin ±%10'u içinde olmalı. Üç fazlı motorda üç sargı direnci birbirine yakın olmalı "
+            + "(öneri: en büyük ile en küçük arasındaki fark %5'ten az). Sonsuz (OL) okunan sargı veya eleman kopuktur.",
+          adimlar: [
+            "Enerjiyi kesin ve kilitleyin. Ölçülecek elemanın en az bir ucunu devreden ayırın; yoksa paralel devreler sonucu bozar.",
+            "Kadranı <b>Ω / süreklilik</b> konumuna alın. Probları birbirine değdirin: 0'a yakın okumalı ve öter.",
+            "<b>Kablo / sigorta:</b> iki ucu ölçün; ötüyorsa sağlam, OL ise kopuk.",
+            "<b>Rezistans:</b> eleman uçlarından direnci ölçün, etiketteki güç ve gerilimden R = U² / P ile hesaplanan değerle karşılaştırın.",
+            "<b>Motor:</b> klemens kutusunda köprüleri sökerek U1–U2, V1–V2, W1–W2 sargılarını ölçün ve birbirleriyle karşılaştırın."
+          ],
+          dikkat: [
+            "Gerilim altındaki devrede direnç ölçmeyin — cihaz ve devre zarar görür.",
+            "Kondansatörlü devrelerde (invertör, güç kaynağı) ölçmeden önce deşarj olmasını bekleyin.",
+            "Rezistans soğukken ölçülür; sıcak eleman biraz daha yüksek direnç gösterir."
+          ]
+        }
+      ]
+    },
+    {
+      id: 'uni-t-ut363',
+      marka: 'UNI-T',
+      model: 'UT363',
+      tur: 'Mini Anemometre',
+      foto: './img/uni-t-ut363.webp',
+      ozet: "Egzoz ve kurutma fanlarının üflediği / emdiği havanın hızını ölçer. Hız, menfez kesit alanıyla çarpılarak hava debisi (m³/h) hesaplanır "
+        + "ve fan kataloğundaki değerle karşılaştırılır. Ters dönen fan, tıkalı filtre veya kanal kaçağı düşük debi olarak ortaya çıkar.",
+      ozellikler: [
+        ["Hava hızı", "0–30 m/s · 0,1 m/s çözünürlük"],
+        ["Doğruluk", "±(%5 okuma + 0,5)"],
+        ["Ortam sıcaklığı", "−10…50 °C · ±2 °C"],
+        ["Fonksiyon", "MAX / AVG · data hold"],
+        ["Örnekleme", "0,5 sn"],
+        ["Aşım", "> 45 m/s → OL"]
+      ],
+      kaynaklar: [
+        ["Üretici sayfası", "https://meters.uni-trend.com/product/ut363/"]
+      ],
+      testler: [
+        {
+          id: 'debi',
+          ad: 'Hava Debisi Ölçümü',
+          en: 'Egzoz / kurutma fanı — Q = v × A × 3600',
+          ikon: 'wind',
+          renk: '#0d9488',
+          acik: '#f0fdfa',
+          amac: "Fanın gerçekten yeterli havayı taşıdığını doğrular. Egzoz yetersizse hücrede buhar birikir ve kapak açılınca dışarı yayılır; "
+            + "kurutma yetersizse parçalar ıslak çıkar.",
+          degerler: [
+            ["Debi", "Q (m³/h) = v (m/s) × A (m²) × 3600"],
+            ["Dikdörtgen", "A = en × boy"],
+            ["Yuvarlak", "A = π × d² / 4"],
+            ["Örnek", "6 m/s × 0,0314 m² (Ø200) → 678 m³/h"]
+          ],
+          kabul: "Hesaplanan debi fan kataloğundaki çalışma noktasına yakın olmalı. Kanal, filtre ve dirsekler debiyi düşürür; "
+            + "ilk makinelerde ölçtüğünüz değerleri model için referans alıp sonraki makineleri buna göre karşılaştırın.",
+          adimlar: [
+            "Fanı normal çalışma hızında çalıştırın; kapak ve filtreler çalışma konumunda olsun.",
+            "Ölçeceğiniz menfezin / kanal ağzının ölçüsünü alın ve kesit alanını m² olarak hesaplayın.",
+            "Cihazı açın, <b>MAX/AVG</b> ile ortalama moduna alın. Pervaneyi hava akışına <b>dik</b> tutun (cihazdaki ok akış yönünde).",
+            "Ağız yüzeyinde eşit aralıklı birkaç noktayı (ör. 5–9 nokta) 2–3 saniye bekleyerek gezin; ortalama hızı okuyun.",
+            "Q = v × A × 3600 ile debiyi hesaplayın ve fan kataloğuyla karşılaştırın; fan dönüş yönünü de (K4032) kontrol edin."
+          ],
+          dikkat: [
+            "Cihazın çalışma sıcaklığı 50 °C'ye kadardır; sıcak kurutma havasında uzun süre tutmayın, mümkünse emiş tarafında ölçün.",
+            "Pervaneden küçük deliklerde ve çok türbülanslı yerlerde (dirsek hemen arkası) ölçüm güvenilir değildir.",
+            "Pervaneye parmak veya kablo değmesin; dönen fana yaklaşırken dikkat edin."
+          ]
+        }
+      ]
+    },
+    {
+      id: 'uni-t-ut201plus',
+      marka: 'UNI-T',
+      model: 'UT201+',
+      tur: 'Pens Ampermetre (True RMS)',
+      foto: './img/uni-t-ut201plus.webp',
+      ozet: "Kabloyu sökmeden, çalışan makinede pompa, redüktör, fan ve ısıtıcıların çektiği akımı ölçer. "
+        + "Ölçülen akımı motor etiketi ve MKŞ ayarıyla karşılaştırmak; zorlanan motoru, eksik fazı ve yanlış ayarlanmış koruma şalterini ortaya çıkarır.",
+      ozellikler: [
+        ["AC akım", "400 A · ±(%2 + 10)"],
+        ["Ölçüm", "True RMS · 4000 sayım"],
+        ["Çene açıklığı", "28 mm"],
+        ["Diğer", "AC/DC gerilim · direnç · NCV"],
+        ["Fonksiyon", "MAX / MIN · data hold"],
+        ["Güvenlik", "CAT II 600 V / CAT III 300 V"]
+      ],
+      kaynaklar: [
+        ["Üretici sayfası (UT200+ serisi)", "https://meters.uni-trend.com/product/ut200plus-series/"],
+        ["Kullanım kılavuzu", "https://meters.uni-trend.com/download/ut201-ut202-ut202a-user-manual/"]
+      ],
+      testler: [
+        {
+          id: 'motor-akim',
+          ad: 'Motor Akımı',
+          en: 'Pompa, redüktör, fan, yağ sıyırıcı — A~',
+          ikon: 'gauge',
+          renk: '#7c3aed',
+          acik: '#f5f3ff',
+          amac: "Motorun normal yükte etiketindeki akımın altında çalıştığını ve üç fazın dengeli olduğunu doğrular. "
+            + "Etiket akımını aşan motor zorlanıyordur (sıkışan pompa, ters dönüş, yanlış redüktör); fazlardan biri belirgin farklıysa bağlantı veya sargı sorunu vardır.",
+          degerler: [
+            ["Ölçüm", "Her faz ayrı (L1, L2, L3)"],
+            ["Karşılaştır", "Motor etiketi (In) ve MKŞ ayarı"],
+            ["Form", "K3013–K3028 akım · K3037–K3056 MKŞ"],
+            ["Toplam", "K3062 makine toplam akımı"]
+          ],
+          kabul: "Ölçülen akım motor etiketindeki nominal akımı (In) aşmamalı; MKŞ termik ayarı genellikle motor etiket akımına ayarlanır. "
+            + "Öneri: üç faz akımı arasındaki fark %10'u geçmemeli.",
+          adimlar: [
+            "Kadranı <b>A~</b> konumuna alın. Makineyi normal çalışma durumunda çalıştırın (pompa suyla, redüktör yükte).",
+            "Pensi motor kablosundaki <b>tek bir faz iletkenine</b> kapatın; iletken çenenin ortasında olsun.",
+            "Değeri okuyun, sonra aynı ölçümü diğer iki faz için tekrarlayın; en yüksek değeri esas alın.",
+            "Değeri formdaki ilgili motor akımı maddesine (ör. <b>K3013 Pompa 1</b>) yazın; MKŞ üzerindeki ayarı da ilgili MKŞ maddesine yazın.",
+            "Makinenin toplam akımı için ana besleme kablosunda her fazı ölçüp en yüksek değeri <b>K3062</b>'ye yazın."
+          ],
+          dikkat: [
+            "Pensi çok damarlı kablonun tamamına kapatırsanız fazların akımları birbirini götürür ve 0'a yakın okunur.",
+            "UT201+ CAT III'te 300 V'a kadar güvenlidir: panodaki 400 V hatlarda <b>gerilimi UT139C ile</b> ölçün, bu cihazı akım için kullanın.",
+            "Motor kalkış anında birkaç saniye nominalin çok üstünde akım çeker; değeri motor normal devre ulaştıktan sonra okuyun."
+          ]
+        },
+        {
+          id: 'isitici-akim',
+          ad: 'Isıtıcı Akımı',
+          en: 'Rezistans grupları — A~',
+          ikon: 'thermometer',
+          renk: '#dc2626',
+          acik: '#fef2f2',
+          amac: "Her ısıtıcı grubunun beklenen gücü çektiğini doğrular. Düşük akım yanmış ya da kopuk bir elemanı, "
+            + "fazlar arası fark da tek bir elemanın arızalandığını gösterir. Isıtıcılar makinedeki en büyük yük olduğu için toplam akımı da belirler.",
+          degerler: [
+            ["Üç fazlı grup", "I = P / (√3 × U) → 9 kW / 400 V ≈ 13 A"],
+            ["Tek fazlı eleman", "I = P / U → 3 kW / 230 V ≈ 13 A"],
+            ["Form", "K3029–K3036, K3063–K3069"],
+            ["Kaçak koruma", "K4038 ısıtıcı kaçak akım"]
+          ],
+          kabul: "Öneri: ölçülen akım hesaplanan değerin ±%10'u içinde olmalı ve üç faz birbirine yakın olmalı. "
+            + "Bir fazın akımı belirgin düşükse o faza bağlı elemanı UT139C ile direnç ölçerek kontrol edin.",
+          adimlar: [
+            "Tankta su olduğundan emin olun (kuru çalışan rezistans yanar). Isıtıcıyı çalıştırın.",
+            "Kadranı <b>A~</b>'ya alın ve pensi ısıtıcı kontaktörünün çıkışındaki <b>tek bir faz iletkenine</b> kapatın.",
+            "Üç fazı sırayla ölçün; değerleri hesaplanan akımla karşılaştırın.",
+            "En yüksek değeri formdaki ilgili <b>ISITICI</b> akım maddesine yazın."
+          ],
+          dikkat: [
+            "Isıtıcı devresi çalışırken pano içinde sıcak ve gerilimli bölgeler vardır; yalnızca pens çenesini kabloya yaklaştırın.",
+            "Termostat ısıtıcıyı kapattıysa akım 0 okunur — ölçümü ısıtıcı çalışırken yapın."
+          ]
+        }
+      ]
+    },
+    {
+      id: 'uni-t-ut306a',
+      marka: 'UNI-T',
+      model: 'UT306A',
+      tur: 'Mini Kızılötesi Termometre',
+      foto: './img/uni-t-ut306a.webp',
+      ozet: "Hızlı, temassız yüzey sıcaklığı kontrolü (ayrıntılı termal analiz testo 860i ile yapılır). Tank ve gövde sıcaklığını termostat değeriyle karşılaştırmak, aşırı ısınan motor ve "
+        + "gevşek bağlantı nedeniyle ısınan klemens / kontaktörleri bulmak için kullanılır.",
+      ozellikler: [
+        ["Aralık", "−35…300 °C"],
+        ["Doğruluk", "±2 °C veya ±%2"],
+        ["Mesafe / nokta", "D:S 6:1"],
+        ["Emisivite", "0,95 (sabit)"],
+        ["Tepki süresi", "< 250 ms"],
+        ["Fonksiyon", "MAX / MIN / AVG · lazer · kilit"]
+      ],
+      kaynaklar: [
+        ["Üretici sayfası", "https://meters.uni-trend.com/product/ut306a/"]
+      ],
+      testler: [
+        {
+          id: 'yuzey-sicaklik',
+          ad: 'Yüzey Sıcaklığı',
+          en: 'Tank, motor, pano bileşenleri — °C',
+          ikon: 'thermometer',
+          renk: '#ea580c',
+          acik: '#fff7ed',
+          amac: "Tank suyunun ve yüzeylerin gerçek sıcaklığını termostatın gösterdiğiyle karşılaştırır; motor gövdelerinde ve pano içinde "
+            + "olağan dışı ısınmayı bulur. Aynı yükteki üç fazdan birinin klemensi diğerlerinden sıcaksa o bağlantı gevşektir.",
+          degerler: [
+            ["Nokta çapı", "30 cm'den ≈ 5 cm (D:S 6:1)"],
+            ["Termostat", "K4041 su sıcaklığı uyumu"],
+            ["Emniyet", "K4055 aşırı sıcaklık kesme"],
+            ["Uyarı", "K6014 sıcak yüzey etiketi"]
+          ],
+          kabul: "Öneri: ölçülen su sıcaklığı termostat / PLC değerine birkaç derece yakın olmalı. Aynı akımı taşıyan klemensler arasında belirgin "
+            + "sıcaklık farkı (ör. 10 °C üstü) gevşek bağlantı belirtisidir; sıkıp tekrar ölçün.",
+          adimlar: [
+            "Cihazı ölçülecek yüzeye dik tutun; lazer noktası ölçülen alanın ortasını gösterir.",
+            "Küçük hedefleri (klemens, kontaktör) <b>yakından</b> ölçün: 6:1 oranında 30 cm uzaktan 5 cm'lik bir alanın ortalaması okunur.",
+            "<b>Tank suyu:</b> su yüzeyini ölçün (su ölçüme uygundur) ve termostat / PLC ekranındaki değerle karşılaştırın.",
+            "<b>Motor ve pano:</b> makine bir süre çalıştıktan sonra motor gövdelerini, kontaktör ve klemensleri tarayın; <b>MAX</b> modu en sıcak noktayı yakalar.",
+            "Sonuçları ilgili maddelere yazın; sıcak bir yüzeye uyarı etiketi yoksa K6014'ü HAYIR işaretleyin."
+          ],
+          dikkat: [
+            "Emisivite 0,95'e sabittir: <b>parlak paslanmaz çelik</b> gerçekte olduğundan çok daha soğuk görünür. Ölçüm noktasına mat siyah bant yapıştırıp bandı ölçün.",
+            "Cam ve buhar arkasındaki yüzeyi ölçemez; ölçtüğü şey camın / buharın sıcaklığıdır.",
+            "Lazeri göze tutmayın."
+          ]
+        }
+      ]
+    },
+    {
+      id: 'testo-860i',
+      marka: 'TESTO',
+      model: '860i',
+      tur: 'Termal Kamera (akıllı telefonla)',
+      foto: './img/testo-860i.webp',
+      ozet: "Esas termal ölçümlerin yapıldığı kamera. Tek noktayı değil bütün yüzeyin sıcaklık haritasını gösterir; panoda ısınan bağlantıyı, "
+        + "tankta eşit ısınmayan bölgeyi, motor ve redüktörde aşırı ısınan yatağı tek görüntüde yakalar. testo Smart App ile telefona bağlanır, "
+        + "termal fotoğraflar telefona kaydedilir ve KaliteX formuna fotoğraf olarak eklenebilir.",
+      ozellikler: [
+        ["Kızılötesi çözünürlük", "256 × 192 piksel"],
+        ["Termal hassasiyet", "50 mK (NETD)"],
+        ["Ölçüm aralığı", "−20…+350 °C · ±3 °C / ±%3"],
+        ["Emisivite", "0,01–1 ayarlı + yansıyan sıcaklık"],
+        ["Görüş alanı", "48° × 36° · 9 Hz"],
+        ["Bağlantı", "testo Smart App (Wi-Fi) · IP54 · 2 sa pil"]
+      ],
+      kaynaklar: [
+        ["Üretici sayfası", "https://www.testo.com/en-US/testo-860i/p/0560-0860"],
+        ["Teknik föy (PDF)", "https://www.instrumart.com/assets/testo-860i-thermal-imager-datasheet.pdf"]
+      ],
+      testler: [
+        {
+          id: 'pano-termografi',
+          ad: 'Elektrik Panosu Termografisi',
+          en: 'Klemens, kontaktör, sigorta, kablo — ΔT',
+          ikon: 'zap',
+          renk: '#dc2626',
+          acik: '#fef2f2',
+          amac: "Gevşek klemens, oksitlenmiş kontak ve aşırı yüklü iletken, akım geçerken çevresinden daha fazla ısınır. Termal kamera bu noktaları "
+            + "panoya dokunmadan, makine çalışırken gösterir. En etkili yöntem, aynı akımı taşıyan üç fazı (L1-L2-L3) aynı görüntüde karşılaştırmaktır.",
+          degerler: [
+            ["Yük", "Makine tam yükte, en az 15–30 dk"],
+            ["Karşılaştır", "Aynı yükteki 3 faz / benzer bileşen"],
+            ["Emisivite", "Kablo izolasyonu, plastik: ≈ 0,95"],
+            ["Kayıt", "Termal foto → forma (K9010 elektrik panosu)"]
+          ],
+          kabul: "Benzer yükteki benzer bileşenler arasındaki sıcaklık farkına göre (NETA MTS sınıflandırması): 1–3 °C olası kusur, incelenmeli; "
+            + "4–15 °C muhtemel kusur, onarılmalı; 15 °C üstü ciddi kusur, makine sevk edilmeden hemen onarılmalı.",
+          adimlar: [
+            "Makineyi en yüksek yükte çalıştırın (ısıtıcılar, pompalar, fanlar açık) ve en az <b>15–30 dakika</b> ısınmasını bekleyin. Yük düşükse sorunlu bağlantı da ısınmaz.",
+            "Kamerayı açıp testo Smart App'te bağlanın. <b>Emisiviteyi 0,95</b>, yansıyan sıcaklığı ortam sıcaklığı olarak ayarlayın.",
+            "Pano kapağını <b>yalnızca yetkili kişi</b> açsın; gerilimli parçalara yaklaşmadan, kapak açıklığından görüntü alın.",
+            "Ana şalter, sigortalar, kontaktörler ve klemens sırasını tarayın. Üç fazı aynı karede tutun ve <b>Delta T</b> ile en sıcak fazı diğerleriyle karşılaştırın.",
+            "Sıcak bir nokta bulursanız UT201+ ile o fazın akımını ölçün; uygulamanın <b>elektrik modu</b>nda akımı görüntüye not edin.",
+            "Görüntüyü kaydedip KaliteX formuna <b>fotoğraf</b> olarak ekleyin (ilgili maddeye veya K9010). Sorunlu bağlantıyı sıkıp makine tekrar ısındıktan sonra yeniden çekin."
+          ],
+          dikkat: [
+            "Çıplak bakır bara, parlak vida başı ve metal kapak yansıtıcıdır; ortamdaki ısıyı yansıtır, kendi sıcaklığını göstermez. <b>Kablo izolasyonunu, plastik gövdeyi veya klemens yüzeyini</b> ölçün.",
+            "Pano kapağı açıkken gerilimli bölgeler açıktadır: kişisel koruyucu donanım kullanın, kameraya odaklanıp elinizi panoya yaklaştırmayın.",
+            "Kapağı açtıktan sonra hızlı çekin — panonun içi soğumaya başlar ve farklar küçülür."
+          ]
+        },
+        {
+          id: 'isitma-tank',
+          ad: 'Isıtma ve Tank Termografisi',
+          en: 'Rezistans, tank, hücre, kapak — °C dağılımı',
+          ikon: 'thermometer',
+          renk: '#ea580c',
+          acik: '#fff7ed',
+          amac: "Tankın ve rezistansların eşit ısındığını, termostat değerinin suyun gerçek sıcaklığıyla tuttuğunu ve dışarıya dokunulabilir sıcak yüzey "
+            + "kalmadığını doğrular. Isınmayan bir rezistans elemanı, tıkalı bir hat veya yalıtım boşluğu termal görüntüde hemen ayrışır.",
+          degerler: [
+            ["Termostat", "K4041 su sıcaklığı uyumu"],
+            ["Emniyet", "K4055 aşırı sıcaklık kesme"],
+            ["Sıcak yüzey", "K6014 uyarı etiketi"],
+            ["Isıtıcı", "Akımla birlikte: K3029–K3036"]
+          ],
+          kabul: "Öneri: tank yüzeyinde aynı seviyedeki bölgeler birbirine yakın sıcaklıkta olmalı; belirgin soğuk bölge çalışmayan bir rezistans elemanını gösterir. "
+            + "Su sıcaklığı termostat / PLC değerine birkaç derece yakın olmalı. Operatörün dokunabileceği yüzeylerde yüksek sıcaklık varsa sıcak yüzey etiketi olmalı.",
+          adimlar: [
+            "Tankı doldurup ısıtıcıları çalıştırın; su set sıcaklığına ulaşana kadar bekleyin.",
+            "<b>Su yüzeyini</b> ölçün (su için emisivite ≈ 0,95) ve termostat / PLC ekranındaki değerle karşılaştırın.",
+            "Tankın dış yüzeyini rezistans hizasından tarayın: her rezistans bölgesi benzer renkte olmalı. Soğuk kalan bölgede o elemanın akımını UT201+ ile ölçün.",
+            "Kapak, gövde ve kumanda paneli çevresinde operatörün dokunabileceği yüzeylerin sıcaklığını kontrol edin.",
+            "Görüntüleri kaydedip forma fotoğraf olarak ekleyin."
+          ],
+          dikkat: [
+            "<b>Parlak paslanmaz çelik</b> termal kamerada aynaya benzer: çevredeki sıcak / soğuk nesneleri yansıtır ve emisivite ayarıyla bile güvenilir ölçülmez. Ölçüm noktasına mat siyah bant yapıştırıp (emisivite ≈ 0,95) bandı ölçün.",
+            "Kamerayı yüzeye çok açılı tutmayın; dik açıya yakın çekim yansımayı azaltır.",
+            "Buhar ve cam arkası ölçülemez — kamera buharın veya camın sıcaklığını gösterir."
+          ]
+        },
+        {
+          id: 'motor-mekanik',
+          ad: 'Motor ve Mekanik Termografi',
+          en: 'Pompa, redüktör, fan, yatak, kaplin — °C',
+          ikon: 'gauge',
+          renk: '#7c3aed',
+          acik: '#f5f3ff',
+          amac: "Aşırı yüklenen motor, sıkışan pompa, yağsız veya hatalı takılmış rulman ve eksen kaçıklığı olan kaplin; normalden fazla ısınır. "
+            + "Aynı tip motorları ya da aynı modelin farklı makinelerini karşılaştırmak, sorunu sayısal olarak gösterir.",
+          degerler: [
+            ["Karşılaştır", "Aynı tip motorlar / önceki makineler"],
+            ["Odak", "Yatak bölgesi, kaplin, redüktör gövdesi"],
+            ["Akım", "UT201+ ölçümüyle birlikte değerlendirin"],
+            ["Dönüş", "K4031–K4035 dönme yönü"]
+          ],
+          kabul: "Öneri: yatak bölgesi motor gövdesinden belirgin sıcaksa veya aynı tip motorlar arasında belirgin fark varsa (ör. 10 °C üstü) araştırılmalı. "
+            + "Kaplinde iki tarafın farklı ısınması eksen kaçıklığına işaret eder. İlk makinelerin görüntülerini model için referans olarak saklayın.",
+          adimlar: [
+            "Makineyi normal yükte en az 30 dakika çalıştırın; motorların çalışma sıcaklığına ulaşmasını bekleyin.",
+            "Motor gövdesi boyalıysa emisiviteyi <b>0,95</b> bırakın. Parlak metal yüzeylerde ölçüm yapmayın.",
+            "Pompa, redüktör ve fan motorlarını aynı mesafeden çekin; <b>en sıcak nokta</b> göstergesine ve yatak bölgesine bakın.",
+            "Aynı tip motorları (ör. iki pompa) birbiriyle, gerekiyorsa aynı modelin önceki makinesindeki görüntüyle karşılaştırın.",
+            "Sıcak bir motorda UT201+ ile akımı ölçün: akım da yüksekse motor zorlanıyordur (sıkışma, yanlış dönüş, aşırı yük)."
+          ],
+          dikkat: [
+            "Dönen parçalara (kaplin, fan) yaklaşırken koruyucular yerinde olsun; kamerayı ve kabloları dönen parçadan uzak tutun.",
+            "Motor fanının üflediği hava yüzeyi soğutur; aynı noktayı her makinede aynı açıdan çekin ki karşılaştırma anlamlı olsun."
+          ]
+        }
+      ]
+    },
+    {
+      id: 'uni-t-ut353',
+      marka: 'UNI-T',
+      model: 'UT353',
+      tur: 'Mini Ses Seviyesi Ölçer',
+      foto: './img/uni-t-ut353.webp',
+      ozet: "Makinenin çalışırken çıkardığı gürültüyü dB(A) olarak ölçer. Pompa, redüktör, fan ve ultrasonik ünitedeki anormal sesleri "
+        + "sayısal hale getirir; aynı modelin makinelerini birbiriyle karşılaştırmayı sağlar.",
+      ozellikler: [
+        ["Aralık", "30–130 dB (A ağırlıklı)"],
+        ["Doğruluk", "±1,5 dB · 0,1 dB çözünürlük"],
+        ["Frekans", "31,5 Hz – 8 kHz"],
+        ["Tepki", "FAST 125 ms · SLOW 1 sn"],
+        ["Fonksiyon", "MAX / MIN · data hold"],
+        ["Aşım", "OL göstergesi"]
+      ],
+      kaynaklar: [
+        ["Üretici sayfası", "https://meters.uni-trend.com/product/ut353/"]
+      ],
+      testler: [
+        {
+          id: 'gurultu',
+          ad: 'Gürültü Ölçümü',
+          en: 'Çalışma sesi — dB(A)',
+          ikon: 'volume-2',
+          renk: '#2563eb',
+          acik: '#eff6ff',
+          amac: "Makinenin gürültü seviyesini kayda geçirir ve anormal sesi (yatak, kavitasyon yapan pompa, sürten fan, ultrasonik ünite) "
+            + "kulak yerine sayıyla tespit eder. Makine Direktifi, operatör konumundaki ses basıncı seviyesinin kullanım kılavuzunda belirtilmesini ister.",
+          degerler: [
+            ["Mesafe", "Makineden 1 m · kulak hizası (~1,6 m)"],
+            ["Mod", "SLOW + MAX"],
+            ["Arka plan", "Ölçümden en az 10 dB düşük"],
+            ["Form", "K4051 ultrasonik · K4061 anormal ses"]
+          ],
+          kabul: "Makine Direktifi (2006/42/AT): operatör konumunda A ağırlıklı ses basıncı 70 dB(A)'yı aşıyorsa değeri, aşmıyorsa bunu kullanım kılavuzunda belirtin. "
+            + "Kalite kontrolde aynı modelin ilk makinelerinde ölçtüğünüz değeri referans alın; belirgin artış (ör. 3 dB üstü) arıza belirtisidir.",
+          adimlar: [
+            "Makine kapalıyken ölçüm yerindeki <b>arka plan gürültüsünü</b> ölçün; makine sesi bundan en az 10 dB yüksek olmalı, yoksa sonuç şişer.",
+            "Makineyi en gürültülü çalışma durumuna alın (pompa, fanlar ve varsa ultrasonik ünite birlikte).",
+            "Cihazı <b>SLOW</b> ve <b>MAX</b> moduna alın; makineden <b>1 m</b> uzakta, operatörün kulak hizasında, mikrofon makineye dönük tutun.",
+            "Operatör tarafından ve makinenin dört yönünden 10–15 saniye ölçün; vücudunuzu cihazla makine arasına sokmayın.",
+            "En yüksek değeri forma yazın; anormal ses duyduğunuz noktayı (ör. pompa) yakından ölçüp nota ekleyin."
+          ],
+          dikkat: [
+            "Rüzgârlık süngeri takılı olsun; fan çıkışına doğrudan tutmayın — hava akımı sahte gürültü okutur.",
+            "Yansıtıcı duvarlara çok yakın ölçüm sonucu yükseltir; mümkünse makineyi açık alanda ölçün.",
+            "85 dB(A) üzerinde uzun süre kulak koruyucusuz durmayın."
+          ]
+        }
+      ]
     }
   ];
 
@@ -5948,11 +6383,11 @@
           </details>
           <div class="tc-warn${t.tehlike ? ' tc-warn-red' : ''}">
             <div class="tc-warn-t"><i data-lucide="alert-triangle" class="w-4 h-4"></i> ${t.tehlike ? 'Tehlike' : 'Dikkat'}</div>
-            <ul>${t.dikkat.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+            <ul>${t.dikkat.map(x => `<li>${x}</li>`).join('')}</ul>
           </div>
         </section>`).join('');
       return `
-        <article class="tc-card">
+        <article class="tc-card" id="tc-${d.id}">
           <div class="tc-hero">
             <div class="tc-photo"><img src="${esc(d.foto)}" alt="${esc(d.marka + ' ' + d.model)}" loading="lazy"></div>
             <div class="tc-info">
@@ -5964,8 +6399,8 @@
               <div class="tc-links">${links}</div>
             </div>
           </div>
-          <div class="tc-order"><div class="tc-order-t">Test sırası</div><div class="tc-steps">${order}</div></div>
-          <div class="tc-tests">${tests}</div>
+          ${d.sira ? `<div class="tc-order"><div class="tc-order-t">Test sırası</div><div class="tc-steps">${order}</div></div>` : ''}
+          <div class="tc-tests" style="--n:${Math.min(d.testler.length, 3)}">${tests}</div>
         </article>`;
     }).join('');
     pc.innerHTML = `
@@ -5975,7 +6410,7 @@
         .tc-head p{font-size:13px;color:#6b7280;margin-top:2px;}
         .tc-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 4px 24px rgba(17,24,39,.06);overflow:hidden;}
         .tc-hero{display:grid;grid-template-columns:minmax(260px,400px) 1fr;}
-        .tc-photo{background:radial-gradient(circle at 50% 40%,#374151 0%,#111827 75%);display:flex;align-items:center;justify-content:center;padding:28px;min-height:280px;}
+        .tc-photo{background:radial-gradient(circle at 50% 40%,#374151 0%,#111827 75%);display:flex;align-items:center;justify-content:center;padding:28px;min-height:280px;overflow:hidden;}
         .tc-photo img{max-width:100%;max-height:300px;object-fit:contain;filter:drop-shadow(0 18px 30px rgba(0,0,0,.55));}
         .tc-info{padding:24px 26px;display:flex;flex-direction:column;gap:6px;}
         .tc-brand{display:inline-block;align-self:flex-start;font-size:10px;font-weight:800;letter-spacing:.16em;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:999px;padding:3px 10px;}
@@ -5997,7 +6432,8 @@
         .tc-step-n{width:22px;height:22px;border-radius:50%;background:var(--c,#111827);color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;}
         .tc-step-last{--c:#6b7280;color:#6b7280;}
         .tc-step-arrow{color:#d1d5db;font-weight:800;}
-        .tc-tests{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:4px 18px 20px;}
+        .tc-tests{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:14px;padding:18px 18px 20px;border-top:1px solid #f0f0f0;}
+        .tc-order + .tc-tests{border-top:none;padding-top:4px;}
         .tc-test{border:1px solid #e5e7eb;border-top:4px solid var(--c);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:12px;}
         .tc-test-hd{display:flex;align-items:center;gap:10px;}
         .tc-test-ic{width:38px;height:38px;border-radius:11px;background:var(--bg);color:var(--c);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -6024,6 +6460,13 @@
         .tc-warn ul{margin:0;padding-left:16px;list-style:disc;font-size:11.5px;color:#374151;line-height:1.5;}
         .tc-note{font-size:11px;color:#9ca3af;text-align:center;}
         @media(max-width:1100px){.tc-tests{grid-template-columns:1fr;}}
+        .tc-nav{display:flex;gap:8px;flex-wrap:wrap;}
+        .tc-chip{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:5px 12px 5px 5px;text-decoration:none;color:#111827;font-size:12px;font-weight:800;transition:border-color .15s,box-shadow .15s;}
+        .tc-chip:hover{border-color:#dc2626;box-shadow:0 2px 10px rgba(220,38,38,.12);}
+        .tc-chip-img{width:34px;height:34px;border-radius:8px;background:radial-gradient(circle at 50% 40%,#374151 0%,#111827 80%);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+        .tc-chip-img img{max-width:28px;max-height:28px;object-fit:contain;}
+        .tc-chip small{display:block;font-size:9.5px;font-weight:700;color:#9ca3af;}
+        .tc-card{scroll-margin-top:12px;}
         @media(max-width:760px){.tc-hero{grid-template-columns:1fr;}.tc-photo{min-height:220px;}.tc-info{padding:18px;}.tc-order{padding:12px 18px;}.tc-tests{padding:4px 12px 14px;}}
       </style>
       <div class="tc-wrap page-fade">
@@ -6031,6 +6474,7 @@
           <h1>Test Cihazları</h1>
           <p>Kalite kontrol testlerinde kullanılan cihazlar ve test yöntemleri</p>
         </div>
+        <nav class="tc-nav">${TEST_DEVICES.map(d => `<a class="tc-chip" href="#tc-${d.id}"><span class="tc-chip-img"><img src="${esc(d.foto)}" alt=""></span><span>${esc(d.marka)} ${esc(d.model)}<small>${esc(d.tur)}</small></span></a>`).join('')}</nav>
         ${cards}
         <div class="tc-note">Cihaz değerleri üretici kılavuzundan alınmıştır. Testleri her zaman cihazın kendi kılavuzu ve firma güvenlik talimatlarına göre yapın.</div>
       </div>`;
