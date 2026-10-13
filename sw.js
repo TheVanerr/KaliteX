@@ -4,7 +4,7 @@
 //   - CDN (Tailwind, Lucide, Fonts): Cache-first
 //   - Supabase REST API: Network-first, offline'da cache'den dön
 
-  const CACHE = 'kalitex-v20';
+  const CACHE = 'kalitex-v21';
 
 const LOCAL_ASSETS = [
   './',
@@ -27,6 +27,7 @@ const CDN_ASSETS = [
   'https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js',
   'https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap',
   'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js',
 ];
 
 // ── Kurulum ─────────────────────────────────────────────────────────────────
