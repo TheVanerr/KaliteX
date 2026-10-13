@@ -416,7 +416,7 @@
   <div id="kf-toast-global"></div>
   <script>
   let currentPage = 'kalite-formu';
-  let sidebarOpen = true;
+  let sidebarOpen = false; // sol menü kapalı başlar, ☰ ile açılır
 
   const pageContents = {
     'kalite-formu': { title: 'Kalite Formu', desc: 'Üretim kalite kontrol formlarını buradan yönetin.' },
@@ -2468,13 +2468,19 @@
 
   function toggleSidebar() {
     sidebarOpen = !sidebarOpen;
+    kxApplySidebar();
+    // Menü her açılıp kapandığında seri alt menüleri sıfırlansın (hepsi kapalı)
+    kxCollapseAllSeries();
+  }
+
+  // sidebarOpen durumunu ekrana uygula (açılışta da kullanılır — menü kapalı başlar)
+  function kxApplySidebar() {
     const sb = document.getElementById('sidebar');
+    if (!sb) return;
     sb.style.transform = sidebarOpen ? 'translateX(0)' : 'translateX(-100%)';
     sb.style.position = sidebarOpen ? 'relative' : 'absolute';
     sb.style.height = '100%';
     document.body.classList.toggle('sidebar-open', sidebarOpen);
-    // Menü her açılıp kapandığında seri alt menüleri sıfırlansın (hepsi kapalı)
-    kxCollapseAllSeries();
   }
 
   // Tüm seri alt menülerini (LYM, VDL, … ve Proje) kapalı duruma getir
@@ -6491,7 +6497,8 @@
   (async () => {
     authCheckSession();          // localStorage'dan editör oturumu yükle
     await authCheckCallback();  // Google OAuth geri dönüşü varsa işle
-    kxCollapseAllSeries(); // açılışta tüm seri alt menüleri kapalı (uygulama görünmeden önce)
+    kxApplySidebar();      // açılışta sol menü kapalı (uygulama görünmeden önce)
+    kxCollapseAllSeries(); // açılışta tüm seri alt menüleri kapalı
     const app = document.getElementById('app');
     app.style.removeProperty('display');
     app.style.display = 'flex';

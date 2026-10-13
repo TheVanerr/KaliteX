@@ -4,7 +4,7 @@
 //   - CDN (Tailwind, Lucide, Fonts): Cache-first
 //   - Supabase REST API: Network-first, offline'da cache'den dön
 
-  const CACHE = 'kalitex-v19';
+  const CACHE = 'kalitex-v20';
 
 const LOCAL_ASSETS = [
   './',
@@ -89,8 +89,10 @@ self.addEventListener('fetch', event => {
   // kalite.html, manifest ve ikonlar — network-first: her zaman güncel gelsin
   if (url.endsWith('/kalite.html') || url.endsWith('/KaliteX/') || url.endsWith('/KaliteX')
       || url.endsWith('/manifest.json') || url.endsWith('/icon-192.png') || url.endsWith('/icon-512.png') || url.endsWith('/icon.svg')) {
+    // cache: 'no-cache' → tarayıcının HTTP önbelleği yerine sunucuya sorar (ETag ile, değişmediyse 304).
+    // GitHub Pages sayfayı 10 dk önbellekliyor; bu olmadan yeni sürüm gecikmeli geliyordu.
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-cache' })
         .then(res => {
           if (res.ok) {
             const clone = res.clone();
