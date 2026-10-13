@@ -122,6 +122,77 @@
     }
     .kfhb-note-badge{position:absolute;top:3px;right:3px;width:7px;height:7px;background:#16a34a;border-radius:50%;display:none;}
     #kf-toast-global{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:10060;max-width:92vw;text-align:center;}
+    /* Form tamamlama: boş maddeler */
+    .kf-row-empty td{background:#fef9c3!important;}
+    .kf-row-empty .kf-rn{color:#b45309!important;font-weight:800;}
+    /* Satır fotoğraf hücresi */
+    .kf-ph-cell{border-bottom:1px solid #f0f0f0;text-align:center;cursor:pointer;font-size:12px;color:#d1d5db;user-select:none;touch-action:manipulation;}
+    .kf-ph-cell:not(.has){filter:grayscale(1);opacity:.28;}
+    .kf-ph-cell:hover{background:#f5f3ff!important;color:#7c3aed;filter:none;opacity:1;}
+    /* Üst bar butonları sığmazsa yatay kaydırılsın — sağdaki bağlantı/çıkış alanı ekrandan taşmasın */
+    #kf-header-bar,#pf-header-bar{min-width:0;overflow-x:auto;scrollbar-width:none;}
+    #kf-header-bar::-webkit-scrollbar,#pf-header-bar::-webkit-scrollbar{display:none;}
+    .kf-ph-cell.has{color:#7c3aed;font-weight:800;}
+    /* Fotoğraf modalı */
+    .kxph-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10040;display:none;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;}
+    .kxph-box{background:#fff;border-radius:14px;width:min(860px,97vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.25);overflow:hidden;}
+    .kxph-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 18px 8px;}
+    .kxph-title{font-size:15px;font-weight:800;color:#111827;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .kxph-x{background:#f3f4f6;border:none;border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;flex-shrink:0;}
+    .kxph-grid{flex:1;min-height:120px;overflow-y:auto;padding:6px 18px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;align-content:start;-webkit-overflow-scrolling:touch;}
+    .kxph-item{position:relative;border:1.5px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#f9fafb;}
+    .kxph-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;cursor:zoom-in;background:#f3f4f6;}
+    .kxph-ph{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:#9ca3af;padding:8px;box-sizing:border-box;}
+    .kxph-cap{font-size:10px;font-weight:700;color:#4b5563;padding:5px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .kxph-del{position:absolute;top:5px;right:5px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(220,38,38,0.92);color:#fff;font-size:15px;cursor:pointer;line-height:1;touch-action:manipulation;}
+    .kxph-badge{position:absolute;top:6px;left:6px;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:rgba(17,24,39,0.75);color:#fff;}
+    .kxph-empty{grid-column:1/-1;text-align:center;color:#9ca3af;font-size:13px;padding:30px 0;font-style:italic;}
+    .kxph-btns{display:flex;gap:8px;align-items:center;padding:10px 18px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid #e5e7eb;}
+    .kxph-btn{border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .kxph-cam{background:#7c3aed;color:#fff;} .kxph-gal{background:#ede9fe;color:#5b21b6;} .kxph-close{background:#f3f4f6;color:#374151;}
+    .kxlb{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10070;display:none;align-items:center;justify-content:center;cursor:zoom-out;}
+    .kxlb img{max-width:96vw;max-height:94vh;object-fit:contain;}
+    @media(max-width:768px){.kxph-overlay{align-items:flex-end;padding:0;}.kxph-box{width:100%;border-radius:16px 16px 0 0;}.kxph-grid{grid-template-columns:repeat(2,1fr);}}
+    /* PDF kalite belgesi */
+    #kf-print{display:none;}
+    @media print{
+      @page{size:A4;margin:11mm;}
+      body.kf-printing > *:not(#kf-print){display:none!important;}
+      body.kf-printing #kf-print{display:block!important;}
+      body.kf-printing, html:has(body.kf-printing){height:auto!important;overflow:visible!important;background:#fff!important;}
+    }
+    .kp{color:#111827;font-size:10pt;line-height:1.35;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .kp-hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #dc2626;padding-bottom:6px;margin-bottom:10px;}
+    .kp-logo{font-size:26pt;font-weight:900;color:#dc2626;line-height:1;letter-spacing:-.02em;}
+    .kp-sub{font-size:7pt;font-weight:600;color:#6b7280;letter-spacing:.14em;text-transform:uppercase;}
+    .kp-doc{text-align:right;} .kp-doc-t{font-size:13pt;font-weight:800;} .kp-doc-s{font-size:8pt;color:#6b7280;}
+    .kp-info{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #d1d5db;border-radius:6px;overflow:hidden;margin-bottom:8px;}
+    .kp-info div{padding:5px 8px;border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;}
+    .kp-info b{display:block;font-size:6.5pt;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+    .kp-info span{font-size:9.5pt;font-weight:700;}
+    .kp-sum{display:flex;gap:6px;margin-bottom:10px;}
+    .kp-sum div{flex:1;border:1px solid #e5e7eb;border-radius:6px;padding:4px 6px;text-align:center;}
+    .kp-sum b{display:block;font-size:13pt;font-weight:900;} .kp-sum span{font-size:6.5pt;color:#6b7280;font-weight:700;text-transform:uppercase;}
+    .kp-tbl{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:10px;}
+    .kp-tbl th{background:#dc2626;color:#fff;text-align:left;padding:4px 6px;font-size:7.5pt;}
+    .kp-tbl td{border-bottom:1px solid #e5e7eb;padding:3px 6px;vertical-align:top;}
+    .kp-tbl tr{break-inside:avoid;page-break-inside:avoid;}
+    .kp-tbl thead{display:table-header-group;}
+    .kp-g td{background:#fef2f2;color:#dc2626;font-weight:800;font-size:7.5pt;text-transform:uppercase;letter-spacing:.05em;}
+    .kp-no td{background:#fee2e2;} .kp-no .kp-res{color:#dc2626;}
+    .kp-kod{white-space:nowrap;font-weight:700;color:#374151;} .kp-res{font-weight:800;white-space:nowrap;} .kp-f{white-space:nowrap;color:#7c3aed;font-weight:700;}
+    .kp-empty{color:#d97706;}
+    .kp-h2{font-size:10pt;font-weight:800;margin:10px 0 5px;border-bottom:1.5px solid #e5e7eb;padding-bottom:3px;break-after:avoid;}
+    .kp-note{padding:3px 8px;margin-bottom:3px;border-left:3px solid #dc2626;background:#fff1f1;font-size:9pt;break-inside:avoid;}
+    .kp-note.r{border-left-color:#2563eb;background:#eff6ff;}
+    .kp-ph{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .kp-fig{border:1px solid #d1d5db;border-radius:6px;overflow:hidden;break-inside:avoid;page-break-inside:avoid;}
+    .kp-fig img{width:100%;height:68mm;object-fit:contain;background:#f9fafb;display:block;}
+    .kp-fig .kp-noimg{height:30mm;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:8pt;}
+    .kp-fig figcaption{font-size:7.5pt;padding:3px 6px;border-top:1px solid #e5e7eb;}
+    .kp-sign{display:flex;gap:30px;margin-top:22px;break-inside:avoid;}
+    .kp-sign div{flex:1;border-top:1px solid #9ca3af;padding-top:4px;font-size:8pt;color:#4b5563;}
+    .kp-foot{margin-top:10px;font-size:7pt;color:#9ca3af;text-align:right;}
   </style>
 
  </head>
@@ -172,6 +243,9 @@
         <button onclick="handleFormAction('save-as')" class="kfhb kfhb-org" title="Farklı Kaydet"><i data-lucide="copy" class="w-4 h-4"></i><span class="kfhb-lbl">Farklı</span></button>
         <button onclick="handleFormAction('load')" class="kfhb kfhb-blu" title="Yükle"><i data-lucide="upload" class="w-4 h-4"></i><span class="kfhb-lbl">Yükle</span></button>
         <button onclick="handleFormAction('notes')" class="kfhb kfhb-grn" title="Not" style="position:relative;"><i data-lucide="sticky-note" class="w-4 h-4"></i><span class="kfhb-lbl">Not</span><span id="kf-note-badge" class="kfhb-note-badge"></span></button>
+        <button onclick="kxPhotoOpen(null)" class="kfhb kfhb-pur" title="Fotoğraflar"><i data-lucide="camera" class="w-4 h-4"></i><span class="kfhb-lbl">Foto</span></button>
+        <button id="kf-status-btn" onclick="kfStatusClick()" class="kfhb" style="display:none;background:#f59e0b;color:#fff;" title="Form durumu"></button>
+        <button onclick="kfPrintCurrent()" class="kfhb kfhb-blu" title="PDF kalite belgesi"><i data-lucide="printer" class="w-4 h-4"></i><span class="kfhb-lbl">PDF</span></button>
         <div style="position:relative;">
           <button id="model-select-btn" onclick="toggleModelDropdown()" class="kfhb kfhb-tel" title="Model Seç">
             <i data-lucide="filter" class="w-4 h-4"></i><span class="kfhb-lbl" id="model-select-label">Model</span>
@@ -253,6 +327,9 @@
         <button onclick="handleFormAction('save-as')" class="kfhb kfhb-org" title="Farklı Kaydet"><i data-lucide="copy" class="w-4 h-4"></i><span class="kfhb-lbl">Farklı</span></button>
         <button onclick="handleFormAction('load')" class="kfhb kfhb-blu" title="Yükle"><i data-lucide="upload" class="w-4 h-4"></i><span class="kfhb-lbl">Yükle</span></button>
         <button onclick="handleFormAction('notes')" class="kfhb kfhb-grn" title="Not" style="position:relative;"><i data-lucide="sticky-note" class="w-4 h-4"></i><span class="kfhb-lbl">Not</span><span id="pf-note-badge" class="kfhb-note-badge"></span></button>
+        <button onclick="kxPhotoOpen(null)" class="kfhb kfhb-pur" title="Fotoğraflar"><i data-lucide="camera" class="w-4 h-4"></i><span class="kfhb-lbl">Foto</span></button>
+        <button id="pf-status-btn" onclick="kfStatusClick()" class="kfhb" style="display:none;background:#f59e0b;color:#fff;" title="Form durumu"></button>
+        <button onclick="kfPrintCurrent()" class="kfhb kfhb-blu" title="PDF kalite belgesi"><i data-lucide="printer" class="w-4 h-4"></i><span class="kfhb-lbl">PDF</span></button>
         <div style="position:relative;">
           <button id="project-select-btn" onclick="toggleProjectDropdown()" class="kfhb kfhb-tel" title="Proje Seç">
             <i data-lucide="filter" class="w-4 h-4"></i><span class="kfhb-lbl" id="project-select-label">Proje</span>
@@ -271,6 +348,7 @@
         <button onclick="rpExportPDF()" class="kfhb kfhb-blu" title="PDF olarak indir"><i data-lucide="file-text" class="w-4 h-4"></i><span class="kfhb-lbl">PDF</span></button>
       </div>
       <div class="flex items-center gap-2 shrink-0">
+        <span id="kx-net" style="display:none;font-size:11px;font-weight:700;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:7px;padding:4px 8px;white-space:nowrap;"></span>
         <button onclick="hardRefreshApp()" title="Uygulamayı Yenile (Hard)" style="padding:6px 10px;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;color:#6b7280;font-size:18px;cursor:pointer;line-height:1;touch-action:manipulation;" onmouseenter="this.style.background='#f3f4f6'" onmouseleave="this.style.background='#f9fafb'">⟳</button>
         <div id="auth-ui" class="flex items-center gap-3"></div>
       </div>
@@ -314,6 +392,27 @@
       </div>
     </div>
   </div>
+  <!-- Fotoğraf modalı — page-content dışında -->
+  <div id="kxph-overlay" class="kxph-overlay" onclick="if(event.target===this)kxPhotoClose()">
+    <div class="kxph-box">
+      <div class="kxph-head">
+        <div id="kxph-title" class="kxph-title">📷 Fotoğraflar</div>
+        <button type="button" class="kxph-x" onclick="kxPhotoClose()">✕</button>
+      </div>
+      <div id="kxph-grid" class="kxph-grid"></div>
+      <div class="kxph-btns">
+        <button type="button" class="kxph-btn kxph-cam kxph-edit" onclick="kxPhotoPick(true)">📸 Kamera</button>
+        <button type="button" class="kxph-btn kxph-gal kxph-edit" onclick="kxPhotoPick(false)">🖼️ Galeri</button>
+        <span style="flex:1;"></span>
+        <button type="button" class="kxph-btn kxph-close" onclick="kxPhotoClose()">Kapat</button>
+      </div>
+    </div>
+  </div>
+  <div id="kx-lightbox" class="kxlb" onclick="this.style.display='none'"><img id="kx-lightbox-img" alt=""></div>
+  <input type="file" id="kxph-file-cam" accept="image/*" capture="environment" style="display:none">
+  <input type="file" id="kxph-file-gal" accept="image/*" multiple style="display:none">
+  <!-- PDF kalite belgesi — sadece yazdırırken görünür -->
+  <div id="kf-print"></div>
   <div id="kf-toast-global"></div>
   <script>
   let currentPage = 'kalite-formu';
@@ -502,6 +601,10 @@
     });
     if (!r.ok) throw new Error(await r.text());
   }
+  // PostgREST "in" filtresi — değerler tırnaklı ve URL-kodlu (virgül/boşluk içeren kodlar bozulmasın)
+  function sbInList(values) {
+    return encodeURIComponent('in.(' + values.map(v => '"' + String(v).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"').join(',') + ')');
+  }
   async function sbDel(tbl, filter) {
     const r = await _sbFetch(SB_URL + '/rest/v1/' + tbl + '?' + filter, { method: 'DELETE', headers: sbH() });
     if (!r.ok) throw new Error(await r.text());
@@ -534,10 +637,33 @@
   function khTC() { return KH_FIXED.length + mxCols().length; }
   function khMVal(mid, ri) { return ((currentPage === 'proje-havuzu' ? PH.assignments : KH.assignments)[mid] || {})[ri] || ''; }
   function khMValSet(mid, ri, val) {
-    const o = (currentPage === 'proje-havuzu') ? PH.assignments : KH.assignments;
+    const isPH = currentPage === 'proje-havuzu';
+    const o = isPH ? PH.assignments : KH.assignments;
     if (!o[mid]) o[mid] = {};
+    val = String(val || '').trim();
+    const had = !!o[mid][ri];
+    if (val === (o[mid][ri] || '')) return;
     if (val) o[mid][ri] = val; else delete o[mid][ri];
-    if (currentPage === 'proje-havuzu') PH._dirty = true; else KH._dirty = true;
+    // Kaldırılan atamayı kaydet — yoksa senkron sunucudakiyle birleştirip geri getirir
+    const kod = KH.paramData[ri]?.[0];
+    if (kod) {
+      if (!val && had) (isPH ? phAddDeletedAtama : khAddDeletedAtama)(mid, [kod]);
+      else if (val) (isPH ? _phDeletedAtama : _khDeletedAtama)[mid]?.delete(kod);
+    }
+    if (isPH) PH._dirty = true; else KH._dirty = true;
+  }
+  // Parametre (sabit sütun) hücresi yaz — KOD değişirse eski kod silinmiş sayılır
+  function khSetFixed(ri, ci, v) {
+    v = String(v ?? '');
+    if (ci === 0) v = v.trim();
+    const old = KH.paramData[ri][ci] || '';
+    if (old === v) return;
+    if (ci === 0) {
+      if (old) khAddDeletedKodlar([old]);
+      if (v) _khDeletedKodlar.delete(v);
+    }
+    KH.paramData[ri][ci] = v;
+    KH._dirty = true;
   }
   function khEsc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function khToast(msg, dur) {
@@ -598,7 +724,7 @@
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:18px;text-align:center;">
         <div style="font-size:56px;">📡</div>
         <div style="font-size:20px;font-weight:800;color:#dc2626;">İnternet Bağlantısı Yok</div>
-        <div style="font-size:14px;color:#6b7280;max-width:320px;">KaliteX çevrimdışı çalışmaz. Lütfen internet bağlantınızı kontrol edip sayfayı yenileyin.</div>
+        <div style="font-size:14px;color:#6b7280;max-width:340px;">Bu cihazda henüz kayıtlı havuz verisi yok. İlk açılış için internet gerekli; bir kez açıldıktan sonra KaliteX çevrimdışı da çalışır.</div>
         <button onclick="location.reload()" style="background:#dc2626;color:#fff;border:none;padding:10px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🔄 Yenile</button>
       </div>`;
   }
@@ -606,8 +732,17 @@
   async function khInit() {
     if (KH._ready) return;
 
-    // İnternet yoksa blokla — offline mod yok
+    // Çevrimdışı: son başarılı yüklemenin cihazdaki kopyasıyla aç (havuz salt okunur)
+    const useCache = () => {
+      if (!khLoadFromCache()) return false;
+      KH._ready = true; KH._offline = true;
+      khSyncStatus('offline');
+      const at = KH._cacheAt ? new Date(KH._cacheAt).toLocaleString('tr-TR') : '?';
+      kfToast('📴 Çevrimdışı — ' + at + ' tarihli kayıtlı havuz verisi kullanılıyor');
+      return true;
+    };
     if (!navigator.onLine) {
+      if (useCache()) return;
       khShowOfflineBlock();
       khSyncStatus('offline');
       return;
@@ -621,6 +756,8 @@
       console.log('[KaliteX] Supabase\'den yüklendi ✓');
     } catch(e) {
       KH._ready = false;
+      // Bağlantı var görünüyor ama sunucuya ulaşılamıyor (zayıf Wi-Fi vb.) → önbellek
+      if (useCache()) return;
       // 503 zaten _sbFetch içinde retry edildi ve yine de hata geldiyse bildir
       const msg = String(e.message || e);
       if (msg.includes('503') || msg.toLowerCase().includes('paused') || msg.toLowerCase().includes('project')) {
@@ -691,17 +828,39 @@
     };
   }
 
-  async function khLoadFromSupabase() {
-    // Önce belleği temizle — eski / fazla satırlar kalmasın
-    KH.paramData = [];
-    for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
-    KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
+  // Proje atamaları KH satır indeksine bağlı. KH satırları yeniden kurulmadan önce
+  // atamaları KOD listesine çevir, sonra yeni indekslere geri eşle.
+  function phSnapshotKodlar() {
+    const snap = {};
+    for (const [pid, obj] of Object.entries(PH.assignments || {})) {
+      snap[pid] = Object.keys(obj).map(ri => KH.paramData[+ri]?.[0]).filter(Boolean);
+    }
+    return snap;
+  }
+  function phRestoreKodlar(snap) {
+    const kodIdx = {};
+    for (let ri = 0; ri < KH.TOTAL_ROWS; ri++) { const k = KH.paramData[ri]?.[0]; if (k) kodIdx[k] = ri; }
+    for (const [pid, kodlar] of Object.entries(snap)) {
+      const obj = {};
+      kodlar.forEach(k => { if (kodIdx[k] !== undefined) obj[kodIdx[k]] = 'X'; });
+      PH.assignments[pid] = obj;
+    }
+  }
 
+  async function khLoadFromSupabase() {
     const [paramsRaw, atamaList] = await Promise.all([
       sbGetAll('kalite_parametreleri', 'order=id.asc'),
       sbGetAll('model_atama', 'select=model_id,parametre_kod&order=model_id,parametre_kod')
     ]);
     const params = khApplyKodOrder(paramsRaw);
+
+    const phSnap = phSnapshotKodlar();
+
+    // Belleği sunucu verisiyle yeniden kur (veri geldikten sonra — hata olursa eldeki kalsın)
+    KH.TOTAL_ROWS = Math.max(500, params.length + 50); // 500'den fazla parametre gizlenmesin
+    KH.paramData = [];
+    for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
+    KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
     const kodIdx = {};
     params.forEach((p, i) => {
       kodIdx[p.kod] = i;
@@ -712,7 +871,71 @@
       const ri = kodIdx[a.parametre_kod];
       if (ri !== undefined && KH.assignments[a.model_id] !== undefined) KH.assignments[a.model_id][ri] = 'X';
     });
+    phRestoreKodlar(phSnap);
+    KH._offline = false;
+    khCacheSave();
     console.log(`[KaliteX] Supabase yuklendi: ${params.length} parametre, ${atamaList.length} atama`);
+  }
+
+  // ── Çevrimdışı önbellek (localStorage) ─────────────────────────────────────
+  // Satır indeksleri değil KOD saklanır — yeniden kurulumda indeksler değişebilir
+  const KX_CACHE_KH = 'kx_cache_kh', KX_CACHE_PH = 'kx_cache_ph';
+  function khCacheSave() {
+    try {
+      const params = [];
+      for (let ri = 0; ri < KH.TOTAL_ROWS; ri++) {
+        const r = KH.paramData[ri];
+        if (r && r[0]) params.push(r.slice(0, KH_FIXED.length));
+      }
+      const asg = {};
+      for (const [mid, obj] of Object.entries(KH.assignments)) {
+        asg[mid] = Object.keys(obj).map(ri => KH.paramData[+ri]?.[0]).filter(Boolean);
+      }
+      localStorage.setItem(KX_CACHE_KH, JSON.stringify({ at: new Date().toISOString(), params, asg }));
+    } catch (e) { console.warn('[KaliteX] Havuz önbelleği yazılamadı:', e.message || e); }
+  }
+  function khLoadFromCache() {
+    let c = null;
+    try { c = JSON.parse(localStorage.getItem(KX_CACHE_KH) || 'null'); } catch (e) {}
+    if (!c || !Array.isArray(c.params) || !c.params.length) return false;
+    const phSnap = phSnapshotKodlar();
+    KH.TOTAL_ROWS = Math.max(500, c.params.length + 50);
+    KH.paramData = [];
+    for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
+    KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
+    const kodIdx = {};
+    c.params.forEach((p, i) => { KH.paramData[i] = p.slice(); kodIdx[p[0]] = i; });
+    for (const [mid, kodlar] of Object.entries(c.asg || {})) {
+      if (!KH.assignments[mid]) continue;
+      kodlar.forEach(k => { if (kodIdx[k] !== undefined) KH.assignments[mid][kodIdx[k]] = 'X'; });
+    }
+    phRestoreKodlar(phSnap);
+    KH._cacheAt = c.at;
+    return true;
+  }
+  function phCacheSave() {
+    try { localStorage.setItem(KX_CACHE_PH, JSON.stringify({ at: new Date().toISOString(), projects: PH_PROJECTS, asg: phSnapshotKodlar() })); }
+    catch (e) { console.warn('[KaliteX] Proje önbelleği yazılamadı:', e.message || e); }
+  }
+  function phLoadFromCache() {
+    let c = null;
+    try { c = JSON.parse(localStorage.getItem(KX_CACHE_PH) || 'null'); } catch (e) {}
+    if (!c || !Array.isArray(c.projects)) return false;
+    PH_PROJECTS = c.projects;
+    PH.assignments = {};
+    PH_PROJECTS.forEach(p => { PH.assignments[p.id] = {}; });
+    phRestoreKodlar(c.asg || {});
+    phUpdatePageContents();
+    phRebuildSidebar();
+    phRebuildProjectDropdown();
+    PH._ready = true;
+    return true;
+  }
+  // Çevrimdışıyken havuz düzenlenemez (kayıt yapılamaz, düzenleme kaybolur)
+  function khCanEdit() {
+    if (!isEditor()) return false;
+    if (!navigator.onLine || KH._offline) { khToast('📴 Çevrimdışı — havuz salt okunur', 2500); return false; }
+    return true;
   }
 
   let _khSyncing = false;
@@ -735,7 +958,9 @@
 
       // ── ADIM 1: Parametreleri Merge et ve UPSERT et ───────────────────────────
       // Local satır sırasını koru — yeni eklenen maddeler en alta gitmesin
-      const deletedKodlar = khGetDeletedKodlar();
+      // Yerelde hâlâ bir satırda duran kod silinmez (ör. yeniden yazıldıysa)
+      const presentKodlar = new Set(KH.paramData.slice(0, KH.TOTAL_ROWS).map(r => r && r[0]).filter(Boolean));
+      const deletedKodlar = khGetDeletedKodlar().filter(k => !presentKodlar.has(k));
       const deletedSet = new Set(deletedKodlar);
       const serverReal = serverParams.filter(p => p.kod !== KH_ORDER_KOD);
       const serverOrderRow = serverParams.find(p => p.kod === KH_ORDER_KOD);
@@ -785,8 +1010,11 @@
       // ── ADIM 2: Kasıtlı silinen parametreleri Supabase'den sil ───────────────
       // "local'de olmayan her şeyi sil" YERİNE sadece bu cihazda açıkça silinen
       // kodları sil. Bu sayede diğer cihazın eklediği veriler korunur.
-      if (deletedKodlar.length > 0 && deletedKodlar.length <= 300) {
-        await sbDel('kalite_parametreleri', 'kod=in.(' + deletedKodlar.join(',') + ')');
+      for (let i = 0; i < deletedKodlar.length; i += 100) {
+        const chunk = deletedKodlar.slice(i, i + 100);
+        await sbDel('kalite_parametreleri', 'kod=' + sbInList(chunk));
+        // Silinen parametrelerin proje atamaları da yetim kalmasın
+        try { await sbDel('proje_atama', 'parametre_kod=' + sbInList(chunk)); } catch (e) { /* tablo yoksa */ }
       }
 
       // ── ADIM 3: Model atamalarını Merge et ve yaz ─────────────────────────────
@@ -797,7 +1025,9 @@
         serverAtamaByModel.get(a.model_id).add(a.parametre_kod);
       });
 
-      // Her model için: server atamaları ∪ local atamaları → kayıp olmaz
+      // Her model için: server atamaları ∪ local atamaları → kayıp olmaz.
+      // Sadece FARK yazılır (eskiden model başına hepsi silinip yeniden yazılıyordu —
+      // arada hata olursa o modelin tüm atamaları sunucudan kayboluyordu).
       for (const [mid, obj] of Object.entries(KH.assignments)) {
         const localKodlar = new Set();
         for (const ri of Object.keys(obj)) {
@@ -805,18 +1035,17 @@
           if (kod) localKodlar.add(kod);
         }
         const serverKodlar = serverAtamaByModel.get(mid) || new Set();
-        // Birleşim: her iki cihazın atamalarını koru
         const merged = new Set([...serverKodlar, ...localKodlar]);
-        // Bu modelde kasıtlı kaldırılanları çıkar
-        const deletedAtama = khGetDeletedAtama(mid);
-        deletedAtama.forEach(k => merged.delete(k));
+        // Bu modelde kasıtlı kaldırılanları ve silinen parametreleri çıkar
+        khGetDeletedAtama(mid).forEach(k => merged.delete(k));
+        deletedKodlar.forEach(k => merged.delete(k));
 
-        await sbDel('model_atama', 'model_id=eq.' + mid);
-        if (merged.size > 0) {
-          const rows = [...merged].map(kod => ({ model_id: mid, parametre_kod: kod }));
-          for (let i = 0; i < rows.length; i += 200)
-            await sbPost('model_atama', rows.slice(i, i + 200));
-        }
+        const toAdd = [...merged].filter(k => !serverKodlar.has(k));
+        const toDel = [...serverKodlar].filter(k => !merged.has(k));
+        for (let i = 0; i < toAdd.length; i += 200)
+          await sbPost('model_atama', toAdd.slice(i, i + 200).map(kod => ({ model_id: mid, parametre_kod: kod })));
+        for (let i = 0; i < toDel.length; i += 100)
+          await sbDel('model_atama', 'model_id=eq.' + encodeURIComponent(mid) + '&parametre_kod=' + sbInList(toDel.slice(i, i + 100)));
       }
 
       // ── ADIM 4: Merge edilmiş veriyi tekrar çek → belleği güncelle ──────────
@@ -848,11 +1077,31 @@
     el.textContent = map[s] || ''; el.style.color = col[s] || '#6b7280';
   }
 
+  // Kayıt öncesi güvenlik kontrolleri: mükerrer KOD (upsert'te biri ezilir) ve toplu silme onayı
+  function khPreSaveCheck() {
+    const seen = new Map(), dups = new Set();
+    for (let ri = 0; ri < KH.TOTAL_ROWS; ri++) {
+      const k = KH.paramData[ri]?.[0];
+      if (!k) continue;
+      if (seen.has(k)) dups.add(k); else seen.set(k, ri);
+    }
+    if (dups.size) {
+      khToast('⛔ Aynı KOD birden fazla satırda: ' + [...dups].slice(0, 5).join(', ') + ' — düzeltip tekrar kaydedin', 6000);
+      return false;
+    }
+    const del = khGetDeletedKodlar().filter(k => !seen.has(k));
+    if (del.length && !window.confirm(del.length + ' parametre veritabanından KALICI olarak silinecek'
+        + ' (model/proje atamalarıyla birlikte):\n\n' + del.slice(0, 15).join(', ') + (del.length > 15 ? ' …' : '')
+        + '\n\nDevam edilsin mi?')) return false;
+    return true;
+  }
+
   async function khSave() {
     if (currentPage === 'proje-havuzu') { await phSave(); return; }
     if (!navigator.onLine) { khToast('⚠️ İnternet yok — kayıt yapılamaz', 3000); khSyncStatus('offline'); return; }
     if (_khSyncing) { khToast('Kayıt zaten devam ediyor…', 2000); return; }
     if (KH.editCell) khCE();
+    if (!khPreSaveCheck()) return;
     const ok = await khSyncToSupabase();
     if (ok) {
       KH._dirty = false;
@@ -911,6 +1160,7 @@
   };
 
   function khImportCSV() {
+    if (!khCanEdit()) return;
     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.csv,.txt';
     inp.onchange = () => {
       const f = inp.files[0]; if (!f) return;
@@ -929,10 +1179,11 @@
           // Model sütun indekslerini belirle
           const modelCols = {}; // colIdx -> mid
           headers.forEach((h, ci) => { if (KH_CSV_MAP[h]) modelCols[ci] = KH_CSV_MAP[h]; });
+          const phSnap = phSnapshotKodlar(); // satırlar yeniden kuruluyor — proje atamalarını KOD ile koru
           // Veriyi sıfırla
           KH.paramData = [];
           KH_MODELS.forEach(m => { KH.assignments[m.id] = {}; });
-          KH.TOTAL_ROWS = 500;
+          KH.TOTAL_ROWS = Math.max(500, allLines.length + 50);
           for (let r = 0; r < KH.TOTAL_ROWS; r++) KH.paramData.push(new Array(KH_FIXED.length).fill(''));
           // Satırları parse et
           let rowIdx = 0;
@@ -956,6 +1207,7 @@
             });
             rowIdx++;
           }
+          phRestoreKodlar(phSnap);
           khBuildFR(); khVSR(); khSave();
           khToast(`CSV yüklendi: ${rowIdx} parametre ✓`, 2500);
         } catch(err) { alert('CSV okuma hatası: ' + err.message); }
@@ -1066,12 +1318,16 @@
     phRebuildSidebar();
     phRebuildProjectDropdown();
     PH._ready = true;
+    phCacheSave();
     console.log(`[KaliteX] Projeler yuklendi: ${PH_PROJECTS.length} proje, ${atamaList.length} atama`);
   }
 
   async function phEnsureLoaded() {
     await khInit();
-    if (!PH._ready) await phLoadFromSupabase();
+    if (PH._ready) return;
+    if (!navigator.onLine || KH._offline) { phLoadFromCache(); return; }
+    try { await phLoadFromSupabase(); }
+    catch (e) { if (!phLoadFromCache()) throw e; }
   }
 
   async function phSyncToSupabase() {
@@ -1096,11 +1352,13 @@
         const serverKodlar = serverAtamaByProject.get(pid) || new Set();
         const merged = new Set([...serverKodlar, ...localKodlar]);
         phGetDeletedAtama(pid).forEach(k => merged.delete(k));
-        await sbDel('proje_atama', 'project_id=eq.' + encodeURIComponent(pid));
-        if (merged.size > 0) {
-          const rows = [...merged].map(kod => ({ project_id: pid, parametre_kod: kod }));
-          for (let i = 0; i < rows.length; i += 200) await sbPost('proje_atama', rows.slice(i, i + 200));
-        }
+        // Sadece fark yazılır — toplu sil/yeniden yaz arasında hata olursa veri kaybolmasın
+        const toAdd = [...merged].filter(k => !serverKodlar.has(k));
+        const toDel = [...serverKodlar].filter(k => !merged.has(k));
+        for (let i = 0; i < toAdd.length; i += 200)
+          await sbPost('proje_atama', toAdd.slice(i, i + 200).map(kod => ({ project_id: pid, parametre_kod: kod })));
+        for (let i = 0; i < toDel.length; i += 100)
+          await sbDel('proje_atama', 'project_id=eq.' + encodeURIComponent(pid) + '&parametre_kod=' + sbInList(toDel.slice(i, i + 100)));
       }
       await phLoadFromSupabase();
       phClearDeletedAtama();
@@ -1121,7 +1379,7 @@
     if (_phSyncing || _khSyncing) { khToast('Kayıt devam ediyor…', 2000); return; }
     if (KH.editCell) khCE();
     let ok = true;
-    if (KH._dirty) ok = await khSyncToSupabase();
+    if (KH._dirty) { if (!khPreSaveCheck()) return; ok = await khSyncToSupabase(); }
     if (ok && PH._dirty) ok = await phSyncToSupabase();
     if (ok) {
       if (currentPage === 'proje-havuzu') { khBuildFR(); khVSR(); }
@@ -1351,7 +1609,7 @@
 
   // ── Edit ─────────────────────────────────────────────────────
   function khDD(e, ri, ci) {
-    if (!isEditor()) return;
+    if (!khCanEdit()) return;
     if (currentPage === 'proje-havuzu' && ci < KH_FIXED.length) { khToast('Parametre tanımları Kalite Havuzu\'ndan düzenlenir', 2500); return; }
     khCE();
     const cell = e.currentTarget;
@@ -1381,10 +1639,11 @@
     if (!KH.editCell || !KH.editEl) return;
     const { ri, ci, el } = KH.editCell;
     const v = KH.editEl.value;
-    if (ci < KH_FIXED.length) { KH.paramData[ri][ci] = v; KH._dirty = true; }
+    if (ci < KH_FIXED.length) khSetFixed(ri, ci, v);
     else khMValSet(mxCols()[ci - KH_FIXED.length].id, ri, v);
-    el.innerHTML = `<div class="khcv">${khEsc(v)}</div>`;
-    KH.editCell = null; KH.editEl = null; KH._dirty = true;
+    const shown = ci < KH_FIXED.length ? (KH.paramData[ri][ci] || '') : khMVal(mxCols()[ci - KH_FIXED.length].id, ri);
+    el.innerHTML = `<div class="khcv">${khEsc(shown)}</div>`;
+    KH.editCell = null; KH.editEl = null;
   }
 
   function khCA() {
@@ -1413,67 +1672,50 @@
     khToast(`${(maxR-minR+1)*(maxC-minC+1)} hücre kopyalandı`);
   }
 
+  // Hücre yaz (sabit / atama sütunu) — Proje Havuzunda parametre tanımlarına dokunulmaz
+  function khSetCell(r, c, val) {
+    if (c < KH_FIXED.length) { if (currentPage !== 'proje-havuzu') khSetFixed(r, c, val); }
+    else khMValSet(mxCols()[c - KH_FIXED.length].id, r, val);
+  }
+
   function khPaste() {
+    if (!khCanEdit()) return;
     const doIt = rows => {
       if (KH.sel.r1 < 0) return;
       const sR = Math.min(KH.sel.r1, KH.sel.r2), sC = Math.min(KH.sel.c1, KH.sel.c2);
       rows.forEach((row, ri) => row.forEach((val, ci) => {
         const tr = sR + ri, tc = sC + ci;
         if (tr >= KH.TOTAL_ROWS || tc >= khTC()) return;
-        if (tc < KH_FIXED.length) { KH.paramData[tr][tc] = val; KH._dirty = true; }
-        else { khMValSet(mxCols()[tc - KH_FIXED.length].id, tr, val); }
+        khSetCell(tr, tc, String(val).replace(/\r$/, ''));
       }));
-      KH._dirty = true; khVSR(); khToast('Yapıştırıldı');
+      khVSR(); khToast('Yapıştırıldı');
     };
     if (KH.clipboard) { doIt(KH.clipboard.data); return; }
-    navigator.clipboard.readText().then(t => { if (t) doIt(t.split('\n').map(r => r.split('\t'))); }).catch(() => {});
+    navigator.clipboard.readText().then(t => { if (t) doIt(t.replace(/\r?\n$/, '').split(/\r?\n/).map(r => r.split('\t'))); }).catch(() => {});
   }
 
   function khCut() {
+    if (!khCanEdit()) return;
     khCopy();
-    const { r1, c1, r2, c2 } = KH.sel;
-    const minR = Math.min(r1,r2), maxR = Math.max(r1,r2);
-    const minC = Math.min(c1,c2), maxC = Math.max(c1,c2);
-    for (let r = minR; r <= maxR; r++) for (let c = minC; c <= maxC; c++) {
-      if (c < KH_FIXED.length) { KH.paramData[r][c] = ''; KH._dirty = true; }
-      else khMValSet(mxCols()[c - KH_FIXED.length].id, r, '');
-    }
-    KH._dirty = true; khVSR();
-  }
-
-  function khDel() {
     const { r1, c1, r2, c2 } = KH.sel; if (r1 < 0) return;
     const minR = Math.min(r1,r2), maxR = Math.max(r1,r2);
     const minC = Math.min(c1,c2), maxC = Math.max(c1,c2);
+    for (let r = minR; r <= maxR; r++) for (let c = minC; c <= maxC; c++) khSetCell(r, c, '');
+    khVSR();
+  }
 
-    // Kasıtlı silme takibi: KOD sütunu (ci=0) siliniyorsa Supabase'deki kaydı da sil
-    // Model atama sütunu siliniyorsa o modelin atamasını kaldır
-    const deletedKodlar = [];
-    const deletedAtamaByModel = {};
-    const isProje = currentPage === 'proje-havuzu';
+  function khDel() {
+    if (!khCanEdit()) return;
+    const { r1, c1, r2, c2 } = KH.sel; if (r1 < 0) return;
+    const minR = Math.min(r1,r2), maxR = Math.max(r1,r2);
+    const minC = Math.min(c1,c2), maxC = Math.max(c1,c2);
+    // Silme takibi khSetFixed / khMValSet içinde: KOD silinirse parametre,
+    // atama silinirse o modelin/projenin ataması kayıtta sunucudan da kaldırılır.
+    // Önce atama sütunları — KOD silinmeden kod bilgisi okunabilsin
     for (let r = minR; r <= maxR; r++) {
-      for (let c = minC; c <= maxC; c++) {
-        if (c === 0 && KH.paramData[r][0] && !isProje) {
-          deletedKodlar.push(KH.paramData[r][0]);
-        } else if (c >= KH_FIXED.length) {
-          const mid = mxCols()[c - KH_FIXED.length].id;
-          const kod = KH.paramData[r][0];
-          if (kod) {
-            if (!deletedAtamaByModel[mid]) deletedAtamaByModel[mid] = [];
-            deletedAtamaByModel[mid].push(kod);
-          }
-        }
-        if (c < KH_FIXED.length) { if (!isProje) KH.paramData[r][c] = ''; else continue; KH._dirty = true; }
-        else khMValSet(mxCols()[c - KH_FIXED.length].id, r, '');
-      }
+      for (let c = maxC; c >= minC; c--) khSetCell(r, c, '');
     }
-    if (deletedKodlar.length) khAddDeletedKodlar(deletedKodlar);
-    for (const [mid, kodlar] of Object.entries(deletedAtamaByModel)) {
-      if (isProje) phAddDeletedAtama(mid, kodlar);
-      else khAddDeletedAtama(mid, kodlar);
-    }
-
-    KH._dirty = true; khVSR();
+    khVSR();
   }
 
   function khSelAll() { KH.showSel = true; KH.sel = { r1: 0, c1: 0, r2: KH.TOTAL_ROWS-1, c2: khTC()-1 }; khSelUI(); }
@@ -1528,6 +1770,7 @@
 
   // ── Add row (insert above selected row) ────────────────────
   function khAddRow() {
+    if (!khCanEdit()) return;
     if (KH.sel.r1 < 0) {
       khToast('Önce bir satır seçin — yeni satır seçili satırın üstüne eklenir', 3000);
       return;
@@ -1536,14 +1779,17 @@
     KH.TOTAL_ROWS++;
     KH.paramData.splice(insertAt, 0, new Array(KH_FIXED.length).fill(''));
     // Shift assignment row indices for rows at or after insertAt
-    for (const [mid, obj] of Object.entries(KH.assignments)) {
-      const newObj = {};
-      for (const [ri, v] of Object.entries(obj)) {
-        const n = +ri;
-        newObj[n >= insertAt ? n + 1 : n] = v;
+    // (proje atamaları da aynı satır indekslerini kullanır — onlar da kaydırılmalı)
+    [KH.assignments, PH.assignments].forEach(asg => {
+      for (const [mid, obj] of Object.entries(asg)) {
+        const newObj = {};
+        for (const [ri, v] of Object.entries(obj)) {
+          const n = +ri;
+          newObj[n >= insertAt ? n + 1 : n] = v;
+        }
+        asg[mid] = newObj;
       }
-      KH.assignments[mid] = newObj;
-    }
+    });
     KH.sel = { r1: insertAt, c1: KH.sel.c1, r2: insertAt, c2: KH.sel.c2 };
     KH._dirty = true;
     khBuildFR(); khVSR();
@@ -1599,8 +1845,7 @@
       const { r1: selR, c1: selC } = KH.sel;
       const cell = document.querySelector(`.khc[data-ri="${selR}"][data-ci="${selC}"]`);
       if (cell) {
-        if (selC < KH_FIXED.length && currentPage !== 'proje-havuzu') { KH.paramData[selR][selC] = ''; KH._dirty = true; }
-        else if (selC >= KH_FIXED.length) khMValSet(mxCols()[selC - KH_FIXED.length].id, selR, '');
+        // Hücre önceden silinmez — Escape ile vazgeçilirse eski değer korunur
         const k = e.key;
         khDD({ currentTarget: cell, stopPropagation: () => {} }, selR, selC);
         setTimeout(() => { if (KH.editEl) { KH.editEl.value = k; KH.editEl.setSelectionRange(1,1); } }, 0);
@@ -1804,13 +2049,14 @@
             const grupEsc = kfEsc(row[2]);
             html += '<tr class="kf-grup-hdr" data-grup="' + grupEsc + '">'
               + '<td class="kf-rn" style="background:#fef2f2;"></td>'
-              + '<td colspan="6" style="background:#fef2f2;border-bottom:1px solid #fca5a5;padding:0 10px;height:30px;">'
+              + '<td colspan="7" style="background:#fef2f2;border-bottom:1px solid #fca5a5;padding:0 10px;height:30px;">'
               + '<div style="display:flex;align-items:center;justify-content:space-between;">'
               + '<span style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.06em;">' + grupEsc + '</span>'
               + '<button onclick="kfGroupAllEvet(this.closest(\'tr\').dataset.grup)" style="font-size:10px;font-weight:700;color:#16a34a;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:5px;padding:2px 9px;cursor:pointer;font-family:inherit;line-height:1.6;touch-action:manipulation;" title="Bu gruptaki boş T tipi soruları EVET yap (HAYIR/KD değişmez)">\u2713 Tümü EVET</button>'
               + '</div></td></tr>';
           }
-          html += `<tr class="kf-row" data-ri="${ri}">`;
+          const _empty = window._kfShowEmpty && row[6] === 1 && row[0] && !String(row[3] || '').trim();
+          html += `<tr class="kf-row${_empty ? ' kf-row-empty' : ''}" data-ri="${ri}">`;
           html += `<td class="kf-rn">${ri + 1}</td>`;
           for (let ci = 0; ci < 6; ci++) {
             const ro = row[6] === 1 && ci < 3;
@@ -1848,8 +2094,16 @@
               html += `<td class="kf-cell" data-ri="${ri}" data-ci="${ci}" ondblclick="kfDblClick(event,${ri},${ci})"><div class="kf-cv${ctr}">${kfEsc(row[ci])}</div></td>`;
             }
           }
+          // Fotoğraf hücresi — sadece parametre satırları
+          if (row[6] === 1 && row[0]) {
+            const _np = (window.kfPhotos || []).filter(p => p.kod === row[0]).length;
+            html += `<td class="kf-ph-cell${_np ? ' has' : ''}" onclick="kfPhotoOpenRow(${ri})" title="Fotoğraf ekle / gör">📷${_np ? ' ' + _np : ''}</td>`;
+          } else {
+            html += `<td class="kf-ph-cell" style="cursor:default;"></td>`;
+          }
           html += `</tr>`;
         }
+        kfStatusRender();
         return html;
       }
       window.kfBuildRows = kfBuildRows;
@@ -1892,6 +2146,7 @@
         const inp = el.querySelector('input');
         if (!inp) return;
         window.kfData[ri][ci] = inp.value;
+        if (ci === 3) { kfStatusRender(); if (inp.value.trim()) el.closest('tr')?.classList.remove('kf-row-empty'); }
         el.innerHTML = `<div class="kf-cv">${kfEsc(inp.value)}</div>`;
         window.kfEdit = null;
       };
@@ -2002,6 +2257,7 @@
                   <th style="width:120px;">SONUÇ</th>
                   <th style="width:130px;">DURUM</th>
                   <th style="width:160px;">REFERANS</th>
+                  <th style="width:58px;" title="Fotoğraf">📷</th>
                 </tr>
               </thead>
               <tbody id="kf-tbody">
@@ -2230,8 +2486,10 @@
       } else if (s.refresh_token) {
         // Token expire olmuş ama refresh_token var — kullanıcıyı restore et, async yenile
         currentUser = { email: s.email, name: s.name };
+        // Çevrimdışı: oturumu koru (formlar yerel kaydedilebilsin), internet gelince yenilenir
+        if (!navigator.onLine) return;
         authRefreshToken().then(ok => {
-          if (!ok) {
+          if (!ok && navigator.onLine) {
             localStorage.removeItem('kx_editor_session');
             currentUser = null; SB_TOKEN = null;
           }
@@ -2354,6 +2612,7 @@
     if (selLbl) selLbl.textContent = window.kfCurrentProjectLabel;
     window.kfCurrentSaveId = null; window.kfCurrentSaveName = '';
     window.kfNotes = { aksilikler:[], revizeler:[] };
+    kfResetFormExtras();
     const slbl = document.getElementById('pf-save-name');
     if (slbl) slbl.style.display = 'none';
     kfNotesUpdateBadge();
@@ -2411,7 +2670,16 @@
     if (window.kfCurrentSaveId) return true; // Zaten kaydedilmiş = veri var
     const n = window.kfNotes || {};
     if ((n.aksilikler||[]).length || (n.revizeler||[]).length) return true;
-    return window.kfData.some(row => row[3] && String(row[3]).trim());
+    if ((window.kfPhotos || []).length) return true;
+    // K9013 otomatik doldurulur — kullanıcı verisi sayılmaz
+    return window.kfData.some(row => row[3] && String(row[3]).trim() && String(row[0]||'').toUpperCase().trim() !== 'K9013');
+  }
+
+  // Kaybolabilecek form verisi var mı? (kaydedilmemiş yeni form veya kayıtlı formda değişiklik)
+  function kfHasUnsavedWork() {
+    if (!window.kfData || !window.kfData.length) return false;
+    if (window.kfCurrentSaveId) return kfHasUnsavedChanges();
+    return kfFormHasData();
   }
 
   function selectModel(modelId) {
@@ -2474,6 +2742,7 @@
     // Yeni model seçilince kayıt durumu ve notları sıfırla
     window.kfCurrentSaveId = null; window.kfCurrentSaveName = '';
     window.kfNotes = {aksilikler:[],revizeler:[]};
+    kfResetFormExtras();
     const slbl = document.getElementById('kf-save-name');
     if (slbl) slbl.style.display = 'none';
     kfNotesUpdateBadge();
@@ -2497,7 +2766,9 @@
         // Tabloda Referans hücresini güncelle
         const refCell = document.querySelector(`#kf-tbody .kf-row[data-ri="${ri}"] .kf-cell[data-ci="5"] .kf-cv`);
         if (refCell) refCell.textContent = window.kfData[ri][5];
+        document.querySelector(`#kf-tbody .kf-row[data-ri="${ri}"]`)?.classList.remove('kf-row-empty');
       }
+      kfStatusRender();
     }
   };
 
@@ -2730,11 +3001,14 @@
     if (saveBtn) kfNotesBindTap(saveBtn, kfNotesSave);
   }
 
-  function kfPackFormPayload(kfData, kfNotes) {
+  // extra: { status: 'taslak'|'tamamlandi', photos: [{id,kod,path,loc,driveId?,size,w,h,at}] }
+  function kfPackFormPayload(kfData, kfNotes, extra) {
     return {
       _v: 2,
       rows: JSON.parse(JSON.stringify(kfData || [])),
-      notes: kfNotesNormalize(kfNotes)
+      notes: kfNotesNormalize(kfNotes),
+      status: (extra && extra.status) || 'taslak',
+      photos: JSON.parse(JSON.stringify((extra && extra.photos) || []))
     };
   }
 
@@ -2742,17 +3016,94 @@
     if (data && typeof data === 'object' && !Array.isArray(data) && data._v === 2) {
       return {
         rows: JSON.parse(JSON.stringify(data.rows || [])),
-        notes: kfNotesNormalize(data.notes)
+        notes: kfNotesNormalize(data.notes),
+        status: data.status || '',
+        photos: Array.isArray(data.photos) ? JSON.parse(JSON.stringify(data.photos)) : []
       };
     }
     return {
       rows: Array.isArray(data) ? JSON.parse(JSON.stringify(data)) : [],
-      notes: kfNotesNormalize(fallbackNotes)
+      notes: kfNotesNormalize(fallbackNotes),
+      status: '',
+      photos: []
     };
   }
 
   function kfFormGetRows(f) { return kfUnpackFormPayload(f?.data, f?.notes).rows; }
   function kfFormGetNotes(f) { return kfUnpackFormPayload(f?.data, f?.notes).notes; }
+  function kfFormGetStatus(f) { return f?.status || kfUnpackFormPayload(f?.data).status || 'taslak'; }
+  function kfFormGetPhotos(f) { return Array.isArray(f?.photos) ? f.photos : kfUnpackFormPayload(f?.data).photos; }
+
+  // Doldurulma ilerlemesi: parametre satırlarından SONUÇ'u dolu olanlar
+  function kfFormProgress(rows) {
+    const p = (rows || []).filter(r => r && r[6] === 1 && r[0]);
+    const filled = p.filter(r => String(r[3] || '').trim()).length;
+    return { total: p.length, filled, empty: p.length - filled };
+  }
+
+  window.kfPhotos = window.kfPhotos || [];
+  window.kfStatus = window.kfStatus || 'taslak';
+  window._kfPhotoDeletes = [];
+  window._kfShowEmpty = false;
+
+  // Yeni / boş form durumu (model-proje değişimi)
+  function kfResetFormExtras() {
+    window.kfPhotos = [];
+    window.kfStatus = 'taslak';
+    window._kfPhotoDeletes = [];
+    window._kfShowEmpty = false;
+  }
+
+  function kfStatusRender() {
+    const pr = kfFormProgress(window.kfData);
+    const done = window.kfStatus === 'tamamlandi';
+    ['kf-status-btn', 'pf-status-btn'].forEach(id => {
+      const b = document.getElementById(id);
+      if (!b) return;
+      if (!pr.total) { b.style.display = 'none'; return; }
+      b.style.display = '';
+      b.style.background = done ? '#16a34a' : (pr.empty ? '#f59e0b' : '#0284c7');
+      b.innerHTML = done
+        ? '✓<span class="kfhb-lbl">&nbsp;Tamamlandı</span>'
+        : pr.filled + '/' + pr.total + '<span class="kfhb-lbl">&nbsp;Taslak</span>';
+      b.title = done ? 'Tamamlandı — taslağa almak için tıkla' : (pr.empty + ' madde boş — tamamlamak için tıkla');
+    });
+  }
+
+  function kfRebuildTbody() {
+    const tb = document.getElementById('kf-tbody');
+    if (tb && typeof window.kfBuildRows === 'function') tb.innerHTML = window.kfBuildRows();
+    else kfStatusRender();
+  }
+
+  function kfStatusClick() {
+    if (!isEditor()) { kfToast('Salt okunur modda durum değiştirilemez.'); return; }
+    if (!kfRequireModel()) return;
+    const finish = () => {
+      kfStatusRender();
+      if (window.kfCurrentSaveId) kfDoSave(window.kfCurrentSaveName, false);
+      else kfShowSaveModal(false);
+    };
+    if (window.kfStatus === 'tamamlandi') {
+      if (!window.confirm('Form tekrar TASLAK durumuna alınsın mı?')) return;
+      window.kfStatus = 'taslak';
+      finish();
+      return;
+    }
+    const pr = kfFormProgress(window.kfData);
+    if (!pr.empty) { window.kfStatus = 'tamamlandi'; finish(); kfToast('✓ Form tamamlandı'); return; }
+    // Boş maddeleri göster, ilkine kaydır — onay penceresi boyamadan sonra açılsın
+    window._kfShowEmpty = true;
+    kfRebuildTbody();
+    document.querySelector('#kf-tbody .kf-row-empty')?.scrollIntoView({ block: 'center' });
+    setTimeout(() => {
+      if (!window.confirm(pr.empty + ' madde boş (sarı ile işaretlendi).\n\nYine de TAMAMLANDI olarak işaretlensin mi?')) return;
+      window.kfStatus = 'tamamlandi';
+      window._kfShowEmpty = false;
+      kfRebuildTbody();
+      finish();
+    }, 120);
+  }
 
   window.kfNotes = window.kfNotes || {aksilikler:[], revizeler:[]};
 
@@ -2817,16 +3168,11 @@
   let _kfnmSR = null;
   let _kfnmSRSide = null;
   let _kfnmManualStop = false;
-  let _kfnmMicStream = null;
 
   function kfNotesMicStop() {
     _kfnmManualStop = true;
     if (_kfnmSR) { try { _kfnmSR.abort(); } catch (e) {} _kfnmSR = null; }
     _kfnmSRSide = null;
-    if (_kfnmMicStream) {
-      _kfnmMicStream.getTracks().forEach(t => t.stop());
-      _kfnmMicStream = null;
-    }
     document.querySelectorAll('.kfnm-mic.listening').forEach(b => b.classList.remove('listening'));
   }
 
@@ -2854,16 +3200,31 @@
     kfNotesMicStop();
     _kfnmManualStop = false;
 
+    if (!navigator.onLine) {
+      kfNotesStatus('Ses tanıma için internet bağlantısı gerekli.');
+      kfToast('Ses tanıma için internet gerekli.');
+      return;
+    }
+
     const inp = document.getElementById(kfNotesInpId(side));
     const btn = document.getElementById(kfNotesMicId(side));
     const mobile = kfNotesIsMobile();
-    const base = inp ? inp.value.trimEnd() : '';
+    const join = (a, b) => (a && b) ? a + ' ' + b : (a || b);
+    // Kesinleşen metin oturumlar arasında korunur — mobilde tanıma her cümleden
+    // sonra kapanıp yeniden başlar, önceki cümleler silinmemeli
+    let committed = inp ? inp.value.trim() : '';
+    let lastWritten = inp ? inp.value : '';
+    let gotResult = false;
+    let idleSessions = 0;
+    const MAX_IDLE_SESSIONS = 3; // art arda sessiz oturum → otomatik dur (Android bip döngüsünü önler)
 
     if (inp) inp.blur();
 
+    // Masaüstü: izni önceden iste, akışı hemen bırak — mikrofonu tanıma motoru kendisi açar
     if (!mobile && navigator.mediaDevices?.getUserMedia) {
       try {
-        _kfnmMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+        s.getTracks().forEach(t => t.stop());
       } catch (e) {
         kfNotesStatus('Mikrofon izni reddedildi.');
         kfToast('Mikrofon izni gerekli.');
@@ -2880,18 +3241,26 @@
     _kfnmSRSide = side;
 
     sr.onstart = () => {
+      gotResult = false;
       if (btn) btn.classList.add('listening');
       if (inp) inp.placeholder = '🎤 Konuşun…';
       kfNotesStatus('Dinleniyor… (🎤 ile durdurun)');
     };
 
     sr.onresult = (e) => {
-      let chunk = '';
+      if (_kfnmSR !== sr || !inp) return;
+      // Kullanıcı dinleme sırasında kutuya elle yazdıysa onu esas al
+      if (inp.value !== lastWritten) committed = inp.value.trim();
+      let interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        chunk += e.results[i][0].transcript;
+        const t = (e.results[i][0]?.transcript || '').trim();
+        if (!t) continue;
+        if (e.results[i].isFinal) committed = join(committed, t);
+        else interim = join(interim, t);
       }
-      const merged = (base + (base && chunk ? ' ' : '') + chunk.trim()).trimStart();
-      if (inp) inp.value = merged;
+      gotResult = true;
+      idleSessions = 0;
+      inp.value = lastWritten = join(committed, interim);
     };
 
     sr.onend = () => {
@@ -2899,25 +3268,20 @@
       if (inp) {
         inp.placeholder = side === 'a' ? 'Aksiliği yaz, Enter veya Ekle...' : 'Öneriyi yaz, Enter veya Ekle...';
       }
-      if (_kfnmMicStream) {
-        _kfnmMicStream.getTracks().forEach(t => t.stop());
-        _kfnmMicStream = null;
-      }
-      if (!_kfnmManualStop && _kfnmSR === sr) {
-        if (mobile) {
-          setTimeout(() => {
-            if (!_kfnmManualStop && _kfnmSR === sr) {
-              try { sr.start(); } catch (err) { /* mobil yeniden dinle */ }
-            }
-          }, 280);
-          return;
-        }
-        try { sr.start(); return; } catch (e) { /* masaüstü */ }
+      if (!gotResult) idleSessions++;
+      if (!_kfnmManualStop && _kfnmSR === sr && idleSessions < MAX_IDLE_SESSIONS) {
+        setTimeout(() => {
+          if (_kfnmManualStop || _kfnmSR !== sr) return;
+          try { sr.start(); } catch (err) {
+            _kfnmSR = null; _kfnmSRSide = null; kfNotesStatus('');
+          }
+        }, mobile ? 280 : 50);
+        return;
       }
       if (_kfnmSR === sr) {
         _kfnmSR = null;
         _kfnmSRSide = null;
-        kfNotesStatus('');
+        kfNotesStatus(idleSessions >= MAX_IDLE_SESSIONS ? 'Ses algılanmadı, dinleme durdu.' : '');
       }
     };
 
@@ -2927,10 +3291,6 @@
       _kfnmSR = null;
       _kfnmSRSide = null;
       if (btn) btn.classList.remove('listening');
-      if (_kfnmMicStream) {
-        _kfnmMicStream.getTracks().forEach(t => t.stop());
-        _kfnmMicStream = null;
-      }
       const msgs = {
         'not-allowed': 'Mikrofon izni reddedildi.',
         'service-not-allowed': 'HTTPS + Chrome gerekli (http://IP ile çalışmaz).',
@@ -2954,7 +3314,7 @@
 
   function kfShowNotesModal() {
     if (!isEditor()) { kfToast('Salt okunur modda not eklenemez.'); return; }
-    if (currentPage !== 'kalite-formu') { kfToast('Not eklemek için Kalite Formu sayfasına gidin.'); return; }
+    if (currentPage !== 'kalite-formu' && currentPage !== 'proje-formu') { kfToast('Not eklemek için Kalite veya Proje Formu sayfasına gidin.'); return; }
     kfNotesWireEvents();
     const overlay = document.getElementById('kf-notes-overlay');
     if (!overlay) return;
@@ -3147,6 +3507,8 @@
       ['Model',            f.modelLabel || f.modelId || ''],
       ['Kaydedilme',       f.savedAt ? new Date(f.savedAt).toLocaleString('tr-TR') : ''],
       ['Güncelleme',       f.updatedAt ? new Date(f.updatedAt).toLocaleString('tr-TR') : ''],
+      ['Durum',            kfFormGetStatus(f) === 'tamamlandi' ? 'Tamamlandı' : 'Taslak'],
+      ['Fotoğraf',         String(kfFormGetPhotos(f).length)],
       ['Aksilikler',       n.aksilikler.join(' | ') || '—'],
       ['Revize Önerileri', n.revizeler.join(' | ') || '—'],
       [],
@@ -3397,7 +3759,7 @@
           ssId = await kxCreate(H, folderId, title, 'Veri');
           driveByName[title] = ssId; // sonraki iterasyonlarda aynı isimle tekrar oluşturma
         }
-        await kxWrite(H, ssId, 'Veri', rows, 7, 6, 1);
+        await kxWrite(H, ssId, 'Veri', rows, 9, 6, 1);
         log[f.id] = { updatedAt: stamp, fileId: ssId };
         lastSsId = ssId;
         written++;
@@ -3455,13 +3817,16 @@
   // ── Kaydedilmemiş değişiklik tespiti ────────────────────────────────────────
   // kfDoLoad ve kfDoSave sonrası snapshot alınır; ⟳ basılınca karşılaştırılır
   window._kfCleanSnapshot = null;
+  function kfSnapshotStr() {
+    return JSON.stringify({ d: window.kfData || [], n: window.kfNotes || {}, p: (window.kfPhotos || []).map(x => x.id + ':' + x.loc), s: window.kfStatus || 'taslak' });
+  }
   function kfTakeSnapshot() {
-    window._kfCleanSnapshot = JSON.stringify({ d: window.kfData || [], n: window.kfNotes || {} });
+    window._kfCleanSnapshot = kfSnapshotStr();
   }
   function kfHasUnsavedChanges() {
     if (!window.kfCurrentSaveId) return false;
     if (!window._kfCleanSnapshot) return false;
-    return window._kfCleanSnapshot !== JSON.stringify({ d: window.kfData || [], n: window.kfNotes || {} });
+    return window._kfCleanSnapshot !== kfSnapshotStr();
   }
 
   function kfSyncStatus(s) {
@@ -3490,7 +3855,8 @@
 
   // Supabase yazımı sürerken sayfanın erken kapanmasını engelle
   window.addEventListener('beforeunload', function(e) {
-    if (!_kfSavingToCloud) return;
+    const formDirty = (currentPage === 'kalite-formu' || currentPage === 'proje-formu') && kfHasUnsavedWork();
+    if (!_kfSavingToCloud && !_kxArchiving && !formDirty && !KH._dirty && !PH._dirty) return;
     e.preventDefault();
     e.returnValue = '';
   });
@@ -3506,33 +3872,57 @@
         model_id: entry.modelId || '',
         model_label: entry.modelLabel || '',
         saved_at: entry.savedAt,
-        updated_at: new Date().toISOString(),
-        data: kfPackFormPayload(entry.data, entry.notes)
+        updated_at: entry.updatedAt || new Date().toISOString(),
+        data: kfPackFormPayload(entry.data, entry.notes, { status: entry.status, photos: entry.photos })
       }, 'id');
+      kfMarkSynced(entry.id);
       return true;
     } catch(e) { console.warn('[KaliteX] kf_forms UPSERT hatası:', e.message||e); }
     return false;
   }
 
+  // Bir kez Supabase'e yazılmış form işaretlenir: sonradan sunucuda yoksa
+  // başka cihazdan silinmiş demektir, yeniden yüklenmez.
+  function kfMarkSynced(id) {
+    const forms = kfGetForms();
+    const f = forms.find(x => x.id === id);
+    if (f && !f.synced) { f.synced = true; kfSvForms(forms); }
+  }
+
+  // Çevrimdışıyken silinen formlar — bağlantı gelince sunucudan da silinir
+  const KF_DELETED_KEY = 'kf_deleted_ids';
+  function kfGetDeletedIds() { try { return JSON.parse(localStorage.getItem(KF_DELETED_KEY) || '[]'); } catch(e) { return []; } }
+  function kfSetDeletedIds(a) { localStorage.setItem(KF_DELETED_KEY, JSON.stringify(a)); }
+
   // Tek bir formu Supabase'den sil (editor girişi gerekli)
   async function kfSbDeleteForm(id) {
-    if (!isEditor()) return;
+    if (!isEditor()) return false;
     try {
       await sbDel('kf_forms', 'id=eq.' + encodeURIComponent(id));
+      kfSetDeletedIds(kfGetDeletedIds().filter(x => x !== id));
+      return true;
     } catch(e) { console.warn('[KaliteX] kf_forms DELETE hatası:', e.message||e); }
+    return false;
   }
 
   function kfMergeFormRows(rows, local) {
     const merged = {};
-    local.forEach(f => { merged[f.id] = f; });
+    const deleted = new Set(kfGetDeletedIds());
+    const serverIds = new Set(rows.map(r => r.id));
+    // Sunucuda olmayan yerel formlar: daha önce senkronlandıysa başka cihazdan silinmiştir → at
+    local.forEach(f => { if (serverIds.has(f.id) || !f.synced) merged[f.id] = f; });
     rows.forEach(r => {
+      if (deleted.has(r.id)) return;
       const unpacked = kfUnpackFormPayload(r.data);
       const sbEntry = {
         id: r.id, name: r.name,
         modelId: r.model_id, modelLabel: r.model_label,
         savedAt: r.saved_at, updatedAt: r.updated_at,
         data: unpacked.rows,
-        notes: unpacked.notes
+        notes: unpacked.notes,
+        status: unpacked.status || 'taslak',
+        photos: unpacked.photos,
+        synced: true
       };
       const loc = merged[r.id];
       if (!loc) {
@@ -3540,7 +3930,7 @@
       } else {
         const sbTime = new Date(r.updated_at || r.saved_at).getTime();
         const locTime = new Date(loc.updatedAt || loc.savedAt).getTime();
-        merged[r.id] = sbTime > locTime ? sbEntry : loc;
+        merged[r.id] = sbTime > locTime ? sbEntry : Object.assign({}, loc, { synced: true });
       }
     });
     return Object.values(merged).sort((a,b) => new Date(b.savedAt)-new Date(a.savedAt));
@@ -3569,16 +3959,18 @@
       const local = kfGetForms();
       const finalList = kfMergeFormRows(rows, local);
       // Local'de Supabase'den daha yeni veya hiç olmayan → editor ise Supabase'e gönder
+      kfSvForms(finalList);
       if (isEditor()) {
+        // Çevrimdışıyken silinenleri sunucudan da sil
+        for (const id of kfGetDeletedIds()) await kfSbDeleteForm(id);
         const sbTimestamps = new Map(rows.map(r => [r.id, new Date(r.updated_at || r.saved_at).getTime()]));
-        for (const f of local) {
+        for (const f of finalList) {
           const sbTime = sbTimestamps.get(f.id);
           const locTime = new Date(f.updatedAt || f.savedAt).getTime();
           if (sbTime === undefined || locTime > sbTime) await kfSbUpsertForm(f);
         }
       }
-      kfSvForms(finalList);
-      return finalList;
+      return kfGetForms();
     } catch(e) {
       console.warn('[KaliteX] kf_forms sync hatası:', e.message||e);
       return null;
@@ -3657,6 +4049,11 @@
       return;
     }
     if (!kfRequireModel()) return;
+    // Aynı seri no ile ikinci form açılmasın (yanlışlıkla mükerrer kayıt)
+    const curId = window._fnkbForceNew ? null : window.kfCurrentSaveId;
+    const norm = s => String(s || '').trim().toLocaleUpperCase('tr-TR');
+    const dup = kfGetForms().find(f => f.id !== curId && norm(f.name) === norm(name));
+    if (dup && !window.confirm('"' + name + '" adında (seri no) kayıtlı bir form zaten var.\nYine de ayrı bir form olarak kaydedilsin mi?')) return;
     kfDoSave(name, window._fnkbForceNew);
     // Model geçişi bekliyorsa kayıt bitti — şimdi yeni modeli temiz aç
     if (window._kfPendingModelId) {
@@ -3733,7 +4130,9 @@
         ? (window.kfCurrentProjectLabel||'') : (window.kfCurrentModelLabel||''),
       savedAt: now, updatedAt: now,
       data: JSON.parse(JSON.stringify(window.kfData||[])),
-      notes: JSON.parse(JSON.stringify(window.kfNotes||{aksilikler:[],revizeler:[]}))
+      notes: JSON.parse(JSON.stringify(window.kfNotes||{aksilikler:[],revizeler:[]})),
+      status: window.kfStatus || 'taslak',
+      photos: JSON.parse(JSON.stringify(window.kfPhotos || []))
     };
     if (idx >= 0) { entry.savedAt = forms[idx].savedAt || now; forms[idx] = entry; } else forms.push(entry);
     kfSvForms(forms);
@@ -3742,6 +4141,10 @@
     const slbl = document.getElementById(currentPage === 'proje-formu' ? 'pf-save-name' : 'kf-save-name');
     if (slbl) kfSetSaveName(name);
     kfModalClose();
+    // Senkron durum güncellemesi bitti — buradan sonra await güvenli (çağıran model değiştirebilir)
+    const photoDels = window._kfPhotoDeletes || [];
+    window._kfPhotoDeletes = [];
+    await kxPhotoAfterSave(entry, photoDels); // yeni fotoğrafları bu forma bağla, silinenleri kuyruğa al
     // Supabase yazımı bitene kadar kullanıcıyı bilgilendir
     if (!navigator.onLine) {
       kfSyncStatus('offline');
@@ -3757,6 +4160,7 @@
       if (ok) {
         kfSyncStatus('ok');
         kfToast('Form kaydedildi ve Supabase\'e yazildi ✓');
+        kxPhotoProcessQueue().then(kxPhotoQuotaWarn);
       } else {
         kfSyncStatus('error');
         kfToast('Form kaydedildi ama Supabase\'e yazilamadi ⚠️');
@@ -3816,11 +4220,16 @@
         g.forms.forEach(f => {
           const dt = new Date(f.savedAt);
           const ds = dt.toLocaleDateString('tr-TR') + ' ' + dt.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
-          const syncIcon = f.updatedAt ? '🌐' : '📴';
+          const syncIcon = f.synced ? '🌐' : '📴';
+          const _st = kfFormGetStatus(f), _pr = kfFormProgress(kfFormGetRows(f)), _np = kfFormGetPhotos(f).length;
+          const stB = _st === 'tamamlandi'
+            ? ' · <span style="color:#16a34a;font-weight:800;">✓ Tamamlandı</span>'
+            : ' · <span style="color:#d97706;font-weight:800;">Taslak ' + (_pr.total ? Math.round(_pr.filled / _pr.total * 100) : 0) + '%</span>';
+          const phB = _np ? ' · 📷 ' + _np : '';
           const delBtn = isEditor()
             ? `<button class="kfm-del" onclick="event.stopPropagation();kfConfirmDelete('${f.id}')">Sil</button>`
             : '';
-          items += `<div class="kfm-item" onclick="kfDoLoad('${f.id}')"><div class="kfm-item-info"><div class="kfm-item-name">${kfHEsc(f.name)}</div><div class="kfm-item-meta">${syncIcon} ${ds}</div></div>${delBtn}</div>`;
+          items += `<div class="kfm-item" onclick="kfDoLoad('${f.id}')"><div class="kfm-item-info"><div class="kfm-item-name">${kfHEsc(f.name)}</div><div class="kfm-item-meta">${syncIcon} ${ds}${stB}${phB}</div></div>${delBtn}</div>`;
         });
         list += `<div class="kfm-group">
           <div class="kfm-group-hdr" onclick="kfToggleLoadGroup(this)">
@@ -3835,7 +4244,7 @@
     const exportBtn = isEditor()
       ? `<button class="kfm-export" title="Sadece se\u00e7ti\u011finiz QUALITY FORMS klas\u00f6r\u00fcne yazar (dar izin). \u0130lk seferde klas\u00f6r se\u00e7ilir." onclick="kfExportAllForms()">&#128228; D&#305;&#351;ar&#305; Aktar</button>`
       : `<span></span>`;
-    box.innerHTML = `<div class="kfm-title">&#128194; Kay&#305;tl&#305; Formlar <span style="font-size:11px;font-weight:600;color:#6b7280;">(${forms.length})</span></div><div class="kfm-list" style="gap:8px;">${list}</div><div class="kfm-btns" style="justify-content:space-between;">${exportBtn}<button class="kfm-cancel" onclick="kfModalClose()">Kapat</button></div>`;
+    box.innerHTML = `<div class="kfm-title">&#128194; Kay&#305;tl&#305; Formlar <span style="font-size:11px;font-weight:600;color:#6b7280;">(${forms.length})</span></div><div class="kfm-list" style="gap:8px;">${list}</div>${isEditor() ? kxPhotoMeterHtml(forms) : ''}<div class="kfm-btns" style="justify-content:space-between;">${exportBtn}<button class="kfm-cancel" onclick="kfModalClose()">Kapat</button></div>`;
   }
 
   function kfDoLoad(id) {
@@ -3845,6 +4254,9 @@
     window.kfCurrentSaveId = f.id; window.kfCurrentSaveName = f.name;
     window.kfData = JSON.parse(JSON.stringify(kfFormGetRows(f)));
     window.kfNotes = kfFormGetNotes(f);
+    kfResetFormExtras();
+    window.kfPhotos = JSON.parse(JSON.stringify(kfFormGetPhotos(f)));
+    window.kfStatus = kfFormGetStatus(f);
     if (f.modelId && String(f.modelId).startsWith('proje:')) {
       const pid = f.modelId.slice(6);
       window.kfCurrentModel = ''; window.kfCurrentModelLabel = '';
@@ -3878,15 +4290,22 @@
     if (!inp || inp.value.trim() !== expected.name.trim()) { kfToast('Form adı eşleşmiyor.'); return; }
     window._kfDelTarget = null;
     let forms = kfGetForms();
+    const gone = forms.find(f => f.id === id);
     forms = forms.filter(f => f.id !== id);
     kfSvForms(forms);
+    // Fotoğrafları Supabase'den silinmek üzere kuyruğa al (başka form kullanmıyorsa silinir)
+    if (gone) {
+      kxPhotoQueueDelete(kfFormGetPhotos(gone).filter(p => p.loc !== 'drive').map(p => p.path));
+      kfFormGetPhotos(gone).forEach(p => kxIdbDel(p.id).catch(() => {}));
+    }
     if (window.kfCurrentSaveId === id) {
       window.kfCurrentSaveId = null; window.kfCurrentSaveName = '';
-      const slbl = document.getElementById('kf-save-name');
-      if (slbl) slbl.style.display = 'none';
+      ['kf-save-name', 'pf-save-name'].forEach(sid => { const s = document.getElementById(sid); if (s) s.style.display = 'none'; });
     }
-    // Supabase'den de sil (arka planda)
-    if (navigator.onLine) kfSbDeleteForm(id).catch(() => {});
+    // Önce silinenler listesine al — sunucu silmesi başarısız olursa / çevrimdışıysa
+    // form bir sonraki senkronda geri gelmesin, bağlantı gelince sunucudan silinsin
+    kfSetDeletedIds([...new Set([...kfGetDeletedIds(), id])]);
+    if (navigator.onLine) { await kfSbDeleteForm(id); kxPhotoProcessQueue(); }
     kfShowLoadModal();
   }
 
@@ -3935,13 +4354,37 @@
 
   // ── Online olunca otomatik form sync ──────────────────────────────────────
   window.addEventListener('online', () => {
-    console.log('[KaliteX] İnternet bağlantısı geldi, yenileniyor...');
-    kfSbSync().then(result => {
-      if (result) kfToast('☁️ Formlar senkronize edildi ✓');
-    });
-    // Offline ekranı varsa sayfayı yenile
-    location.reload();
+    console.log('[KaliteX] İnternet bağlantısı geldi');
+    // Uygulama hiç yüklenemediyse (çevrimdışı ekranı) sayfayı yenile.
+    // Aksi halde yenileme YAPMA — doldurulmakta olan form kaybolur, senkron da yarıda kalır.
+    if (!KH._ready && !kfHasUnsavedWork()) { location.reload(); return; }
+    kxGoOnline();
   });
+  window.addEventListener('offline', () => { kxNetRender(); kfToast('📴 Çevrimdışı — formlar cihaza kaydedilir, internet gelince yüklenir'); });
+
+  // İnternet geri geldi: oturumu yenile → bekleyen formları ve fotoğrafları yükle → havuzu tazele
+  let _kxGoingOnline = false;
+  async function kxGoOnline() {
+    if (_kxGoingOnline) return;
+    _kxGoingOnline = true;
+    try {
+      kxNetRender();
+      if (currentUser) await authRefreshToken();
+      const result = await kfSbSync();
+      if (result) kfToast('☁️ Formlar senkronize edildi ✓');
+      await kxPhotoProcessQueue();
+      if (KH._offline) {
+        await khRefreshIfNeeded('online');
+        PH._ready = false;
+        await phRefreshIfNeeded('online');
+      }
+    } catch (e) {
+      console.warn('[KaliteX] Çevrimiçi senkron hatası:', e.message || e);
+    } finally {
+      _kxGoingOnline = false;
+      kxNetRender();
+    }
+  }
 
   window.addEventListener('focus', () => {
     const isModelPage = KH_MODELS.some(m => m.id === currentPage);
@@ -4008,6 +4451,9 @@
             const unpacked = kfUnpackFormPayload(updated.data, updated.notes);
             window.kfData  = unpacked.rows;
             window.kfNotes = unpacked.notes;
+            kfResetFormExtras();
+            window.kfPhotos = JSON.parse(JSON.stringify(kfFormGetPhotos(updated)));
+            window.kfStatus = kfFormGetStatus(updated);
             window.kfCurrentSaveName = updated.name;
             const tbody = document.getElementById('kf-tbody');
             if (tbody && typeof window.kfBuildRows === 'function') tbody.innerHTML = window.kfBuildRows();
@@ -4085,7 +4531,7 @@
   // ─────────────────────────────────────────────────────────────────────────
   // RAPOR SAYFASI
   // ─────────────────────────────────────────────────────────────────────────
-  window._rpFilters = { period: 'month', modelId: '', kaynakci: '', montajci: '' };
+  window._rpFilters = { period: 'month', modelId: '', kaynakci: '', montajci: '', status: '' };
   window._rpActiveTab = 'list';
   window._rpForms = [];
 
@@ -4109,6 +4555,7 @@
       if (window._rpFilters.modelId && f.modelId !== window._rpFilters.modelId) return false;
       if (window._rpFilters.kaynakci && rpGetKaynakci(f) !== window._rpFilters.kaynakci) return false;
       if (window._rpFilters.montajci && rpGetMontajci(f) !== window._rpFilters.montajci) return false;
+      if (window._rpFilters.status && kfFormGetStatus(f) !== window._rpFilters.status) return false;
       return true;
     });
   }
@@ -4134,7 +4581,7 @@
     return { evet, hata, hayir: hata, kd, total, graded, passRate,
       kaynakci:  rpGetKaynakci(form),
       montajci:  rpGetMontajci(form),
-      hasAksilik: (form.notes?.aksilikler || []).length > 0 };
+      hasAksilik: kfFormGetNotes(form).aksilikler.length > 0 };
   }
 
   async function rpRenderPage() {
@@ -4185,15 +4632,20 @@
       <div class="rp-wrap page-fade">
         <div class="rp-fbar">
           <div style="display:flex;gap:4px;">
-            <button class="rp-pb${window._rpFilters.period==='week'?' on':''}" onclick="rpSetPeriod('week')">Bu Hafta</button>
-            <button class="rp-pb${window._rpFilters.period==='month'?' on':''}" onclick="rpSetPeriod('month')">Bu Ay</button>
-            <button class="rp-pb${window._rpFilters.period==='3month'?' on':''}" onclick="rpSetPeriod('3month')">3 Ay</button>
+            <button class="rp-pb${window._rpFilters.period==='week'?' on':''}" onclick="rpSetPeriod('week')">Son 7 Gün</button>
+            <button class="rp-pb${window._rpFilters.period==='month'?' on':''}" onclick="rpSetPeriod('month')">Son 30 Gün</button>
+            <button class="rp-pb${window._rpFilters.period==='3month'?' on':''}" onclick="rpSetPeriod('3month')">Son 3 Ay</button>
             <button class="rp-pb${window._rpFilters.period==='all'?' on':''}" onclick="rpSetPeriod('all')">Tümü</button>
           </div>
           <div class="rp-div"></div>
           <select class="rp-sel" onchange="rpSetModel(this.value)"><option value="">Tüm Modeller</option>${mOpts}</select>
           <select class="rp-sel" id="rp-kaysel" onchange="rpSetKaynakci(this.value)"><option value="">Tüm Kaynakçılar</option></select>
           <select class="rp-sel" id="rp-monsel" onchange="rpSetMontajci(this.value)"><option value="">Tüm Montajcılar</option></select>
+          <select class="rp-sel" onchange="rpSetStatus(this.value)">
+            <option value=""${!window._rpFilters.status?' selected':''}>Tüm Durumlar</option>
+            <option value="tamamlandi"${window._rpFilters.status==='tamamlandi'?' selected':''}>Tamamlanan</option>
+            <option value="taslak"${window._rpFilters.status==='taslak'?' selected':''}>Taslak</option>
+          </select>
           <span id="rp-lst" style="font-size:11px;color:#6b7280;font-weight:600;margin-left:auto;"></span>
         </div>
         <div class="rp-kpis" id="rp-kpis"></div>
@@ -4277,10 +4729,10 @@
         :a.total>0?'<span class="rp-bdg rp-bdg-g">TAMAM</span>':'<span class="rp-bdg rp-bdg-b">BOŞ</span>';
       return `<tr onclick="rpShowDetail('${f.id}')">
         <td style="color:#6b7280;">${tarih}</td>
-        <td style="font-weight:600;">${f.modelLabel||'—'}</td>
-        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name||'—'}</td>
-        <td style="white-space:nowrap;">${a.kaynakci||'—'}</td>
-        <td style="white-space:nowrap;">${a.montajci||'—'}</td>
+        <td style="font-weight:600;">${kfHEsc(f.modelLabel||'—')}</td>
+        <td style="max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${kfHEsc(f.name||'—')}${kfFormGetStatus(f)==='tamamlandi'?'':' <span class="rp-bdg rp-bdg-y">Taslak</span>'}${kfFormGetPhotos(f).length?' <span style="font-size:10px;color:#7c3aed;">📷'+kfFormGetPhotos(f).length+'</span>':''}</td>
+        <td style="white-space:nowrap;">${kfHEsc(a.kaynakci||'—')}</td>
+        <td style="white-space:nowrap;">${kfHEsc(a.montajci||'—')}</td>
         <td>${pb}</td><td>${dur}</td>
         <td style="text-align:center;">${a.hasAksilik?'⚠️':''}</td></tr>`;
     }).join('');
@@ -4401,7 +4853,7 @@
     };
 
     panel.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div class="rp-personel-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
         <div>
           <div style="font-size:13px;font-weight:800;color:#dc2626;border-bottom:2px solid #fee2e2;padding-bottom:7px;margin-bottom:12px;">🔥 Kaynakçılar</div>
           ${rpPersonelBlock('Kaynakçı','#dc2626',kayMap,'kaynakci')}
@@ -4474,15 +4926,16 @@
       const d = new Date(f.savedAt||f.updatedAt);
       const tarih = d.toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric'});
       const meta = `${tarih} · ${f.modelLabel||'—'} · ${f.name||'—'}`;
-      (f.notes?.aksilikler||[]).forEach(t=>items.push({type:'a',txt:t,meta,d}));
-      (f.notes?.revizeler||[]).forEach(t=>items.push({type:'r',txt:t,meta,d}));
+      const n = kfFormGetNotes(f);
+      n.aksilikler.forEach(t=>items.push({type:'a',txt:t,meta,d}));
+      n.revizeler.forEach(t=>items.push({type:'r',txt:t,meta,d}));
     });
     items.sort((a,b)=>b.d-a.d);
     if (!items.length) { panel.innerHTML = '<div class="rp-empty">📝 Bu dönemde aksiliği veya revize önerisi olan form yok.</div>'; return; }
     panel.innerHTML = items.map(it=>`
       <div class="rp-ni ${it.type==='a'?'rp-ni-a':'rp-ni-r'}">
-        <div class="rp-ni-m">${it.type==='a'?'⚠️ Aksilik':'🔧 Revize'} · ${it.meta}</div>
-        <div>${it.txt}</div></div>`).join('');
+        <div class="rp-ni-m">${it.type==='a'?'⚠️ Aksilik':'🔧 Revize'} · ${kfHEsc(it.meta)}</div>
+        <div>${kfHEsc(it.txt)}</div></div>`).join('');
   }
 
   function rpShowDetail(id) {
@@ -4491,16 +4944,18 @@
     const tarih = new Date(f.savedAt||f.updatedAt).toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
     const trs = kfFormGetRows(f).filter(r=>r[6]===1&&r[0]).map(r => {
       const s=r[3]||'—'; const c=s==='HAYIR'?'#dc2626':s==='EVET'?'#16a34a':'#6b7280';
-      return `<tr><td style="font-weight:600;color:#374151;white-space:nowrap;">${r[0]}</td><td>${r[1]||''}</td><td style="text-align:center;">${r[2]||''}</td><td style="text-align:center;font-weight:700;color:${c};">${s}</td></tr>`;
+      return `<tr><td style="font-weight:600;color:#374151;white-space:nowrap;">${kfHEsc(r[0])}</td><td>${kfHEsc(r[1]||'')}</td><td style="text-align:center;">${kfHEsc(r[2]||'')}</td><td style="text-align:center;font-weight:700;color:${c};">${kfHEsc(s)}</td></tr>`;
     }).join('');
     const pc2 = a.passRate===null?'#6b7280':a.passRate>=80?'#16a34a':a.passRate>=60?'#d97706':'#dc2626';
-    const aks = (f.notes?.aksilikler||[]).map(t=>`<div style="padding:5px 10px;background:#fff1f1;border-radius:6px;margin-bottom:4px;font-size:12px;color:#991b1b;">⚠️ ${t}</div>`).join('');
-    const rev = (f.notes?.revizeler||[]).map(t=>`<div style="padding:5px 10px;background:#eff6ff;border-radius:6px;margin-bottom:4px;font-size:12px;color:#1e40af;">🔧 ${t}</div>`).join('');
+    const fn = kfFormGetNotes(f);
+    const aks = fn.aksilikler.map(t=>`<div style="padding:5px 10px;background:#fff1f1;border-radius:6px;margin-bottom:4px;font-size:12px;color:#991b1b;">⚠️ ${kfHEsc(t)}</div>`).join('');
+    const rev = fn.revizeler.map(t=>`<div style="padding:5px 10px;background:#eff6ff;border-radius:6px;margin-bottom:4px;font-size:12px;color:#1e40af;">🔧 ${kfHEsc(t)}</div>`).join('');
     const stats = [['%'+(a.passRate??'—'),'Geçme',pc2],[''+a.evet,'EVET','#16a34a'],[''+a.hata,'Hata',a.hata>0?'#dc2626':'#9ca3af'],[''+a.kd,'KD','#6b7280'],[a.kaynakci||'—','Kaynakçı','#374151'],[a.montajci||'—','Montajcı','#374151']]
       .map(([v,l,c])=>`<div style="background:#f9fafb;border-radius:8px;padding:8px 12px;flex:1;min-width:80px;text-align:center;"><div style="font-size:20px;font-weight:900;color:${c};">${v}</div><div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;">${l}</div></div>`).join('');
     document.getElementById('rp-mbox').innerHTML = `
       <div style="background:#dc2626;color:#fff;padding:15px 18px;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-size:14px;font-weight:800;">${f.name||'Form'}</div><div style="font-size:11px;opacity:.8;margin-top:2px;">${f.modelLabel||'—'} · ${tarih}</div></div>
+        <div><div style="font-size:14px;font-weight:800;">${kfHEsc(f.name||'Form')}</div><div style="font-size:11px;opacity:.8;margin-top:2px;">${kfHEsc(f.modelLabel||'—')} · ${tarih} · ${kfFormGetStatus(f)==='tamamlandi'?'✓ Tamamlandı':'Taslak'}</div></div>
+        <button onclick="rpPrintForm('${f.id}')" style="margin-left:auto;margin-right:8px;background:#fff;color:#dc2626;border:none;border-radius:7px;padding:5px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">🖨️ PDF</button>
         <button onclick="rpCloseModal()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:26px;height:26px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
       </div>
       <div style="padding:14px 18px;">
@@ -4531,6 +4986,7 @@
   function rpSetModel(v)     { window._rpFilters.modelId  = v; rpRefresh(); }
   function rpSetKaynakci(v)  { window._rpFilters.kaynakci = v; rpRefresh(); }
   function rpSetMontajci(v)  { window._rpFilters.montajci = v; rpRefresh(); }
+  function rpSetStatus(v)    { window._rpFilters.status   = v; rpRefresh(); }
   function rpSetTab(t) {
     window._rpActiveTab = t;
     document.querySelectorAll('.rp-tab').forEach(b => b.classList.toggle('on', b.getAttribute('onclick') === `rpSetTab('${t}')`) );
@@ -4547,16 +5003,691 @@
         f.modelLabel||'', f.name||'', a.kaynakci, a.montajci,
         a.passRate!==null?'%'+a.passRate:'',
         a.evet, a.hata, a.kd, a.total,
-        (f.notes?.aksilikler||[]).length, (f.notes?.revizeler||[]).length]);
+        kfFormGetNotes(f).aksilikler.length, kfFormGetNotes(f).revizeler.length]);
     });
+    const fname = 'KaliteX_Rapor_' + new Date().toISOString().slice(0,10);
+    // Ger\u00E7ek .xlsx (SheetJS y\u00FCkl\u00FCyse); yoksa Excel'in a\u00E7abildi\u011Fi CSV'ye d\u00FC\u015F
+    if (typeof XLSX !== 'undefined') {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = rows[0].map((h, i) => ({ wch: i === 2 ? 28 : Math.max(10, String(h).length + 2) }));
+      XLSX.utils.book_append_sheet(wb, ws, '\u00D6zet');
+      // Her HAYIR maddesi ayr\u0131 sat\u0131r \u2014 uygunsuzluk listesi
+      const nc = [['Tarih','Model','Form Ad\u0131 / Seri No','KOD','A\u00E7\u0131klama','Grup','Kaynak\u00E7\u0131','Montajc\u0131']];
+      filtered.forEach(f => {
+        const a = rpAnalyzeForm(f);
+        kfFormGetRows(f).filter(r => r[6] === 1 && r[3] === 'HAYIR').forEach(r => {
+          nc.push([new Date(f.savedAt||f.updatedAt).toLocaleDateString('tr-TR'), f.modelLabel||'', f.name||'',
+            r[0]||'', r[1]||'', r[2]||'', a.kaynakci, a.montajci]);
+        });
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(nc), 'Uygunsuzluklar');
+      XLSX.writeFile(wb, fname + '.xlsx');
+      return;
+    }
     const csv = '\uFEFF' + rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-    a.download = 'KaliteX_Rapor_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.download = fname + '.csv';
     a.click(); URL.revokeObjectURL(a.href);
   }
 
   function rpExportPDF() { window.print(); }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // FOTOĞRAF — Supabase Storage (birincil) + Google Drive (arşiv)
+  // Akış: çek → küçült → IndexedDB (çevrimdışı kuyruk) → form kaydedilince Supabase'e yükle.
+  // Alan dolunca eski formların fotoğrafları Drive'a taşınır; Supabase'den ancak
+  // Drive yüklemesi VE form güncellemesi başarılı olduktan sonra silinir.
+  // ═════════════════════════════════════════════════════════════════════════
+  const KX_PHOTO_BUCKET = 'kf-photos';
+  const KX_PHOTO_QUOTA = 1024 * 1024 * 1024;   // Supabase ücretsiz plan: 1 GB
+  const KX_PHOTO_WARN = 0.8;                    // %80'de uyar
+  const KX_PHOTO_ARCHIVE_TARGET = 0.5;          // arşivle → %50'nin altına indir
+  const KX_PHOTO_MAX_SIDE = 1600, KX_PHOTO_QUALITY = 0.72;
+  const KX_PHOTO_CACHE_MAX = 150;               // cihazda tutulan yüklenmiş/indirilmiş fotoğraf
+  const KX_ARCH_FOLDER = 'KaliteX Foto Arşivi';
+  const KX_PHOTO_DEL_KEY = 'kx_photo_del';
+
+  // ── IndexedDB: { id, blob, path, formId (null=kaydedilmemiş, 'cache'=indirilmiş), uploaded, createdAt } ──
+  let _kxDb = null;
+  function kxIdb() {
+    if (_kxDb) return Promise.resolve(_kxDb);
+    return new Promise((res, rej) => {
+      if (!window.indexedDB) { rej(new Error('IndexedDB desteklenmiyor')); return; }
+      const r = indexedDB.open('kalitex', 1);
+      r.onupgradeneeded = () => {
+        if (!r.result.objectStoreNames.contains('photos')) r.result.createObjectStore('photos', { keyPath: 'id' });
+      };
+      r.onsuccess = () => { _kxDb = r.result; res(_kxDb); };
+      r.onerror = () => rej(r.error);
+    });
+  }
+  async function kxIdbOp(mode, fn) {
+    const db = await kxIdb();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('photos', mode);
+      const req = fn(tx.objectStore('photos'));
+      let out;
+      if (req) req.onsuccess = () => { out = req.result; };
+      tx.oncomplete = () => res(out);
+      tx.onerror = () => rej(tx.error);
+      tx.onabort = () => rej(tx.error);
+    });
+  }
+  function kxIdbGet(id) { return kxIdbOp('readonly', st => st.get(id)); }
+  function kxIdbPut(rec) { return kxIdbOp('readwrite', st => st.put(rec)); }
+  function kxIdbDel(id) { return kxIdbOp('readwrite', st => st.delete(id)); }
+  function kxIdbAll() { return kxIdbOp('readonly', st => st.getAll()); }
+  function kxIsPending(r) { return !!(r && r.formId && r.formId !== 'cache' && !r.uploaded); }
+
+  function kxSafeName(s) { return String(s || '').replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, ' ').trim().slice(0, 120) || 'Form'; }
+  function kxMB(b) { return (b / 1048576).toFixed(b < 10485760 ? 1 : 0); }
+
+  // ── Supabase Storage isteği (süresi dolan JWT'yi yenileyip bir kez tekrar dener) ──
+  async function sbStorageFetch(method, sub, body, extra) {
+    const mk = () => Object.assign({ apikey: SB_KEY, Authorization: 'Bearer ' + (SB_TOKEN || SB_KEY) }, extra || {});
+    const url = SB_URL + '/storage/v1/' + sub;
+    let r = await fetch(url, { method, headers: mk(), body });
+    if ((r.status === 401 || r.status === 400 || r.status === 403) && currentUser) {
+      const t = await r.clone().text().catch(() => '');
+      if (r.status === 401 || /jwt|exp|token/i.test(t)) {
+        if (await authRefreshToken()) r = await fetch(url, { method, headers: mk(), body });
+      }
+    }
+    return r;
+  }
+  function kxSbObjPath(path) { return String(path).split('/').map(encodeURIComponent).join('/'); }
+
+  // ── Küçült + tarih/seri damgası ──
+  async function kxCompressImage(file, stamp) {
+    let src, tmpUrl = null;
+    try { src = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+    catch (e) {
+      src = await new Promise((res, rej) => {
+        const img = new Image();
+        tmpUrl = URL.createObjectURL(file);
+        img.onload = () => res(img);
+        img.onerror = () => rej(new Error('Görüntü okunamadı'));
+        img.src = tmpUrl;
+      });
+    }
+    const w0 = src.width, h0 = src.height;
+    const sc = Math.min(1, KX_PHOTO_MAX_SIDE / Math.max(w0, h0));
+    const w = Math.max(1, Math.round(w0 * sc)), h = Math.max(1, Math.round(h0 * sc));
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(src, 0, 0, w, h);
+    if (src.close) src.close();
+    if (tmpUrl) URL.revokeObjectURL(tmpUrl);
+    if (stamp) {
+      const fs = Math.max(14, Math.round(w / 55));
+      ctx.font = '700 ' + fs + 'px sans-serif';
+      const tw = ctx.measureText(stamp).width, pad = Math.round(fs * 0.45);
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(w - tw - pad * 3, h - fs - pad * 3, tw + pad * 2, fs + pad * 2);
+      ctx.fillStyle = '#fff';
+      ctx.textBaseline = 'top';
+      ctx.fillText(stamp, w - tw - pad * 2, h - fs - pad * 2);
+    }
+    const blob = await new Promise((res, rej) =>
+      c.toBlob(b => b ? res(b) : rej(new Error('JPEG oluşturulamadı')), 'image/jpeg', KX_PHOTO_QUALITY));
+    return { blob, w, h };
+  }
+
+  // ── Görüntüleme: önce cihaz (IndexedDB), yoksa Supabase / Drive'dan indir ──
+  const _kxPhotoUrls = new Map(); // id → objectURL
+  async function kxPhotoBlob(meta) {
+    const rec = await kxIdbGet(meta.id).catch(() => null);
+    if (rec && rec.blob) return rec.blob;
+    if (!navigator.onLine) throw new Error('offline');
+    let r;
+    if (meta.loc === 'drive') {
+      if (!meta.driveId) throw new Error('notfound');
+      if (!_kxDriveTokenExport) throw new Error('drive-token');
+      r = await fetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(meta.driveId) + '?alt=media',
+        { headers: { Authorization: 'Bearer ' + _kxDriveTokenExport } });
+      if (r.status === 401) { _kxDriveTokenExport = null; throw new Error('drive-token'); }
+    } else {
+      if (!SB_TOKEN) throw new Error('login');
+      r = await sbStorageFetch('GET', 'object/authenticated/' + KX_PHOTO_BUCKET + '/' + kxSbObjPath(meta.path));
+    }
+    if (!r.ok) throw new Error(r.status === 404 || r.status === 400 ? 'notfound' : 'http ' + r.status);
+    const blob = await r.blob();
+    kxIdbPut({ id: meta.id, blob, path: meta.path, formId: 'cache', uploaded: true, createdAt: Date.now() })
+      .then(kxPhotoTrimCache).catch(() => {});
+    return blob;
+  }
+  async function kxPhotoUrl(meta) {
+    if (_kxPhotoUrls.has(meta.id)) return _kxPhotoUrls.get(meta.id);
+    const url = URL.createObjectURL(await kxPhotoBlob(meta));
+    _kxPhotoUrls.set(meta.id, url);
+    return url;
+  }
+  function kxPhotoErrText(e) {
+    const m = String((e && e.message) || e);
+    if (m === 'offline') return '📴 Çevrimdışı — internet gelince görünür';
+    if (m === 'drive-token') return '☁️ Drive arşivinde — görmek için dokunun';
+    if (m === 'login') return '🔒 Görmek için düzenleyici girişi gerekli';
+    if (m === 'notfound') return '⏳ Henüz buluta yüklenmedi';
+    return '⚠️ Fotoğraf yüklenemedi';
+  }
+
+  async function kxPhotoTrimCache() {
+    const done = (await kxIdbAll()).filter(r => r.uploaded).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    for (const r of done.slice(KX_PHOTO_CACHE_MAX)) await kxIdbDel(r.id);
+  }
+  async function kxPhotoStartupCleanup() {
+    try {
+      const dayAgo = Date.now() - 86400000;
+      // Hiç kaydedilmemiş formların fotoğrafları — sayfa kapanınca form da kayboldu
+      for (const r of await kxIdbAll()) if (!r.formId && (r.createdAt || 0) < dayAgo) await kxIdbDel(r.id);
+      await kxPhotoTrimCache();
+    } catch (e) { console.warn('[KaliteX] Foto önbellek temizliği:', e.message || e); }
+  }
+
+  // ── Silme kuyruğu (Supabase yolları) ──
+  function kxPhotoDelQueue() { try { return JSON.parse(localStorage.getItem(KX_PHOTO_DEL_KEY) || '[]'); } catch (e) { return []; } }
+  function kxPhotoQueueDelete(paths) {
+    const q = new Set(kxPhotoDelQueue());
+    (paths || []).filter(Boolean).forEach(p => q.add(p));
+    localStorage.setItem(KX_PHOTO_DEL_KEY, JSON.stringify([...q]));
+  }
+  // Farklı Kaydet kopyaları aynı dosyayı paylaşabilir — kullanılan dosya silinmez
+  function kxPhotoReferencedPaths() {
+    const used = new Set();
+    const add = p => { if (p && p.loc !== 'drive' && p.path) used.add(p.path); };
+    kfGetForms().forEach(f => kfFormGetPhotos(f).forEach(add));
+    (window.kfPhotos || []).forEach(add);
+    return used;
+  }
+
+  // Form kaydedildi: yeni fotoğrafları forma bağla (artık yüklenebilir), silinenleri kuyruğa al
+  async function kxPhotoAfterSave(entry, dels) {
+    try {
+      const ids = new Set((entry.photos || []).map(p => p.id));
+      for (const p of entry.photos || []) {
+        const r = await kxIdbGet(p.id).catch(() => null);
+        if (r && !r.formId) { r.formId = entry.id; await kxIdbPut(r); }
+      }
+      const gone = (dels || []).filter(m => !ids.has(m.id));
+      kxPhotoQueueDelete(gone.filter(m => m.loc !== 'drive').map(m => m.path));
+      for (const m of gone) await kxIdbDel(m.id).catch(() => {});
+    } catch (e) { console.warn('[KaliteX] Foto kayıt bağlama hatası:', e.message || e); }
+    kxNetRender();
+  }
+
+  // ── Yükleme / silme kuyruğunu işle ──
+  let _kxPhotoBusy = false, _kxPhotoBucketWarned = false;
+  async function kxPhotoProcessQueue() {
+    if (_kxPhotoBusy || !navigator.onLine || !isEditor() || !SB_TOKEN) return;
+    _kxPhotoBusy = true;
+    let up = 0, fail = 0;
+    try {
+      const q = kxPhotoDelQueue();
+      if (q.length) {
+        const used = kxPhotoReferencedPaths();
+        const del = q.filter(p => !used.has(p));
+        let ok = true;
+        for (let i = 0; i < del.length; i += 100) {
+          const r = await sbStorageFetch('DELETE', 'object/' + KX_PHOTO_BUCKET,
+            JSON.stringify({ prefixes: del.slice(i, i + 100) }), { 'Content-Type': 'application/json' });
+          if (!r.ok) { ok = false; console.warn('[KaliteX] Foto silme hatası:', r.status, await r.text().catch(() => '')); break; }
+        }
+        if (ok) localStorage.setItem(KX_PHOTO_DEL_KEY, '[]');
+      }
+      const pend = (await kxIdbAll()).filter(kxIsPending);
+      for (const rec of pend) {
+        if (!navigator.onLine) break;
+        const r = await sbStorageFetch('POST', 'object/' + KX_PHOTO_BUCKET + '/' + kxSbObjPath(rec.path), rec.blob,
+          { 'Content-Type': 'image/jpeg', 'x-upsert': 'true', 'cache-control': 'max-age=31536000' });
+        if (r.ok) {
+          rec.uploaded = true; rec.createdAt = Date.now();
+          await kxIdbPut(rec);
+          up++;
+        } else {
+          fail++;
+          const t = await r.text().catch(() => '');
+          console.warn('[KaliteX] Foto yükleme hatası:', r.status, t);
+          if (/bucket/i.test(t) && /not.?found/i.test(t)) {
+            if (!_kxPhotoBucketWarned) kfToast('⚠️ Supabase\'de "kf-photos" alanı yok — supabase-foto-schema.sql dosyasını çalıştırın');
+            _kxPhotoBucketWarned = true;
+            break;
+          }
+        }
+        kxNetRender();
+      }
+    } catch (e) {
+      console.warn('[KaliteX] Foto kuyruğu:', e.message || e);
+    } finally {
+      _kxPhotoBusy = false;
+      kxNetRender();
+    }
+    if (up) kfToast('📷 ' + up + ' fotoğraf buluta yüklendi ✓');
+    else if (fail && !_kxPhotoBucketWarned) kfToast('⚠️ ' + fail + ' fotoğraf yüklenemedi — sonra tekrar denenecek');
+  }
+  setInterval(() => { if (navigator.onLine) kxPhotoProcessQueue(); }, 120000);
+
+  // ── Alan kullanımı (form kayıtlarındaki boyutlardan tahmin) ──
+  function kxPhotoUsage(forms) {
+    const seen = new Set();
+    let bytes = 0;
+    (forms || kfGetForms()).forEach(f => kfFormGetPhotos(f).forEach(p => {
+      if (p.loc === 'drive' || seen.has(p.id)) return;
+      seen.add(p.id);
+      bytes += p.size || 0;
+    }));
+    return bytes;
+  }
+  function kxPhotoMeterHtml(forms) {
+    const used = kxPhotoUsage(forms);
+    const pct = Math.min(100, used / KX_PHOTO_QUOTA * 100);
+    const col = pct >= KX_PHOTO_WARN * 100 ? '#dc2626' : pct >= 50 ? '#d97706' : '#16a34a';
+    const driveIds = new Set();
+    forms.forEach(f => kfFormGetPhotos(f).forEach(p => { if (p.loc === 'drive') driveIds.add(p.id); }));
+    return `<div title="Tahmini — form kayıtlarındaki fotoğraf boyutlarından hesaplanır" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px;color:#4b5563;font-weight:600;background:#f9fafb;border:1px solid #e5e7eb;border-radius:9px;padding:8px 12px;margin-bottom:12px;">
+      <span>📷 Supabase foto alanı</span>
+      <div style="flex:1;min-width:90px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;"><div style="height:100%;width:${pct.toFixed(1)}%;background:${col};"></div></div>
+      <span style="color:${col};font-weight:800;">${kxMB(used)} / ${kxMB(KX_PHOTO_QUOTA)} MB</span>
+      ${driveIds.size ? `<span>☁️ Drive'da ${driveIds.size}</span>` : ''}
+      ${used > 0 ? `<button onclick="kxPhotoArchive()" style="background:#fff;border:1.5px solid #c4b5fd;color:#6d28d9;border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Drive'a arşivle</button>` : ''}
+    </div>`;
+  }
+  let _kxQuotaWarned = false;
+  function kxPhotoQuotaWarn() {
+    if (_kxQuotaWarned) return;
+    const used = kxPhotoUsage();
+    if (used < KX_PHOTO_QUOTA * KX_PHOTO_WARN) return;
+    _kxQuotaWarned = true;
+    setTimeout(() => kfToast('⚠️ Supabase foto alanı %' + Math.round(used / KX_PHOTO_QUOTA * 100) + ' dolu — Yükle penceresinden Drive\'a arşivleyin'), 2500);
+  }
+
+  // ── Bağlantı / bekleyen yükleme göstergesi (üst bar) ──
+  async function kxNetRender() {
+    const el = document.getElementById('kx-net');
+    if (!el) return;
+    let pend = 0;
+    try { pend = (await kxIdbAll()).filter(kxIsPending).length; } catch (e) {}
+    const formsPend = isEditor() ? kfGetForms().filter(f => !f.synced).length : 0;
+    const parts = [];
+    if (!navigator.onLine) parts.push('📴');
+    const wait = [formsPend ? formsPend + ' form' : '', pend ? pend + ' foto' : ''].filter(Boolean).join(', ');
+    if (wait) parts.push('⏳ ' + wait);
+    el.textContent = parts.join(' · ');
+    el.title = (!navigator.onLine ? 'Çevrimdışı. ' : '') + (wait ? 'Buluta yüklenmeyi bekleyen: ' + wait + ' — internet gelince otomatik yüklenir' : '');
+    el.style.display = parts.length ? '' : 'none';
+  }
+
+  // ── Fotoğraf modalı ──
+  let _kxPh = { kod: null, label: '' }; // kod: null = formun tüm fotoğrafları, '' = genel
+  function kfPhotoOpenRow(ri) {
+    const row = (window.kfData || [])[ri];
+    if (!row || !row[0]) return;
+    kxPhotoOpen(row[0], row[1]);
+  }
+  function kxPhotoOpen(kod, label) {
+    if (!kfRequireModel()) return;
+    _kxPh = { kod, label: label || '' };
+    document.querySelectorAll('#kxph-overlay .kxph-edit').forEach(b => { b.style.display = isEditor() ? '' : 'none'; });
+    document.getElementById('kxph-overlay').style.display = 'flex';
+    kxPhotoRenderGrid();
+  }
+  function kxPhotoClose() {
+    const o = document.getElementById('kxph-overlay');
+    if (o) o.style.display = 'none';
+  }
+  function kxLightbox(url) {
+    document.getElementById('kx-lightbox-img').src = url;
+    document.getElementById('kx-lightbox').style.display = 'flex';
+  }
+  function kxPhotoRenderGrid() {
+    const grid = document.getElementById('kxph-grid'), title = document.getElementById('kxph-title');
+    if (!grid || !title) return;
+    const all = window.kfPhotos || [];
+    const list = _kxPh.kod === null ? all : all.filter(p => p.kod === _kxPh.kod);
+    title.textContent = _kxPh.kod === null
+      ? '📷 Formun tüm fotoğrafları (' + list.length + ')'
+      : '📷 ' + _kxPh.kod + (_kxPh.label ? ' — ' + _kxPh.label : '');
+    if (!list.length) {
+      grid.innerHTML = '<div class="kxph-empty">Henüz fotoğraf yok.' + (isEditor() ? ' Kamera veya Galeri ile ekleyin.' : '') + '</div>';
+      return;
+    }
+    grid.innerHTML = list.map(p => {
+      const t = p.at ? new Date(p.at).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+      const cap = (p.kod || 'GENEL') + (t ? ' · ' + t : '');
+      return `<div class="kxph-item" data-pid="${kfHEsc(p.id)}">
+        <div class="kxph-ph">⟳</div>
+        ${p.loc === 'drive' ? '<span class="kxph-badge">Drive</span>' : ''}
+        ${isEditor() ? `<button type="button" class="kxph-del" onclick="kxPhotoDelete('${kfHEsc(p.id)}')" title="Sil">×</button>` : ''}
+        <div class="kxph-cap">${kfHEsc(cap)}</div></div>`;
+    }).join('');
+    list.forEach(p => {
+      const box = grid.querySelector(`.kxph-item[data-pid="${CSS.escape(p.id)}"] .kxph-ph`);
+      kxPhotoUrl(p).then(url => {
+        if (!box || !box.isConnected) return;
+        const img = document.createElement('img');
+        img.className = 'kxph-img'; img.alt = ''; img.src = url;
+        img.onclick = () => kxLightbox(url);
+        box.replaceWith(img);
+      }).catch(e => {
+        if (!box || !box.isConnected) return;
+        box.textContent = kxPhotoErrText(e);
+        if (String(e && e.message) === 'drive-token') {
+          box.style.cursor = 'pointer';
+          box.onclick = () => kxRequestDriveToken(() => kxPhotoRenderGrid(), 'export');
+        }
+      });
+    });
+  }
+  function kxPhotoPick(cam) {
+    if (!isEditor()) { kfToast('Salt okunur modda fotoğraf eklenemez.'); return; }
+    if (!kfRequireModel()) return;
+    const inp = document.getElementById(cam ? 'kxph-file-cam' : 'kxph-file-gal');
+    inp.value = '';
+    inp.onchange = () => { const files = [...(inp.files || [])]; if (files.length) kxPhotoAddFiles(files); };
+    inp.click();
+  }
+  async function kxPhotoAddFiles(files) {
+    const kod = _kxPh.kod === null ? '' : _kxPh.kod;
+    const ctxName = window.kfCurrentSaveName
+      || (currentPage === 'proje-formu' ? window.kfCurrentProjectLabel : window.kfCurrentModelLabel) || '';
+    let added = 0;
+    for (let i = 0; i < files.length; i++) {
+      kfToast('📷 Fotoğraf işleniyor… ' + (i + 1) + '/' + files.length);
+      try {
+        const d = new Date();
+        const stamp = d.toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+          + (ctxName ? ' · ' + ctxName : '') + (kod ? ' · ' + kod : '');
+        const { blob, w, h } = await kxCompressImage(files[i], stamp);
+        const id = kfGenId() + Math.random().toString(36).slice(2, 5);
+        const path = 'p/' + d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + id + '.jpg';
+        await kxIdbPut({ id, blob, path, formId: null, uploaded: false, createdAt: Date.now() });
+        window.kfPhotos.push({ id, kod, path, loc: 'sb', size: blob.size, w, h, at: d.toISOString() });
+        added++;
+      } catch (e) {
+        console.warn('[KaliteX] Foto ekleme:', e);
+        kfToast('⚠️ Fotoğraf eklenemedi: ' + (e.message || e));
+      }
+    }
+    if (!added) return;
+    kxPhotoRenderGrid();
+    kfRebuildTbody();
+    // Kayıtlı formda hemen kaydet → yükleme başlar; yeni formda kayıt beklenir
+    if (window.kfCurrentSaveId) kfDoSave(window.kfCurrentSaveName, false);
+    else kfToast('📷 ' + added + ' fotoğraf eklendi — formu kaydedince buluta yüklenir');
+  }
+  async function kxPhotoDelete(id) {
+    if (!isEditor()) return;
+    const i = (window.kfPhotos || []).findIndex(p => p.id === id);
+    if (i < 0) return;
+    if (!window.confirm('Bu fotoğraf silinsin mi?')) return;
+    const meta = window.kfPhotos.splice(i, 1)[0];
+    const rec = await kxIdbGet(id).catch(() => null);
+    if (rec && !rec.formId) await kxIdbDel(id).catch(() => {}); // hiç kaydedilmemiş — iz bırakmadan sil
+    else window._kfPhotoDeletes.push(meta);                     // kayıtta buluttan da silinir
+    const u = _kxPhotoUrls.get(id);
+    if (u) { URL.revokeObjectURL(u); _kxPhotoUrls.delete(id); }
+    kxPhotoRenderGrid();
+    kfRebuildTbody();
+    if (window.kfCurrentSaveId) kfDoSave(window.kfCurrentSaveName, false);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const lb = document.getElementById('kx-lightbox');
+    if (lb && lb.style.display === 'flex') { lb.style.display = 'none'; e.stopPropagation(); return; }
+    const ov = document.getElementById('kxph-overlay');
+    if (ov && ov.style.display === 'flex') { kxPhotoClose(); e.stopPropagation(); }
+  }, true);
+
+  // ── Drive arşivi ──
+  async function kxDriveFindOrCreateFolder(H, name, parentId) {
+    const qName = String(name).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const q = `name='${qName}' and mimeType='application/vnd.google-apps.folder' and trashed=false` + (parentId ? ` and '${parentId}' in parents` : '');
+    const r = await fetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id)&pageSize=1', { headers: H });
+    if (r.status === 401) throw new Error('AUTH_EXPIRED');
+    if (r.ok) { const d = await r.json(); if (d.files && d.files[0]) return d.files[0].id; }
+    const body = { name, mimeType: 'application/vnd.google-apps.folder' };
+    if (parentId) body.parents = [parentId];
+    const c = await fetch('https://www.googleapis.com/drive/v3/files', { method: 'POST', headers: H, body: JSON.stringify(body) });
+    if (c.status === 401) throw new Error('AUTH_EXPIRED');
+    if (!c.ok) throw new Error('Drive klasörü oluşturulamadı: ' + c.status);
+    return (await c.json()).id;
+  }
+  async function kxDriveUploadBlob(token, folderId, name, blob) {
+    const fd = new FormData();
+    fd.append('metadata', new Blob([JSON.stringify({ name, parents: [folderId] })], { type: 'application/json' }));
+    fd.append('file', blob);
+    const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+      { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+    if (r.status === 401) throw new Error('AUTH_EXPIRED');
+    if (!r.ok) throw new Error('Drive yükleme hatası: ' + r.status);
+    return (await r.json()).id;
+  }
+
+  let _kxArchiving = false;
+  function kxPhotoArchive() {
+    if (!isEditor()) { kfToast('Salt okunur modda arşivlenemez.'); return; }
+    if (!navigator.onLine) { kfToast('Arşivleme için internet gerekli.'); return; }
+    if (_kxArchiving) { kfToast('Arşivleme zaten sürüyor…'); return; }
+    kxRequestDriveToken(token => kxDoPhotoArchive(token), 'export');
+  }
+  async function kxDoPhotoArchive(token) {
+    _kxArchiving = true;
+    try {
+      kfToast('Formlar kontrol ediliyor…');
+      const forms = await kfSbFetchForms();
+      const openId = window.kfCurrentSaveId;
+      const used = kxPhotoUsage(forms);
+      const target = KX_PHOTO_QUOTA * KX_PHOTO_ARCHIVE_TARGET;
+      const enough = used <= target;
+      const monthAgo = Date.now() - 30 * 86400000;
+      // En eski formdan başla; açık form atlanır
+      const sorted = forms.filter(f => f.id !== openId).sort((a, b) => new Date(a.savedAt) - new Date(b.savedAt));
+      const seen = new Set(), plan = [];
+      let free = 0;
+      for (const f of sorted) {
+        if (enough ? new Date(f.savedAt).getTime() > monthAgo : used - free <= target) break;
+        const ph = kfFormGetPhotos(f).filter(p => p.loc !== 'drive' && p.path && !seen.has(p.id));
+        if (!ph.length) continue;
+        ph.forEach(p => { seen.add(p.id); free += p.size || 0; });
+        plan.push({ f, ph });
+      }
+      const n = plan.reduce((s, x) => s + x.ph.length, 0);
+      if (!n) { kfToast(enough ? '✓ Alan yeterli — 30 günden eski fotoğraf yok' : 'Taşınacak fotoğraf bulunamadı'); return; }
+      const msg = (enough
+          ? 'Supabase alanı yeterli (%' + Math.round(used / KX_PHOTO_QUOTA * 100) + ').\n30 günden eski '
+          : 'Supabase alanı %' + Math.round(used / KX_PHOTO_QUOTA * 100) + ' dolu.\nEn eski ')
+        + plan.length + ' formun ' + n + ' fotoğrafı (' + kxMB(free) + ' MB) Google Drive\'a taşınacak\n("' + KX_ARCH_FOLDER + '" klasörü).\n\n'
+        + 'Supabase\'den ancak Drive kopyası ve form kaydı başarılı olunca silinir.\nDevam edilsin mi?';
+      if (!window.confirm(msg)) return;
+
+      const H = { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' };
+      const root = await kxDriveFindOrCreateFolder(H, KX_ARCH_FOLDER);
+      const moved = {}, pathOf = {};
+      let done = 0, skipped = 0;
+      for (const { f, ph } of plan) {
+        const sub = await kxDriveFindOrCreateFolder(H, kxSafeName((f.modelLabel || 'Model') + ' - ' + (f.name || 'Form')), root);
+        for (const p of ph) {
+          let blob = null;
+          const rec = await kxIdbGet(p.id).catch(() => null);
+          if (rec && rec.blob) {
+            if (kxIsPending(rec)) { skipped++; continue; } // henüz Supabase'e yüklenmemiş
+            blob = rec.blob;
+          } else {
+            const r = await sbStorageFetch('GET', 'object/authenticated/' + KX_PHOTO_BUCKET + '/' + kxSbObjPath(p.path));
+            if (!r.ok) { skipped++; continue; }
+            blob = await r.blob();
+          }
+          moved[p.id] = await kxDriveUploadBlob(token, sub,
+            kxSafeName((f.name || 'Form') + ' - ' + (p.kod || 'GENEL') + ' - ' + p.id) + '.jpg', blob);
+          pathOf[p.id] = p.path;
+          done++;
+          kfToast('☁️ Drive\'a taşınıyor… ' + done + '/' + n);
+        }
+      }
+      const ids = Object.keys(moved);
+      if (!ids.length) { kfToast('Hiçbir fotoğraf taşınamadı (' + skipped + ' atlandı)'); return; }
+
+      // Bu fotoğrafları kullanan TÜM formları güncelle (Farklı Kaydet kopyaları dahil)
+      const wasClean = !kfHasUnsavedChanges();
+      const local = kfGetForms(), now = new Date().toISOString(), changed = [];
+      local.forEach(f => {
+        const ph = kfFormGetPhotos(f);
+        if (!ph.some(p => moved[p.id] && p.loc !== 'drive')) return;
+        f.data = kfFormGetRows(f); f.notes = kfFormGetNotes(f); f.status = kfFormGetStatus(f);
+        f.photos = ph.map(p => moved[p.id] ? Object.assign({}, p, { loc: 'drive', driveId: moved[p.id] }) : p);
+        f.updatedAt = now;
+        changed.push(f);
+      });
+      kfSvForms(local);
+      (window.kfPhotos || []).forEach(p => { if (moved[p.id]) { p.loc = 'drive'; p.driveId = moved[p.id]; } });
+      if (wasClean && window.kfCurrentSaveId) kfTakeSnapshot();
+      let failed = 0;
+      for (const f of changed) if (!(await kfSbUpsertForm(f))) failed++;
+      if (failed) {
+        kfToast('⚠️ ' + failed + ' form güncellenemedi — güvenlik için Supabase\'deki fotoğraflar silinmedi');
+        return;
+      }
+      // Ancak şimdi Supabase'den sil
+      const paths = ids.map(id => pathOf[id]);
+      let delOk = true;
+      for (let i = 0; i < paths.length; i += 100) {
+        const r = await sbStorageFetch('DELETE', 'object/' + KX_PHOTO_BUCKET,
+          JSON.stringify({ prefixes: paths.slice(i, i + 100) }), { 'Content-Type': 'application/json' });
+        if (!r.ok) delOk = false;
+      }
+      if (!delOk) kxPhotoQueueDelete(paths); // sonra tekrar denenir
+      kfToast('✓ ' + ids.length + ' fotoğraf Drive\'a taşındı' + (skipped ? ' · ' + skipped + ' atlandı' : ''));
+      const ov = document.getElementById('kf-modal-overlay');
+      if (ov && ov.style.display === 'flex') kfShowLoadModal();
+    } catch (e) {
+      if (e.message === 'AUTH_EXPIRED') { _kxDriveTokenExport = null; _kxTokenClientExport = null; kfToast('Google oturumu doldu — tekrar deneyin.'); }
+      else { kfToast('Arşivleme hatası: ' + (e.message || e)); console.error('[KaliteX] Foto arşivi:', e); }
+    } finally {
+      _kxArchiving = false;
+    }
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // PDF KALİTE BELGESİ — tarayıcının "PDF olarak kaydet" yazdırma çıktısı
+  // ═════════════════════════════════════════════════════════════════════════
+  function kfPrintCurrent() {
+    if (!kfRequireModel()) return;
+    if (!(window.kfData || []).length) { kfToast('Formda yazdırılacak madde yok.'); return; }
+    const saved = window.kfCurrentSaveId ? kfGetForms().find(f => f.id === window.kfCurrentSaveId) : null;
+    kfPrintDoc({
+      name: window.kfCurrentSaveName || '',
+      modelLabel: currentPage === 'proje-formu' ? 'Proje: ' + (window.kfCurrentProjectLabel || '') : (window.kfCurrentModelLabel || ''),
+      savedAt: (saved && saved.savedAt) || new Date().toISOString(),
+      status: window.kfStatus || 'taslak',
+      rows: window.kfData, notes: window.kfNotes, photos: window.kfPhotos || []
+    });
+  }
+  function kfPrintFormEntry(f) {
+    kfPrintDoc({
+      name: f.name || '', modelLabel: f.modelLabel || '', savedAt: f.savedAt || f.updatedAt,
+      status: kfFormGetStatus(f), rows: kfFormGetRows(f), notes: kfFormGetNotes(f), photos: kfFormGetPhotos(f)
+    });
+  }
+  function rpPrintForm(id) {
+    const f = (window._rpForms || []).find(x => x.id === id);
+    if (f) kfPrintFormEntry(f);
+  }
+  function kfPrintDoc(doc) {
+    // Drive arşivindeki fotoğraflar için Google izni — tıklama anında istenmeli (popup engeline takılmasın)
+    const needDrive = navigator.onLine && (doc.photos || []).some(p => p.loc === 'drive')
+      && !_kxDriveTokenExport && window.google && window.google.accounts;
+    if (needDrive) { kxRequestDriveToken(() => kfPrintBuild(doc), 'export'); return; }
+    kfPrintBuild(doc);
+  }
+  async function kfPrintBuild(doc) {
+    const el = document.getElementById('kf-print');
+    if (!el) return;
+    kfToast('🖨️ PDF hazırlanıyor…');
+    const esc = kfHEsc;
+    const fmt = d => d ? new Date(d).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+    const rows = (doc.rows || []).filter(r => r && r[6] === 1 && r[0]);
+    const val = k => { const r = rows.find(x => String(x[0]).toUpperCase().trim() === k); return r ? String(r[3] || '') : ''; };
+    const SPECIAL = ['K9011', 'K9012', 'K9013']; // personel — bilgi kutusunda gösterilir
+    const tRows = rows.filter(r => String(r[7] || '').toUpperCase().trim() === 'T');
+    const cnt = v => tRows.filter(r => r[3] === v).length;
+    const pr = kfFormProgress(doc.rows);
+    const done = doc.status === 'tamamlandi';
+    // Fotoğraf sırası: tablo sırası, genel fotoğraflar en sonda → F1, F2…
+    const order = {};
+    rows.forEach((r, i) => { if (order[r[0]] === undefined) order[r[0]] = i; });
+    const rank = p => p.kod ? (order[p.kod] ?? 1e6) : 2e6;
+    const photos = [...(doc.photos || [])].sort((a, b) => rank(a) - rank(b) || String(a.at || '').localeCompare(String(b.at || '')));
+    const figs = {};
+    photos.forEach((p, i) => { (figs[p.kod || ''] = figs[p.kod || ''] || []).push('F' + (i + 1)); });
+    const urls = await Promise.all(photos.map(p => kxPhotoUrl(p).catch(e => ({ err: kxPhotoErrText(e) }))));
+
+    let body = '', lastG = null;
+    rows.filter(r => !SPECIAL.includes(String(r[0]).toUpperCase().trim())).forEach(r => {
+      if ((r[2] || '') !== lastG) { lastG = r[2] || ''; body += `<tr class="kp-g"><td colspan="5">${esc(lastG || '—')}</td></tr>`; }
+      const s = String(r[3] || '').trim();
+      body += `<tr class="${s === 'HAYIR' ? 'kp-no' : ''}"><td class="kp-kod">${esc(r[0])}</td><td>${esc(r[1] || '')}</td>`
+        + `<td class="kp-res">${s ? esc(s) : '<span class="kp-empty">—</span>'}</td><td>${esc(r[4] || '')}</td>`
+        + `<td class="kp-f">${(figs[r[0]] || []).join(', ')}</td></tr>`;
+    });
+    const notes = doc.notes || {};
+    const aks = (notes.aksilikler || []).map(t => `<div class="kp-note">${esc(t)}</div>`).join('');
+    const rev = (notes.revizeler || []).map(t => `<div class="kp-note r">${esc(t)}</div>`).join('');
+    const figHtml = photos.map((p, i) => {
+      const u = urls[i];
+      const row = p.kod ? rows.find(r => r[0] === p.kod) : null;
+      const cap = 'F' + (i + 1) + ' · ' + (p.kod ? p.kod + (row ? ' – ' + row[1] : '') : 'Genel') + (p.at ? ' · ' + fmt(p.at) : '');
+      const media = typeof u === 'string' ? `<img src="${u}" alt="">` : `<div class="kp-noimg">${esc(u.err)}</div>`;
+      return `<figure class="kp-fig" style="margin:0;">${media}<figcaption>${esc(cap)}</figcaption></figure>`;
+    }).join('');
+    const info = [
+      ['Model / Proje', doc.modelLabel || '—'], ['Seri No / Form', doc.name || '(kaydedilmemiş)'],
+      ['Kontrol Tarihi', fmt(doc.savedAt)], ['Durum', done ? '✓ Tamamlandı' : 'Taslak (' + pr.filled + '/' + pr.total + ')'],
+      ['Kontrol Eden', val('K9013') || '—'], ['Kaynakçı', val('K9011') || '—'],
+      ['Montajcı', val('K9012') || '—'], ['Fotoğraf', String(photos.length)]
+    ];
+    el.innerHTML = `<div class="kp">
+      <div class="kp-hd">
+        <div><div class="kp-logo">DOLFIN</div><div class="kp-sub">Endüstriyel Yıkama Makineleri</div></div>
+        <div class="kp-doc"><div class="kp-doc-t">KALİTE KONTROL FORMU</div><div class="kp-doc-s">${esc(doc.modelLabel || '')}${doc.name ? ' · ' + esc(doc.name) : ''}</div></div>
+      </div>
+      <div class="kp-info">${info.map(([k, v]) => `<div><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join('')}</div>
+      <div class="kp-sum">
+        <div><b>${pr.total}</b><span>Madde</span></div>
+        <div><b>${pr.filled}</b><span>Doldurulan</span></div>
+        <div><b style="color:#16a34a">${cnt('EVET')}</b><span>Evet</span></div>
+        <div><b style="color:#dc2626">${cnt('HAYIR')}</b><span>Hayır</span></div>
+        <div><b style="color:#6b7280">${cnt('KD')}</b><span>KD</span></div>
+      </div>
+      <table class="kp-tbl">
+        <thead><tr><th style="width:13%">KOD</th><th>AÇIKLAMA</th><th style="width:12%">SONUÇ</th><th style="width:18%">DURUM</th><th style="width:8%">FOTO</th></tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+      ${aks ? `<div class="kp-h2">⚠️ Aksilikler</div>${aks}` : ''}
+      ${rev ? `<div class="kp-h2">🔧 Revize Önerileri</div>${rev}` : ''}
+      ${figHtml ? `<div class="kp-h2">📷 Fotoğraflar</div><div class="kp-ph">${figHtml}</div>` : ''}
+      <div class="kp-sign">
+        <div>Kontrol Eden: ${esc(val('K9013'))}<br><br>İmza:</div>
+        <div>Tarih: ${esc(fmt(doc.savedAt))}<br><br>Kaşe / İmza:</div>
+      </div>
+      <div class="kp-foot">KaliteX · ${esc(fmt(new Date().toISOString()))} tarihinde oluşturuldu</div>
+    </div>`;
+    await Promise.all([...el.querySelectorAll('img')].map(img => (img.decode ? img.decode() : Promise.resolve()).catch(() => {})));
+    const oldTitle = document.title;
+    const cleanup = () => {
+      document.body.classList.remove('kf-printing');
+      document.title = oldTitle;
+      el.innerHTML = '';
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+    document.body.classList.add('kf-printing');
+    // Tarayıcı "PDF olarak kaydet"te dosya adını başlıktan alır
+    document.title = kxSafeName('Kalite - ' + (doc.modelLabel || '') + ' - ' + (doc.name || 'Form'));
+    setTimeout(() => window.print(), 60);
+  }
 
   applyConfig(defaultConfig);
   lucide.createIcons();
@@ -4570,7 +5701,7 @@
     app.style.display = 'flex';
     authUpdateUI();              // header butonlarını ayarla
     await khInit();
-    try { await phLoadFromSupabase(); } catch (e) {
+    try { await phEnsureLoaded(); } catch (e) {
       console.warn('[KaliteX] Proje yukleme (tablolar yoksa supabase-proje-schema.sql calistirin):', e.message || e);
     }
     const _projeCh = document.querySelector('.series-chevron-proje');
@@ -4578,6 +5709,10 @@
     kfNotesWireEvents();
     renderPage(currentPage);
     lucide.createIcons();
+    kxNetRender();
+    // Çevrimdışıyken kaydedilmiş formlar varsa yükle (uygulama yeniden açıldığında)
+    if (navigator.onLine && isEditor() && kfGetForms().some(f => !f.synced)) kfSbSync().then(() => kxNetRender());
+    kxPhotoStartupCleanup().then(() => kxPhotoProcessQueue());
   })();
 
   // ── PWA: Service Worker kaydı ──────────────────────────────────────────────
@@ -4595,8 +5730,10 @@
 
     // Yeni SW devreye girince (yani yeni kod deploy edilince) sayfayı otomatik yenile
     // Böylece tablette eski JS çalışmaya devam etmez
+    // İlk kurulumda (önceden SW yokken) yenileme gereksiz — sadece güncellemede yenile
+    const _kxHadSW = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!_kfSavingToCloud && !_khSyncing) {
+      if (_kxHadSW &&!_kfSavingToCloud && !_khSyncing && !_phSyncing && !kfHasUnsavedWork() && !KH._dirty && !PH._dirty) {
         console.log('[KaliteX] Yeni Service Worker aktif, sayfa yenileniyor...');
         window.location.reload();
       }

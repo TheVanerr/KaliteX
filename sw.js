@@ -4,7 +4,7 @@
 //   - CDN (Tailwind, Lucide, Fonts): Cache-first
 //   - Supabase REST API: Network-first, offline'da cache'den dön
 
-  const CACHE = 'kalitex-v15';
+  const CACHE = 'kalitex-v16';
 
 const LOCAL_ASSETS = [
   './',
@@ -19,6 +19,7 @@ const CDN_ASSETS = [
   'https://cdn.tailwindcss.com/3.4.17',
   'https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js',
   'https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap',
+  'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
 ];
 
 // ── Kurulum ─────────────────────────────────────────────────────────────────
@@ -57,6 +58,10 @@ self.addEventListener('fetch', event => {
 
   // Supabase AUTH — her zaman network (offline'da login zaten olmaz, session localStorage'da)
   if (url.includes('supabase.co/auth/')) return;
+  // Fotoğraflar (Supabase Storage) — uygulama kendisi IndexedDB'de tutar, SW önbelleğe almaz
+  if (url.includes('supabase.co/storage/')) return;
+  // Google API'leri (Drive dosya listeleri, OAuth) — asla önbellekten dönmemeli
+  if (url.includes('www.googleapis.com/') || url.includes('accounts.google.com/o/') || url.includes('oauth2.googleapis.com')) return;
 
   // Supabase REST — network-first, offline'da cache'den dön
   if (url.includes('supabase.co')) {
