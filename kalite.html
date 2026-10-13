@@ -644,7 +644,8 @@
     TOTAL_ROWS: 500,
     ROW_H: 38,
     showSel: false,
-    BUFFER: 18,
+    BUFFER: 30,        // görünür alanın üstünde/altında çizili tutulan satır sayısı
+    BLOK: 10,          // çizim aralığı bu katlara yuvarlanır
     paramData: [],     // paramData[ri][0..6] = string
     assignments: {},   // modelId -> Set<rowIdx>
     filteredRows: [],  // array of rowIdx after filter/sort
@@ -1531,14 +1532,51 @@
   }
 
   // ── Virtual scroll ───────────────────────────────────────────
+  // Eskiden her kaydırma adımında tüm tablo yeniden çiziliyordu (takılma, beyaz alan).
+  // Şimdi çizili satırlar görünür alanı + pay kadarını kapsadıkça çizim yapılmaz;
+  // kenara yaklaşınca görünür alan etrafında geniş bir aralık bir kerede çizilir.
+  // Kaydırma durunca (kısa bekleme) görünür alan etrafı önceden çizilir — tekrar kaydırınca satırlar hazır olur.
+  let _khDurZaman = null;
   function khOnScroll() {
+    clearTimeout(_khDurZaman);
+    _khDurZaman = setTimeout(() => khPencere(KH.BUFFER / 2), 140);
+    khPencere(10);
+  }
+  // Çizili aralık görünür alanın en az "pay" satır ötesini kapsamıyorsa yeniden çiz
+  function khPencere(pay) {
     const w = document.getElementById('kh-scroll'); if (!w) return;
+    if (KH.mousedown && pay > 10) return; // sürükleyerek seçim sürerken bekleyen ön-çizim yapılmasın
+    const n = KH.filteredRows.length, H = KH.ROW_H;
     const st = w.scrollTop, vh = w.clientHeight;
-    const start = Math.max(0, Math.floor(st / KH.ROW_H) - KH.BUFFER);
-    const end = Math.min(KH.filteredRows.length - 1, Math.ceil((st + vh) / KH.ROW_H) + KH.BUFFER);
+    const ilk = Math.max(0, Math.floor(st / H)), son = Math.min(n - 1, Math.ceil((st + vh) / H));
+    if (KH.vsStart >= 0 && KH.vsStart <= Math.max(0, ilk - pay) && KH.vsEnd >= Math.min(n - 1, son + pay)) return;
+    const B = KH.BLOK;
+    const start = Math.max(0, Math.floor((ilk - KH.BUFFER) / B) * B);
+    const end = Math.min(n - 1, Math.ceil((son + KH.BUFFER) / B) * B);
     if (start === KH.vsStart && end === KH.vsEnd) return;
+    if (khPencereKaydir(start, end)) return;
     KH.vsStart = start; KH.vsEnd = end;
     khVSR();
+  }
+  // Artımlı güncelleme: çizili aralıkla yeni aralık örtüşüyorsa uzaklaşan satırları sil, gelenleri ekle.
+  // Tüm tabloyu yeniden çizmekten ~6 kat ucuz (tablette takılmayı önler).
+  function khPencereKaydir(start, end) {
+    const tb = document.getElementById('kh-tbody');
+    const s0 = KH.vsStart, e0 = Math.min(KH.vsEnd, KH.filteredRows.length - 1);
+    if (!tb || KH.editCell || s0 < 0 || start > e0 || end < s0) return false;
+    const ust = tb.firstElementChild, alt = tb.lastElementChild;
+    const satirlar = tb.querySelectorAll('tr.khr');
+    if (satirlar.length !== e0 - s0 + 1 || !ust || !alt) return false;
+    for (let i = 0; i < start - s0; i++) satirlar[i].remove();
+    for (let i = 0; i < e0 - end; i++) satirlar[satirlar.length - 1 - i].remove();
+    const ctx = khSatirCtx();
+    if (start < s0) { let h = ''; for (let vi = start; vi < s0; vi++) h += khSatirHtml(vi, ctx); ust.insertAdjacentHTML('afterend', h); }
+    if (end > e0) { let h = ''; for (let vi = e0 + 1; vi <= end; vi++) h += khSatirHtml(vi, ctx); alt.insertAdjacentHTML('beforebegin', h); }
+    KH.vsStart = start; KH.vsEnd = end;
+    const tot = KH.filteredRows.length;
+    ust.firstElementChild.style.height = (start * KH.ROW_H) + 'px';
+    alt.firstElementChild.style.height = (Math.max(0, tot - end - 1) * KH.ROW_H) + 'px';
+    return true;
   }
 
   function khVSR() {
@@ -1559,20 +1597,16 @@
     }
   }
 
-  function khVSRDraw() {
-    const tot = KH.filteredRows.length;
-    const colSpan = khTC() + 2;
-    const topH = KH.vsStart * KH.ROW_H;
-    const botH = Math.max(0, (tot - KH.vsEnd - 1)) * KH.ROW_H;
+  function khSatirCtx() {
     const { r1, c1, r2, c2 } = KH.sel;
-    const minR = Math.min(r1,r2), maxR = Math.max(r1,r2);
-    const minC = Math.min(c1,c2), maxC = Math.max(c1,c2);
-
-    let html = `<tr><td colspan="${colSpan}" style="height:${topH}px;padding:0;border:none;"></td></tr>`;
-    for (let vi = KH.vsStart; vi <= KH.vsEnd && vi < tot; vi++) {
+    return { r1, minR: Math.min(r1, r2), maxR: Math.max(r1, r2), minC: Math.min(c1, c2), maxC: Math.max(c1, c2), cols: mxCols() };
+  }
+  function khSatirHtml(vi, ctx) {
+      const { r1, minR, maxR, minC, maxC } = ctx;
+      let html = '';
       const ri = KH.filteredRows[vi];
       const rSel = KH.showSel && r1 >= 0 && ri >= minR && ri <= maxR;
-      html += `<tr class="khr${rSel?' khra':''}" data-ri="${ri}">`;
+      html += `<tr class="khr${vi % 2 ? ' khr-c' : ''}${rSel?' khra':''}" data-ri="${ri}">`;
       html += `<td class="khrn khrn-fr${rSel?' khrns':''}" data-ri="${ri}" onmousedown="khRND(event,${ri})">${ri+1}</td>`;
       for (let ci = 0; ci < KH_FIXED.length; ci++) {
         const v = KH.paramData[ri][ci] || '';
@@ -1581,16 +1615,38 @@
         const ctr = (ci === 0 || ci === 1 || ci === 2 || ci === 3 || ci === 5 || ci === 6) ? ' khcv-c' : '';
         html += `<td class="khc${s?' khs':''}" data-ri="${ri}" data-ci="${ci}" onmousedown="khCD(event,${ri},${ci})" onmouseover="khCO(event,${ri},${ci})" ondblclick="khDD(event,${ri},${ci})"${w5}><div class="khcv${ctr}">${khEsc(v)}</div></td>`;
       }
-      for (let mi = 0; mi < mxCols().length; mi++) {
+      const cols = ctx.cols;
+      for (let mi = 0; mi < cols.length; mi++) {
         const ci = KH_FIXED.length + mi;
-        const xv = khMVal(mxCols()[mi].id, ri);
+        const xv = khMVal(cols[mi].id, ri);
         const xs = rSel && ci >= minC && ci <= maxC;
         html += `<td class="khc${xs?' khs':''}" data-ri="${ri}" data-ci="${ci}" onmousedown="khCD(event,${ri},${ci})" onmouseover="khCO(event,${ri},${ci})" ondblclick="khDD(event,${ri},${ci})"><div class="khcv khcv-c">${khEsc(xv)}</div></td>`;
       }
       html += `<td style="min-width:30px;border:none;"></td></tr>`;
-    }
+      return html;
+  }
+
+  function khVSRDraw() {
+    const tot = KH.filteredRows.length;
+    const colSpan = khTC() + 2;
+    const topH = KH.vsStart * KH.ROW_H;
+    const botH = Math.max(0, (tot - KH.vsEnd - 1)) * KH.ROW_H;
+    const ctx = khSatirCtx();
+    let html = `<tr><td colspan="${colSpan}" style="height:${topH}px;padding:0;border:none;"></td></tr>`;
+    for (let vi = KH.vsStart; vi <= KH.vsEnd && vi < tot; vi++) html += khSatirHtml(vi, ctx);
     html += `<tr><td colspan="${colSpan}" style="height:${botH}px;padding:0;border:none;"></td></tr>`;
-    document.getElementById('kh-tbody').innerHTML = html;
+    const tb = document.getElementById('kh-tbody');
+    tb.innerHTML = html;
+    const trs = tb.querySelectorAll('tr.khr');
+    if (trs.length > 5) {
+      const a = trs[0], z = trs[trs.length - 1];
+      const h = (z.offsetTop + z.offsetHeight - a.offsetTop) / trs.length;
+      if (h > 20 && h < 80 && Math.abs(h - KH.ROW_H) > 0.01) {
+        KH.ROW_H = h;
+        tb.firstElementChild.firstElementChild.style.height = (KH.vsStart * h) + 'px';
+        tb.lastElementChild.firstElementChild.style.height = (Math.max(0, tot - KH.vsEnd - 1) * h) + 'px';
+      }
+    }
     const el = document.getElementById('kh-sc'); if (el) el.textContent = `${tot} / ${KH.TOTAL_ROWS} satır`;
   }
 
@@ -2045,7 +2101,7 @@
           .khfm-ok:hover { background:#b91c1c; }
           .khfm-clear { background:#f3f4f6;color:#374151;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit; }
           .khfm-clear:hover { background:#e5e7eb; }
-          .khr { background:#fff; } .khr:nth-child(even) { background:#fafafa; } .khr:hover { background:#fef2f2; }
+          .khr { background:#fff; } .khr.khr-c { background:#fafafa; } .khr:hover { background:#fef2f2; }
           .khra { background:#fff3f3 !important; }
           .khrn { width:46px;min-width:46px;text-align:center;font-size:10px;color:#9ca3af;background:#f9fafb;border-right:1px solid #e5e7eb;border-bottom:1px solid #f0f0f0;padding:0;height:38px;line-height:38px;cursor:pointer;user-select:none;position:sticky;left:0;z-index:5; }
           .khrn-fr { position:sticky;left:0;z-index:5; }
@@ -2107,7 +2163,7 @@
           .khfm-ok { background:#dc2626;color:#fff;border:none;border-radius:6px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit; }
           .khfm-ok:hover { background:#b91c1c; }
           .khfm-clear { background:#f3f4f6;color:#374151;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit; }
-          .khr { background:#fff; } .khr:nth-child(even) { background:#fafafa; } .khr:hover { background:#fef2f2; }
+          .khr { background:#fff; } .khr.khr-c { background:#fafafa; } .khr:hover { background:#fef2f2; }
           .khra { background:#fff3f3 !important; }
           .khrn { width:46px;min-width:46px;text-align:center;font-size:10px;color:#9ca3af;background:#f9fafb;border-right:1px solid #e5e7eb;border-bottom:1px solid #f0f0f0;padding:0;height:38px;line-height:38px;cursor:pointer;user-select:none;position:sticky;left:0;z-index:5; }
           .khrns { background:#fee2e2 !important;color:#dc2626;font-weight:700; }
@@ -8366,13 +8422,26 @@
         .catch(err => console.warn('[KaliteX] SW kaydı başarısız:', err));
     });
 
-    // Yeni SW devreye girince (yani yeni kod deploy edilince) sayfayı otomatik yenile
-    // Böylece tablette eski JS çalışmaya devam etmez
-    // İlk kurulumda (önceden SW yokken) yenileme gereksiz — sadece güncellemede yenile
+    // Yeni SW devreye girince (yeni sürüm yayınlanınca) sayfa ESKİ sürümse yenile.
+    // kalite.html ağdan geldiği için çoğu zaman sayfa zaten yenidir — o zaman ikinci yenileme yapılmaz.
+    // Yenileme gerektiren durum: uygulama çevrimdışıyken önbellekteki eski sürümle açılmışsa.
+    // İlk kurulumda (önceden SW yokken) yenileme gereksiz.
+    const KX_SURUM = 'kalitex-v24'; // sw.js içindeki CACHE ile AYNI olmalı
     const _kxHadSW = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (_kxHadSW &&!_kfSavingToCloud && !_khSyncing && !_phSyncing && !kfHasUnsavedWork() && !KH._dirty && !PH._dirty) {
-        console.log('[KaliteX] Yeni Service Worker aktif, sayfa yenileniyor...');
+    const _kxSwSurum = () => new Promise(res => {
+      const c = navigator.serviceWorker.controller;
+      if (!c) { res(null); return; }
+      const ch = new MessageChannel();
+      const t = setTimeout(() => res(null), 3000);
+      ch.port1.onmessage = e => { clearTimeout(t); res(e.data); };
+      c.postMessage({ type: 'surum' }, [ch.port2]);
+    });
+    navigator.serviceWorker.addEventListener('controllerchange', async () => {
+      if (!_kxHadSW) return;
+      const swSurum = await _kxSwSurum();
+      if (swSurum === KX_SURUM) { console.log('[KaliteX] Yeni Service Worker aktif — sayfa zaten güncel (' + KX_SURUM + ')'); return; }
+      if (!_kfSavingToCloud && !_khSyncing && !_phSyncing && !kfHasUnsavedWork() && !KH._dirty && !PH._dirty) {
+        console.log('[KaliteX] Yeni sürüm (' + swSurum + '), sayfa yenileniyor...');
         window.location.reload();
       }
     });

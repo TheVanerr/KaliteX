@@ -4,7 +4,8 @@
 //   - CDN (Tailwind, Lucide, Fonts): Cache-first
 //   - Supabase REST API: Network-first, offline'da cache'den dön
 
-  const CACHE = 'kalitex-v23';
+  // Sürüm: kalite.html içindeki KX_SURUM ile AYNI olmalı — her yayında ikisi birlikte artırılır
+  const CACHE = 'kalitex-v24';
 
 const LOCAL_ASSETS = [
   './',
@@ -126,6 +127,11 @@ self.addEventListener('fetch', event => {
       });
     })
   );
+});
+
+// ── Sürüm sorgusu: sayfa, yeni SW devreye girince kendisi eski mi diye sorar ──
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'surum' && event.ports && event.ports[0]) event.ports[0].postMessage(CACHE);
 });
 
 // ── Arkaplan sync ────────────────────────────────────────────────────────────
