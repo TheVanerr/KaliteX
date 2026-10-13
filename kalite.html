@@ -121,6 +121,19 @@
       .kfnm-mic,.kfnm-add-btn{min-height:40px;}
     }
     .kfhb-note-badge{position:absolute;top:3px;right:3px;width:7px;height:7px;background:#16a34a;border-radius:50%;display:none;}
+    @media(max-width:640px){
+      header{padding-left:6px!important;padding-right:6px!important;gap:4px!important;}
+      .kfhb-lbl{display:none!important;}
+      .kfhb{padding:6px 8px;}
+      #kf-save-name .kfsn-full,#pf-save-name .kfsn-full{display:none;}
+      #kf-save-name .kfsn-short,#pf-save-name .kfsn-short{display:inline;}
+      #auth-ui{gap:4px!important;}
+      #auth-ui > span{display:none;}
+      #auth-ui .auth-lbl{display:none;}
+      #auth-ui button{padding:6px 9px!important;}
+      /* Forma başlarken ilk basılan buton: Model / Proje seçimi en başta */
+      #kf-header-bar > div:has(> #model-select-btn), #pf-header-bar > div:has(> #project-select-btn){order:-1;}
+    }
     #kf-toast-global{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:10060;max-width:92vw;text-align:center;}
     /* Form tamamlama: boş maddeler */
     .kf-row-empty td{background:#fef9c3!important;}
@@ -2137,8 +2150,8 @@
             const grupEsc = kfEsc(row[2]);
             html += '<tr class="kf-grup-hdr" data-grup="' + grupEsc + '">'
               + '<td class="kf-rn" style="background:#fef2f2;"></td>'
-              + '<td colspan="7" style="background:#fef2f2;border-bottom:1px solid #fca5a5;padding:0 10px;height:30px;">'
-              + '<div style="display:flex;align-items:center;justify-content:space-between;">'
+              + '<td class="kf-gh-td" colspan="7" style="background:#fef2f2;border-bottom:1px solid #fca5a5;padding:0 10px;height:30px;">'
+              + '<div class="kf-gh" style="display:flex;align-items:center;justify-content:space-between;">'
               + '<span style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.06em;">' + grupEsc + '</span>'
               + '<span style="display:flex;align-items:center;gap:4px;"><span style="font-size:10px;font-weight:700;color:#9ca3af;">Tümü:</span>'
               + kfGroupBtn('EVET', '✓ EVET', '#16a34a', '#f0fdf4', '#bbf7d0')
@@ -2148,7 +2161,9 @@
               + '</div></td></tr>';
           }
           const _empty = window._kfShowEmpty && row[6] === 1 && row[0] && !String(row[3] || '').trim();
-          html += `<tr class="kf-row${_empty ? ' kf-row-empty' : ''}" data-ri="${ri}">`;
+          const _res = row[6] === 1 ? kfResClass(row[3]) : '';
+          const _free = row[6] !== 1 && !row.slice(0, 6).some(v => String(v || '').trim()) ? ' kf-row-free' : '';
+          html += `<tr class="kf-row${_empty ? ' kf-row-empty' : ''}${_res}${_free}" data-ri="${ri}">`;
           html += `<td class="kf-rn">${ri + 1}</td>`;
           for (let ci = 0; ci < 6; ci++) {
             const ro = row[6] === 1 && ci < 3;
@@ -2160,8 +2175,7 @@
               const at = (row[7]||'').toUpperCase().trim();
               const raw = row[3]||'';
               if (at === 'T') {
-                const o = (v,l) => `<option value="${v}"${raw===v?' selected':''}>${l!==undefined?l:v}</option>`;
-                html += `<td class="kf-cell kf-sonuc-t" data-ri="${ri}" data-ci="${ci}"><select class="kf-sel" onchange="kfSonucSet(${ri},this.value)">${o('','—')}${o('EVET')}${o('HAYIR')}${o('KD')}</select></td>`;
+                html += `<td class="kf-cell kf-sonuc-t" data-ri="${ri}" data-ci="${ci}">${kfSegHtml(ri, raw)}</td>`;
               } else if (at === 'N') {
                 html += `<td class="kf-cell kf-sonuc-n" data-ri="${ri}" data-ci="${ci}" onclick="kfKbOpen(${ri},'N')"><div class="kf-cv kf-cv-c${!raw?' kf-ph':''}">${raw||'—'}</div></td>`;
               } else if (at === 'TN') {
@@ -2194,6 +2208,9 @@
             html += `<td class="kf-ph-cell" style="cursor:default;"></td>`;
           }
           html += `</tr>`;
+        }
+        if (!window.kfData.some(r => r[6] === 1)) {
+          html = `<tr class="kf-hint"><td colspan="8">Kontrole başlamak için üstteki <b>Model</b> (Proje Formu'nda <b>Proje</b>) butonundan makineyi seçin.</td></tr>` + html;
         }
         kfStatusRender();
         return html;
@@ -2256,15 +2273,77 @@
           .kf-tbl { width:100%; border-collapse:collapse; table-layout:fixed; }
           .kf-tbl thead { position:sticky; top:0; z-index:10; }
           .kf-tbl th { background:#dc2626; color:#fff; font-size:11px; font-weight:700; letter-spacing:0.05em; text-align:center; padding:10px 8px; border-right:1px solid rgba(255,255,255,0.2); white-space:nowrap; }
-          .kf-tbl th:first-child { width:46px; min-width:46px; background:#b91c1c; }
-          .kf-rn { width:46px; min-width:46px; text-align:center; font-size:10px; color:#9ca3af; background:#f9fafb; border-right:1px solid #e5e7eb; border-bottom:1px solid #f0f0f0; padding:0; height:36px; line-height:36px; user-select:none; position:sticky; left:0; }
+          .kf-tbl th:first-child { width:42px; min-width:42px; background:#b91c1c; }
+          .kf-rn { width:42px; min-width:42px; text-align:center; font-size:10px; color:#9ca3af; background:#f9fafb; border-right:1px solid #e5e7eb; border-bottom:1px solid #f0f0f0; padding:0; height:40px; vertical-align:middle; user-select:none; position:sticky; left:0; }
           .kf-row { background:#fff; } .kf-row:nth-child(even) { background:#fafafa; } .kf-row:hover { background:#fef2f2; }
           .kf-cell { border-bottom:1px solid #f0f0f0; border-right:1px solid #f0f0f0; height:36px; padding:0; cursor:cell; position:relative; vertical-align:middle; }
-          .kf-cv { padding:4px 9px; font-size:12px; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:28px; }
+          /* Uzun metin kesilmez, alt satıra geçer */
+          .kf-cv { padding:7px 10px; font-size:12px; color:#1f2937; white-space:normal; overflow-wrap:anywhere; line-height:1.4; }
+          .kf-cell[data-ci="0"] .kf-cv { white-space:nowrap; font-weight:700; color:#374151; padding:7px 4px; }
+          .kf-cell[data-ci="1"] .kf-cv { font-size:12.5px; }
           .kf-cv-c { text-align:center; }
           .kf-input { position:absolute; inset:0; width:100%; height:100%; border:2px solid #dc2626; outline:none; padding:4px 9px; font-size:12px; font-family:inherit; background:#fff; box-sizing:border-box; z-index:10; text-align:center; }
           .kf-cell-ro { cursor:default !important; background:#f8fafc !important; }
           .kf-cell-ro .kf-cv { color:#4b5563; }
+          .kf-cell { height:40px; }
+          /* EVET / HAYIR / KD — tek dokunuş */
+          .kf-segs { display:flex; gap:4px; padding:4px 6px; }
+          .kf-seg { flex:1; min-width:0; height:30px; border:1.5px solid #e5e7eb; background:#fff; border-radius:7px; font-size:11px; font-weight:800; color:#6b7280; cursor:pointer; font-family:inherit; letter-spacing:.02em; touch-action:manipulation; transition:background .12s,border-color .12s,color .12s; }
+          .kf-seg:hover { border-color:#9ca3af; color:#374151; }
+          .kf-seg-evet.on { background:#16a34a; border-color:#16a34a; color:#fff; }
+          .kf-seg-hayir.on { background:#dc2626; border-color:#dc2626; color:#fff; }
+          .kf-seg-kd.on { background:#6b7280; border-color:#6b7280; color:#fff; }
+          /* Sonuca göre satır işareti — HAYIR'lar kaydırırken göze çarpsın */
+          .kf-r-evet .kf-rn { box-shadow:inset 3px 0 0 #16a34a; }
+          .kf-r-kd .kf-rn { box-shadow:inset 3px 0 0 #9ca3af; }
+          .kf-r-hayir td { background:#fff5f5 !important; }
+          .kf-r-hayir .kf-rn { box-shadow:inset 3px 0 0 #dc2626; color:#dc2626; font-weight:800; }
+          /* Sayı / metin girişi: dokunulacak kutu gibi görünsün */
+          .kf-sonuc-n .kf-cv, .kf-sonuc-tn .kf-cv { margin:5px 8px; padding:4px 8px; border:1.5px dashed #d1d5db; border-radius:7px; background:#fff; font-weight:700; }
+          .kf-sonuc-n .kf-cv.kf-ph, .kf-sonuc-tn .kf-cv.kf-ph { font-weight:400; }
+          .kf-hint td { padding:28px 16px; text-align:center; color:#6b7280; font-size:13px; }
+          /* ── Telefon ve dikey tablet: her madde bir kart ───────────────── */
+          @media (max-width:900px) {
+            .kf-tbl-wrap { background:transparent; border:none; box-shadow:none; border-radius:0; }
+            .kf-tbl, .kf-tbl tbody { display:block; width:100%; }
+            .kf-tbl thead { display:none; }
+            .kf-tbl tr.kf-row-free { display:none; }
+            .kf-tbl tr.kf-hint, .kf-tbl tr.kf-hint td { display:block; }
+            .kf-tbl tr.kf-grup-hdr { display:block; position:sticky; top:0; z-index:5; background:#f9fafb; padding:10px 6px 6px; }
+            .kf-tbl tr.kf-grup-hdr td.kf-rn { display:none; }
+            .kf-tbl tr.kf-grup-hdr td.kf-gh-td { display:block; background:transparent !important; border:none !important; height:auto !important; padding:0 !important; }
+            .kf-tbl tr.kf-grup-hdr .kf-gh { flex-wrap:wrap; gap:6px; }
+            .kf-tbl tr.kf-grup-hdr .kf-gh > span:first-child { font-size:12px !important; }
+            .kf-tbl tr.kf-grup-hdr button { padding:5px 12px !important; font-size:11px !important; }
+            .kf-tbl tr.kf-row { display:grid; grid-template-columns:auto 1fr auto; grid-template-areas:"kod grup foto" "acik acik acik" "sonuc sonuc sonuc" "durum durum ref";
+              gap:2px 8px; align-items:center; background:#fff !important; border:1px solid #e5e7eb; border-radius:12px; margin:0 6px 8px; padding:8px 10px; box-shadow:0 1px 3px rgba(17,24,39,.05); }
+            .kf-tbl tr.kf-row td { display:block; border:none !important; height:auto; padding:0; background:transparent !important; position:static; }
+            .kf-tbl tr.kf-row td.kf-rn { display:none; }
+            .kf-tbl tr.kf-row td[data-ci="0"] { grid-area:kod; }
+            .kf-tbl tr.kf-row td[data-ci="0"] .kf-cv { padding:0; font-size:11px; color:#dc2626; letter-spacing:.03em; }
+            .kf-tbl tr.kf-row td[data-ci="1"] { grid-area:acik; }
+            .kf-tbl tr.kf-row td[data-ci="1"] .kf-cv { padding:2px 0 6px; font-size:14px; font-weight:600; color:#111827; text-align:left; }
+            .kf-tbl tr.kf-row td[data-ci="2"] { grid-area:grup; min-width:0; }
+            .kf-tbl tr.kf-row td[data-ci="2"] .kf-cv { padding:0; font-size:10px; color:#9ca3af; font-weight:700; text-align:left; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .kf-tbl tr.kf-row td[data-ci="3"] { grid-area:sonuc; }
+            .kf-tbl tr.kf-row td[data-ci="4"] { grid-area:durum; }
+            .kf-tbl tr.kf-row td[data-ci="5"] { grid-area:ref; }
+            .kf-tbl tr.kf-row td[data-ci="4"] .kf-cv, .kf-tbl tr.kf-row td[data-ci="5"] .kf-cv { padding:4px 0 0; font-size:11px; color:#6b7280; text-align:left; }
+            .kf-tbl tr.kf-row td[data-ci="5"] .kf-cv { text-align:right; }
+            .kf-tbl tr.kf-row td[data-ci="5"] .kf-cv:not(:empty)::before { content:'Geçmiş: '; color:#9ca3af; }
+            .kf-tbl tr.kf-row td[data-ci="4"] .kf-cv:empty::before { content:'+ durum notu (çift dokun)'; color:#cbd5e1; }
+            .kf-tbl tr.kf-row .kf-ph-cell { grid-area:foto; padding:2px 4px; font-size:15px; border:none !important; }
+            .kf-segs { padding:4px 0 2px; gap:6px; }
+            .kf-seg { height:44px; font-size:14px; border-radius:10px; }
+            .kf-sonuc-n .kf-cv, .kf-sonuc-tn .kf-cv { margin:4px 0 2px; padding:11px 10px; font-size:15px; text-align:center; }
+            .kf-tbl tr.kf-row .kf-sel { height:44px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; }
+            .kf-tbl tr.kf-row.kf-r-hayir { border-color:#fca5a5; background:#fff5f5 !important; box-shadow:inset 4px 0 0 #dc2626; }
+            .kf-tbl tr.kf-row.kf-r-evet { box-shadow:inset 4px 0 0 #16a34a; }
+            .kf-tbl tr.kf-row.kf-r-kd { box-shadow:inset 4px 0 0 #9ca3af; }
+            .kf-tbl tr.kf-row.kf-row-empty { background:#fef9c3 !important; border-color:#facc15; }
+            .kf-input { position:static; height:40px; text-align:left; border-radius:8px; }
+            .kf-tbl tr.kf-row.kf-row-free { display:none; }
+          }
           /* Form kaydet/yükle modal */
           .kfm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9997;align-items:center;justify-content:center;}
           .kfm-box{background:#fff;border-radius:14px;padding:22px 24px;min-width:300px;max-width:680px;width:97%;box-shadow:0 8px 40px rgba(0,0,0,0.22);}
@@ -2342,14 +2421,14 @@
             <table class="kf-tbl">
               <thead>
                 <tr>
-                  <th style="width:46px;">#</th>
-                  <th style="width:110px;">KOD</th>
-                  <th style="width:260px;">AÇIKLAMA</th>
-                  <th style="width:130px;">GRUP</th>
-                  <th style="width:120px;">SONUÇ</th>
-                  <th style="width:130px;">DURUM</th>
-                  <th style="width:160px;">REFERANS</th>
-                  <th style="width:58px;" title="Fotoğraf">📷</th>
+                  <th style="width:42px;">#</th>
+                  <th style="width:78px;">KOD</th>
+                  <th style="text-align:left;padding-left:12px;">AÇIKLAMA</th>
+                  <th style="width:118px;">GRUP</th>
+                  <th style="width:204px;">SONUÇ</th>
+                  <th style="width:120px;">DURUM</th>
+                  <th style="width:118px;">REFERANS</th>
+                  <th style="width:48px;" title="Fotoğraf">📷</th>
                 </tr>
               </thead>
               <tbody id="kf-tbody">
@@ -2615,9 +2694,9 @@
     const el = document.getElementById('auth-ui');
     if (!el) return;
     if (currentUser) {
-      el.innerHTML = `<span style="font-size:0.8rem;font-weight:600;color:#6b7280;">✏️ ${currentUser.name}</span><button onclick="authSignOut()" style="display:flex;align-items:center;gap:6px;background:#dc2626;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">Çıkış</button>`;
+      el.innerHTML = `<span style="font-size:0.8rem;font-weight:600;color:#6b7280;">✏️ ${currentUser.name}</span><button onclick="authSignOut()" style="display:flex;align-items:center;gap:6px;background:#dc2626;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;" title="Çıkış"><span aria-hidden="true">⎋</span><span class="auth-lbl">Çıkış</span></button>`;
     } else {
-      el.innerHTML = `<span style="font-size:0.75rem;color:#9ca3af;font-weight:600;">🔒 Salt Okunur</span><button onclick="authLoginWithGoogle()" style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #d1d5db;color:#374151;padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.1);"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Düzenleyici Girişi</button>`;
+      el.innerHTML = `<span style="font-size:0.75rem;color:#9ca3af;font-weight:600;">🔒 Salt Okunur</span><button onclick="authLoginWithGoogle()" style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #d1d5db;color:#374151;padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.1);"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg><span class="auth-lbl">Düzenleyici Girişi</span></button>`;
     }
     document.querySelectorAll('.kh-editor-only').forEach(b => { b.style.display = currentUser ? '' : 'none'; });
     lucide.createIcons();
@@ -2858,9 +2937,36 @@
   // ── Kalite Formu Özel Klavye ─────────────────────────────────────────────
   window.kfKb = { ri: -1, type: null, val: '', shift: false };
 
+  // Sonuca göre satır sınıfı
+  function kfResClass(v) {
+    v = String(v || '').trim().toUpperCase();
+    return v === 'HAYIR' ? ' kf-r-hayir' : v === 'EVET' ? ' kf-r-evet' : v === 'KD' ? ' kf-r-kd' : '';
+  }
+  function kfSegHtml(ri, raw) {
+    const cur = String(raw || '').trim().toUpperCase();
+    return '<div class="kf-segs">' + ['EVET', 'HAYIR', 'KD'].map(v =>
+      `<button type="button" class="kf-seg kf-seg-${v.toLowerCase()}${cur === v ? ' on' : ''}" onclick="kfSegSet(${ri},'${v}')">${v}</button>`).join('') + '</div>';
+  }
+  // Butona dokun: seç; seçili butona tekrar dokun: temizle
+  window.kfSegSet = function(ri, v) {
+    if (!window.kfData || !window.kfData[ri]) return;
+    const cur = String(window.kfData[ri][3] || '').trim().toUpperCase();
+    window.kfSonucSet(ri, cur === v ? '' : v);
+  };
+  function kfRefreshRowUI(ri) {
+    const tr = document.querySelector(`#kf-tbody .kf-row[data-ri="${ri}"]`);
+    if (!tr || !window.kfData[ri]) return;
+    const v = String(window.kfData[ri][3] || '').trim().toUpperCase();
+    tr.querySelectorAll('.kf-seg').forEach(b => b.classList.toggle('on', b.textContent === v));
+    tr.classList.remove('kf-r-evet', 'kf-r-hayir', 'kf-r-kd');
+    const c = kfResClass(v).trim();
+    if (c) tr.classList.add(c);
+  }
+
   window.kfSonucSet = function(ri, val) {
     if (window.kfData && window.kfData[ri]) {
       window.kfData[ri][3] = val;
+      kfRefreshRowUI(ri);
       // Referans geçmişi: seçim değiştikçe yanına yaz
       if (val) {
         const cur = window.kfData[ri][5] || '';
