@@ -4,7 +4,7 @@
 //   - CDN (Tailwind, Lucide, Fonts): Cache-first
 //   - Supabase REST API: Network-first, offline'da cache'den dön
 
-  const CACHE = 'kalitex-v16';
+  const CACHE = 'kalitex-v17';
 
 const LOCAL_ASSETS = [
   './',
@@ -13,6 +13,7 @@ const LOCAL_ASSETS = [
   './icon.svg',
   './icon-192.png',
   './icon-512.png',
+  './img/sonel-pat-820.webp',
 ];
 
 const CDN_ASSETS = [

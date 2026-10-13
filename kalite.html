@@ -210,7 +210,7 @@
       </div>
      </div>
     </div>
-    <nav class="flex-1 flex flex-col min-h-0 p-3"><div class="flex-1 overflow-y-auto space-y-1 min-h-0"><button onclick="navigate('kalite-formu')" data-page="kalite-formu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Kalite Formu</button> <button onclick="navigate('proje-formu')" data-page="proje-formu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Proje Formu</button> <button onclick="navigate('kalite-havuzu')" data-page="kalite-havuzu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Kalite Havuzu</button> <button onclick="navigate('proje-havuzu')" data-page="proje-havuzu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Proje Havuzu</button> <button onclick="navigate('rapor')" data-page="rapor" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Rapor</button> <button onclick="toggleSeries('lym')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>LYM Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-lym transition-transform"></i> </button>
+    <nav class="flex-1 flex flex-col min-h-0 p-3"><div class="flex-1 overflow-y-auto space-y-1 min-h-0"><button onclick="navigate('kalite-formu')" data-page="kalite-formu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Kalite Formu</button> <button onclick="navigate('proje-formu')" data-page="proje-formu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Proje Formu</button> <button onclick="navigate('kalite-havuzu')" data-page="kalite-havuzu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Kalite Havuzu</button> <button onclick="navigate('proje-havuzu')" data-page="proje-havuzu" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Proje Havuzu</button> <button onclick="navigate('rapor')" data-page="rapor" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Rapor</button> <button onclick="navigate('test-cihazlari')" data-page="test-cihazlari" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">Test Cihazları</button> <button onclick="toggleSeries('lym')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>LYM Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-lym transition-transform"></i> </button>
      <div id="lym-models" class="space-y-0"><button onclick="navigate('lym-950')" data-page="lym-950" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">LYM 950</button> <button onclick="navigate('lym-1150')" data-page="lym-1150" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">LYM 1150</button> <button onclick="navigate('lym-1350')" data-page="lym-1350" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">LYM 1350</button> <button onclick="navigate('lym-1500')" data-page="lym-1500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">LYM 1500</button>
      </div><button onclick="toggleSeries('vdl')" class="series-toggle w-full flex items-center justify-between pt-3 pb-1 px-4 text-[10px] font-700 text-red-500 uppercase tracking-widest hover:text-red-600 transition"> <span>VDL Serisi</span> <i data-lucide="chevron-down" class="w-4 h-4 series-chevron-vdl transition-transform"></i> </button>
      <div id="vdl-models" class="space-y-0"><button onclick="navigate('vdl-2500')" data-page="vdl-2500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 2500</button> <button onclick="navigate('vdl-3500')" data-page="vdl-3500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 3500</button> <button onclick="navigate('vdl-4250')" data-page="vdl-4250" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 4250</button> <button onclick="navigate('vdl-5500')" data-page="vdl-5500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 5500</button> <button onclick="navigate('vdl-6500')" data-page="vdl-6500" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-600 transition-all">VDL 6500</button>
@@ -424,6 +424,7 @@
     'kalite-havuzu': { title: 'Kalite Havuzu', desc: 'Tüm kalite kayıtlarını görüntüleyin ve analiz edin.' },
     'proje-havuzu': { title: 'Proje Havuzu', desc: 'Projelere parametre atamalarını yönetin.' },
     'rapor': { title: 'Rapor', desc: 'Kalite kontrol raporlarını görüntüleyin ve indirin.' },
+    'test-cihazlari': { title: 'Test Cihazları', desc: 'Kalite kontrol testlerinde kullanılan cihazlar ve test yöntemleri.' },
     'lym-950': { title: 'LYM 950', desc: 'LYM 950 modeli kalite kontrol parametreleri.' },
     'lym-1150': { title: 'LYM 1150', desc: 'LYM 1150 modeli kalite kontrol parametreleri.' },
     'lym-1350': { title: 'LYM 1350', desc: 'LYM 1350 modeli kalite kontrol parametreleri.' },
@@ -1089,6 +1090,14 @@
       khToast('⛔ Aynı KOD birden fazla satırda: ' + [...dups].slice(0, 5).join(', ') + ' — düzeltip tekrar kaydedin', 6000);
       return false;
     }
+    // Açıklaması boş madde — yeni eklenip yazılmamış satır olabilir
+    const bos = [];
+    for (let ri = 0; ri < KH.TOTAL_ROWS; ri++) {
+      const r = KH.paramData[ri];
+      if (r && r[0] && !String(r[4] || '').trim()) bos.push(r[0]);
+    }
+    if (bos.length && !window.confirm(bos.length + ' maddenin AÇIKLAMA alanı boş: ' + bos.slice(0, 10).join(', ')
+        + (bos.length > 10 ? ' …' : '') + '\n\nYine de kaydedilsin mi?')) return false;
     const del = khGetDeletedKodlar().filter(k => !seen.has(k));
     if (del.length && !window.confirm(del.length + ' parametre veritabanından KALICI olarak silinecek'
         + ' (model/proje atamalarıyla birlikte):\n\n' + del.slice(0, 15).join(', ') + (del.length > 15 ? ' …' : '')
@@ -1495,6 +1504,24 @@
   }
 
   function khVSR() {
+    // Düzenleme açıkken yeniden çizim editörü yok ediyordu (yazılanlar kayboluyordu):
+    // önce değeri kaydet, çizimden sonra editörü aynı hücrede yeniden aç
+    let reopen = null;
+    if (KH.editCell && KH.editEl) {
+      reopen = { ri: KH.editCell.ri, ci: KH.editCell.ci, pos: KH.editEl.selectionStart };
+      khCE();
+    }
+    khVSRDraw();
+    if (reopen) {
+      const cell = document.querySelector(`.khc[data-ri="${reopen.ri}"][data-ci="${reopen.ci}"]`);
+      if (cell) {
+        khDD({ currentTarget: cell, stopPropagation: () => {} }, reopen.ri, reopen.ci);
+        if (KH.editEl && reopen.pos != null) KH.editEl.setSelectionRange(reopen.pos, reopen.pos);
+      }
+    }
+  }
+
+  function khVSRDraw() {
     const tot = KH.filteredRows.length;
     const colSpan = khTC() + 2;
     const topH = KH.vsStart * KH.ROW_H;
@@ -1619,6 +1646,9 @@
     KH.editEl = cell.querySelector('input');
     KH.editEl.focus(); KH.editEl.select();
     KH.editEl.addEventListener('keydown', ev => {
+      // Ctrl+Enter: kaydet ve altına yeni madde aç (seri madde girişi)
+      // stopPropagation: sayfa geneli kısayol (Ctrl+Enter) ikinci bir satır eklemesin
+      if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); ev.stopPropagation(); khCE(); khAddRow(); return; }
       if (ev.key === 'Enter') { khCE(); ev.preventDefault(); }
       if (ev.key === 'Escape') { khCA(); ev.preventDefault(); }
       if (ev.key === 'Tab') {
@@ -1631,7 +1661,9 @@
         ev.preventDefault();
       }
     });
-    KH.editEl.addEventListener('blur', () => setTimeout(khCE, 80));
+    // Sadece bu editör hâlâ aktifse kapat (yeniden açılan editörü eskisinin blur'u kapatmasın)
+    const myEl = KH.editEl;
+    myEl.addEventListener('blur', () => setTimeout(() => { if (KH.editEl === myEl) khCE(); }, 80));
     e.stopPropagation();
   }
 
@@ -1769,13 +1801,35 @@
   }
 
   // ── Add row (insert above selected row) ────────────────────
+  // KOD'un sayısal kısmını artırarak havuzda kullanılmayan ilk kodu bul (K1048 → K1049)
+  // ERP ile eşleşmesi gerektiği için sadece öneri — hücreden değiştirilebilir
+  function khNextKod(kod) {
+    const m = String(kod || '').trim().match(/^(.*?)(\d+)$/);
+    if (!m) return '';
+    const used = new Set();
+    for (let ri = 0; ri < KH.TOTAL_ROWS; ri++) { const k = KH.paramData[ri]?.[0]; if (k) used.add(k); }
+    let n = parseInt(m[2], 10);
+    for (let i = 0; i < 100000; i++) {
+      n++;
+      const c = m[1] + String(n).padStart(m[2].length, '0');
+      if (!used.has(c)) return c;
+    }
+    return '';
+  }
+
+  // Seçili satırın ALTINA yeni satır ekle; KOD (sıradaki boş numara), ALAN TÜRÜ, UZUNLUK,
+  // DESİMAL, GRUP, GRUP KODU seçili satırdan gelir; AÇIKLAMA yazmaya hazır açılır.
   function khAddRow() {
     if (!khCanEdit()) return;
+    if (currentPage !== 'kalite-havuzu') return;
     if (KH.sel.r1 < 0) {
-      khToast('Önce bir satır seçin — yeni satır seçili satırın üstüne eklenir', 3000);
+      khToast('Önce bir satır seçin — yeni satır seçili satırın altına eklenir', 3000);
       return;
     }
-    const insertAt = Math.min(KH.sel.r1, KH.sel.r2);
+    if (KH.editCell) khCE();
+    const srcRow = Math.max(KH.sel.r1, KH.sel.r2);
+    const insertAt = srcRow + 1;
+    const src = KH.paramData[srcRow] || [];
     KH.TOTAL_ROWS++;
     KH.paramData.splice(insertAt, 0, new Array(KH_FIXED.length).fill(''));
     // Shift assignment row indices for rows at or after insertAt
@@ -1790,11 +1844,42 @@
         asg[mid] = newObj;
       }
     });
-    KH.sel = { r1: insertAt, c1: KH.sel.c1, r2: insertAt, c2: KH.sel.c2 };
+    // Üst satırdan kopyala (AÇIKLAMA hariç — her maddede farklı)
+    const yeniKod = khNextKod(src[0]);
+    if (yeniKod) khSetFixed(insertAt, 0, yeniKod);
+    [1, 2, 3, 5, 6].forEach(ci => { if (src[ci]) khSetFixed(insertAt, ci, src[ci]); });
+    KH.sel = { r1: insertAt, c1: 4, r2: insertAt, c2: 4 };
+    KH.showSel = true;
     KH._dirty = true;
     khBuildFR(); khVSR();
     khScrollTo(insertAt);
-    khToast('Satır eklendi ✓');
+    khToast(yeniKod ? 'Satır eklendi: ' + yeniKod + ' — açıklamayı yazın (Ctrl+Enter: kaydet ve yeni satır)' : 'Satır eklendi ✓', 3500);
+    // AÇIKLAMA hücresini düzenlemeye aç (kaydırma sonrası satır çizilsin diye kısa gecikme)
+    setTimeout(() => {
+      khOnScroll();
+      const cell = document.querySelector(`.khc[data-ri="${insertAt}"][data-ci="4"]`);
+      if (cell) khDD({ currentTarget: cell, stopPropagation: () => {} }, insertAt, 4);
+    }, 60);
+  }
+
+  // Ctrl+D — aşağı doldur: çok satır seçiliyse ilk satırın değerleri altındakilere,
+  // tek satırda üstteki satırın değerleri bu satıra kopyalanır. KOD sütunu atlanır (benzersiz olmalı).
+  function khFillDown() {
+    if (!khCanEdit()) return;
+    const { r1, c1, r2, c2 } = KH.sel; if (r1 < 0) return;
+    const minR = Math.min(r1, r2), maxR = Math.max(r1, r2);
+    const minC = Math.min(c1, c2), maxC = Math.max(c1, c2);
+    let src, targets = [];
+    if (minR === maxR) { if (minR === 0) return; src = minR - 1; targets = [minR]; }
+    else { src = minR; for (let r = minR + 1; r <= maxR; r++) targets.push(r); }
+    let n = 0;
+    for (let c = minC; c <= maxC; c++) {
+      if (c === 0) continue;
+      const v = c < KH_FIXED.length ? (KH.paramData[src][c] || '') : khMVal(mxCols()[c - KH_FIXED.length].id, src);
+      targets.forEach(r => { khSetCell(r, c, v); n++; });
+    }
+    khVSR();
+    khToast(n ? n + ' hücre aşağı dolduruldu' + (minC === 0 ? ' (KOD sütunu atlandı)' : '') : 'KOD sütunu doldurulamaz — benzersiz olmalı', 2500);
   }
 
   // ── Scroll cell into view ─────────────────────────────────────
@@ -1820,6 +1905,8 @@
     if (cmd && e.key === 'v') { khPaste(); e.preventDefault(); return; }
     if (cmd && e.key === 'x') { khCut(); e.preventDefault(); return; }
     if (cmd && e.key === 'a') { khSelAll(); e.preventDefault(); return; }
+    if (cmd && (e.key === 'd' || e.key === 'D')) { khFillDown(); e.preventDefault(); return; }
+    if ((e.key === 'Insert' || (cmd && e.key === 'Enter')) && currentPage === 'kalite-havuzu') { khAddRow(); e.preventDefault(); return; }
     if (cmd && e.key === 's') { if (isEditor()) { currentPage === 'proje-havuzu' ? phSave() : khSave(); } e.preventDefault(); return; }
     if (e.key === 'F2' && KH.sel.r1 >= 0 && KH.sel.r1 === KH.sel.r2 && KH.sel.c1 === KH.sel.c2) {
       if (isEditor()) {
@@ -1959,7 +2046,7 @@
           </div>
           <div class="khst">
             <span id="kh-sc"></span>
-            <span>Satırlar = Kalite Parametreleri &nbsp;|&nbsp; Sütunlar = Makine Modelleri &nbsp;|&nbsp; Hücreye çift tıkla: düzenle</span>
+            <span>Çift tık: düzenle &nbsp;|&nbsp; Satır Ekle / Insert: alta yeni madde (üst satırdan kopyalar) &nbsp;|&nbsp; Ctrl+Enter: kaydet + yeni madde &nbsp;|&nbsp; Ctrl+D: aşağı doldur</span>
           </div>
         </div>
         <div id="kh-filter-modal" class="khfm-overlay" style="display:none;" onclick="if(event.target===this)khCloseFilter()"></div>
@@ -2052,7 +2139,11 @@
               + '<td colspan="7" style="background:#fef2f2;border-bottom:1px solid #fca5a5;padding:0 10px;height:30px;">'
               + '<div style="display:flex;align-items:center;justify-content:space-between;">'
               + '<span style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.06em;">' + grupEsc + '</span>'
-              + '<button onclick="kfGroupAllEvet(this.closest(\'tr\').dataset.grup)" style="font-size:10px;font-weight:700;color:#16a34a;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:5px;padding:2px 9px;cursor:pointer;font-family:inherit;line-height:1.6;touch-action:manipulation;" title="Bu gruptaki boş T tipi soruları EVET yap (HAYIR/KD değişmez)">\u2713 Tümü EVET</button>'
+              + '<span style="display:flex;align-items:center;gap:4px;"><span style="font-size:10px;font-weight:700;color:#9ca3af;">Tümü:</span>'
+              + kfGroupBtn('EVET', '✓ EVET', '#16a34a', '#f0fdf4', '#bbf7d0')
+              + kfGroupBtn('HAYIR', '✗ HAYIR', '#dc2626', '#fff', '#fecaca')
+              + kfGroupBtn('KD', 'KD', '#4b5563', '#f9fafb', '#d1d5db')
+              + '</span>'
               + '</div></td></tr>';
           }
           const _empty = window._kfShowEmpty && row[6] === 1 && row[0] && !String(row[3] || '').trim();
@@ -2333,6 +2424,8 @@
 
       } else if (currentPage === 'rapor') {
         rpRenderPage();
+      } else if (currentPage === 'test-cihazlari') {
+        tcRenderPage();
       } else {
         document.getElementById('page-content').innerHTML = `
           <div class="page-fade">
@@ -2772,28 +2865,34 @@
     }
   };
 
-  // Gruptaki boş T tipi satırları EVET yap (HAYIR ve KD dokunulmaz)
-  window.kfGroupAllEvet = function(grupAdi) {
+  // Grup başlığındaki "Tümü: EVET / HAYIR / KD" butonu
+  function kfGroupBtn(val, label, color, bg, border) {
+    return '<button onclick="kfGroupAll(this.closest(\'tr\').dataset.grup,\'' + val + '\')" style="font-size:10px;font-weight:700;color:' + color
+      + ';background:' + bg + ';border:1.5px solid ' + border + ';border-radius:5px;padding:2px 9px;cursor:pointer;font-family:inherit;line-height:1.6;touch-action:manipulation;"'
+      + ' title="Bu gruptaki BOŞ EVET/HAYIR sorularını ' + val + ' yap (cevaplanmışlar değişmez)">' + label + '</button>';
+  }
+
+  // Gruptaki boş T tipi (EVET/HAYIR/KD) soruları verilen değerle doldur — cevaplanmışlara dokunma
+  window.kfGroupAll = function(grupAdi, deger) {
     if (!window.kfData) return;
-    let degistirilen = 0;
+    const hedef = [];
     window.kfData.forEach((row, ri) => {
       if (row[6] !== 1) return;
       if ((row[2] || '') !== grupAdi) return;
       if ((row[7] || '').toUpperCase().trim() !== 'T') return;
-      const val = String(row[3] || '').trim().toUpperCase();
-      if (val === 'EVET' || val === 'HAYIR' || val === 'KD') return;
-      if (val) return;
-      window.kfSonucSet(ri, 'EVET');
-      const sel = document.querySelector(`#kf-tbody .kf-row[data-ri="${ri}"] select.kf-sel`);
-      if (sel) sel.value = 'EVET';
-      degistirilen++;
+      if (String(row[3] || '').trim()) return;
+      hedef.push(ri);
     });
-    if (degistirilen === 0) {
-      kfToast('Bu grupta doldurulacak boş soru yok ✓');
-    } else {
-      kfToast(`✓ ${grupAdi}: ${degistirilen} boş satır EVET yapıldı`);
-    }
+    if (!hedef.length) { kfToast('Bu grupta doldurulacak boş soru yok ✓'); return; }
+    if (deger === 'HAYIR' && !window.confirm(grupAdi + ' grubundaki ' + hedef.length + ' boş soru HAYIR (hatalı) olarak işaretlensin mi?')) return;
+    hedef.forEach(ri => {
+      window.kfSonucSet(ri, deger);
+      const sel = document.querySelector(`#kf-tbody .kf-row[data-ri="${ri}"] select.kf-sel`);
+      if (sel) sel.value = deger;
+    });
+    kfToast(`✓ ${grupAdi}: ${hedef.length} boş soru ${deger} yapıldı`);
   };
+  window.kfGroupAllEvet = grupAdi => window.kfGroupAll(grupAdi, 'EVET');
 
   window.kfKbOpen = function(ri, type) {
     if (!window.kfData || !window.kfData[ri]) return;
@@ -5687,6 +5786,255 @@
     // Tarayıcı "PDF olarak kaydet"te dosya adını başlıktan alır
     document.title = kxSafeName('Kalite - ' + (doc.modelLabel || '') + ' - ' + (doc.name || 'Form'));
     setTimeout(() => window.print(), 60);
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // TEST CİHAZLARI — kalite kontrolde kullanılan cihazlar ve test yöntemleri
+  // Yeni cihaz eklemek için TEST_DEVICES listesine bir kayıt eklemek yeterli.
+  // Cihaz değerleri: Sonel PAT-810/815/820 kullanım kılavuzu v1.14 (sonel.pl)
+  // Kabul kriterleri: EN 60204-1 (Makinelerde güvenlik — makinelerin elektrik donanımı)
+  // ═════════════════════════════════════════════════════════════════════════
+  const TEST_DEVICES = [
+    {
+      id: 'sonel-pat-820',
+      marka: 'SONEL',
+      model: 'PAT-820',
+      tur: 'Elektriksel Güvenlik Test Cihazı',
+      foto: './img/sonel-pat-820.webp',
+      ozet: 'Makinelerin elektriksel güvenliğini sevkiyattan önce doğrulamak için kullanılan çok fonksiyonlu test cihazı. '
+        + 'Koruyucu iletken (topraklama) direnci, izolasyon direnci ve yüksek gerilim (flash) testini tek cihazda yapar; '
+        + 'sonuçları hafızaya kaydeder, USB ile bilgisayara aktarır.',
+      ozellikler: [
+        ['Topraklama sürekliliği', '200 mA · 10 A · 25 A'],
+        ['İzolasyon direnci', '100 · 250 · 500 V DC — 599,9 MΩ\'a kadar'],
+        ['Flash test', '1500 · 3000 V AC — 0,01–2,50 mA limit'],
+        ['Kaçak akım', 'PE, fark, temas, ikame'],
+        ['Koruma', 'IP67 (kapak kapalı)'],
+        ['Veri', 'Hafıza · USB · Sonel PAT yazılımı']
+      ],
+      kaynaklar: [
+        ['Üretici sayfası', 'https://sonel.pl/en/product/portable-appliance-tester-sonel-pat-820'],
+        ['Kullanım kılavuzu (EN)', 'https://cdn.sonel.com/Erp/PAT-810-815-820%20insobs%20GB%20v1.14.pdf']
+      ],
+      testler: [
+        {
+          id: 'topraklama',
+          ad: 'Topraklama Sürekliliği',
+          en: 'Protective conductor (PE) continuity — RPE',
+          ikon: 'shield-check',
+          renk: '#16a34a',
+          acik: '#f0fdf4',
+          amac: 'Makinenin dokunulabilen tüm metal parçalarının ana topraklama (PE) barasına düşük dirençle bağlı olduğunu doğrular. '
+            + 'Bir kablo gövdeye değdiğinde arıza akımının kişinin üzerinden değil, topraklama iletkeninden akması ve sigortanın / '
+            + 'kaçak akım rölesinin hemen açması bu bağlantıya bağlıdır. Kapak menteşeleri, pano kapısı ve boyalı yüzeyler en sık sorun çıkan yerlerdir.',
+          degerler: [
+            ['Test akımı', '10 A (önerilen) · 25 A · 200 mA'],
+            ['Süre', '1–60 sn (ör. 5 sn)'],
+            ['Limit', '10 mΩ – 1,99 Ω arası ayarlanır'],
+            ['Kabul', 'RPE < limit — standart: beklenen aralıkta olmalı']
+          ],
+          kabul: 'EN 60204-1 bu testi 0,2 A ile yaklaşık 10 A arası bir akımla yapmayı ister ve ölçülen direncin iletken boyu/kesitine göre beklenen aralıkta olmasını şart koşar. '
+            + 'Kısa iç topraklama bağlantılarında pratikte birkaç on miliohm görülür; firma limitinizi (ör. 0,1 Ω) prosedürünüze yazın.',
+          adimlar: [
+            "Makinenin enerjisini kesin, ana şalteri kapatıp kilitleyin. Besleme kablosunu (L1-L2-L3-N) şebekeden ayırın.",
+            "Cihazda <b>Rpe</b>'ye basın. Test akımını <b>10 A</b> seçin, süreyi ve limiti girin. Ölçüm yöntemi: <b>Prob – prob</b> (T1–T2).",
+            "<b>T1</b> kablosunu panodaki ana PE barasına (toprak klemensine) bağlayın.",
+            "<b>T2</b> probuyla <b>5 farklı noktayı</b> ölçün. Örnek: 1) gövde sacı, 2) kapak, 3) tank, 4) pompa / motor gövdesi, 5) pano kapısı. Boyalı yüzeylerde çıplak metale temas edin.",
+            "Her noktada <b>START</b>'a basın, sonucu okuyun: RPE &lt; limit ise <b>GEÇTİ</b>.",
+            "Değerleri formdaki <b>TOPRAKLAMA SÜREKLİLİĞİ 1.–5. ÖLÇÜM</b> maddelerine (K3070–K3074) ohm olarak yazın. Geçmeyen noktada topraklama örgüsünü / pabucu kontrol edip tekrar ölçün."
+          ],
+          dikkat: [
+            "200 mA gevşek bir pabucu gizleyebilir; 10 A veya 25 A temas noktasındaki zayıf bağlantıyı ortaya çıkarır.",
+            "Menteşeli kapaklar ve pano kapısı için ayrı topraklama örgüsü gerekir — menteşe üzerinden topraklama sayılmaz.",
+            "Ölçüm kablolarının kendi direnci sonuca eklenir; kabloları birbirine değdirip cihazın gösterdiği değeri kontrol edin."
+          ]
+        },
+        {
+          id: 'izolasyon',
+          ad: 'İzolasyon Direnci',
+          en: 'Insulation resistance — RISO',
+          ikon: 'activity',
+          renk: '#2563eb',
+          acik: '#eff6ff',
+          amac: "Akım taşıyan iletkenlerin (L1, L2, L3, N) birbirinden ve gövde / topraklamadan yalıtımının sağlam olduğunu ölçer. "
+            + "Ezik ya da çapakta kesilmiş kablo, su almış motor klemensi, nem çekmiş rezistans veya ıslak klemens bu testte düşük değer verir. "
+            + "Su ve buharla çalışan yıkama makinelerinde en kritik elektrik testidir.",
+          degerler: [
+            ["Test gerilimi", "500 V DC (100 / 250 V da var)"],
+            ["Ölçüm aralığı", "599,9 MΩ'a kadar"],
+            ["Ölçümler", "10 çift: L1/L2/L3/N–PE, L–L, L–N"],
+            ["Kabul", "≥ 1 MΩ (EN 60204-1, PE'ye karşı)"]
+          ],
+          kabul: "EN 60204-1: Güç devresi iletkenleri ile koruyucu topraklama devresi arasında 500 V DC'de ölçülen izolasyon direnci en az 1 MΩ olmalıdır. "
+            + "Sağlıklı yeni bir makinede değer genellikle yüzlerce MΩ çıkar; 1 MΩ'a yakın değerler de araştırılmalıdır. Faz–faz ve faz–nötr ölçümleri için de aynı alt sınırı kullanabilirsiniz.",
+          adimlar: [
+            "Topraklama sürekliliği testi GEÇMİŞ olmalı. Enerjiyi kesin, kilitleyin, besleme kablosunu ayırın.",
+            "500 V'tan zarar görebilecek elektronikleri ayırın: PLC, HMI, invertör (frekans konvertörü), 24 V güç kaynağı, ultrasonik jeneratör, faz sıra rölesi, sensör beslemeleri.",
+            "Ana şalteri ve MKŞ'leri <b>açık (ON)</b> konuma alın ki gerilim tüm güç devresine ulaşsın.",
+            "<b>Faz–faz ve faz–nötr</b> ölçümlerinden önce fazlar arasına bağlı yükleri (motorlar, rezistanslar, trafo) ayırın — kontaktörler açık kalsın ya da klemensleri sökün. Yoksa yük üzerinden 0'a yakın okunur.",
+            "Cihazda <b>Riso</b>'ya basın: <b>500 V</b>, limit <b>1 MΩ</b>, yöntem <b>Prob – prob</b>. Her ölçüm için T1'i birinci, T2'yi ikinci iletkene bağlayın: L1–PE, L2–PE, L3–PE, N–PE, L1–L2, L1–L3, L2–L3, L1–N, L2–N, L3–N.",
+            "Her ölçümde <b>START</b>'a basın, değer sabitlenince okuyun: RISO &gt; limit ise <b>GEÇTİ</b>. Cihaz bitince otomatik deşarj eder — bitmeden kabloları sökmeyin. Ekranda “&gt;599,9 MΩ” görürseniz forma 599.9 yazın (sayı klavyesinde ondalık nokta ile).",
+            "Değerleri formdaki <b>İZOLASYON DİRENCİ</b> maddelerine (K3075–K3084) MΩ olarak yazın. Ayırdığınız yükleri ve elektronikleri <b>geri bağlayın</b>."
+          ],
+          dikkat: [
+            "Soğuk ve nemli rezistanslar düşük değer verebilir. Rezistansları bir süre çalıştırıp kuruttuktan sonra tekrar ölçün.",
+            "Test sırasında makineye ve uçlara dokunmayın — 500 V DC çarpabilir.",
+            "Ayrılan yükleri ve elektronikleri geri bağlamayı unutmamak için ayırdıklarınızı not alın."
+          ]
+        },
+        {
+          id: 'flash',
+          ad: 'Flash Test',
+          en: 'Yüksek gerilim / dielektrik dayanım testi — IHV',
+          ikon: 'zap',
+          renk: '#dc2626',
+          acik: '#fef2f2',
+          tehlike: true,
+          amac: 'Yalıtımın kısa süreli yüksek gerilime delinmeden dayanıp dayanmadığını kontrol eder. İzolasyon direnci yalıtımın "ne kadar iyi" olduğunu ölçer; '
+            + 'flash test ise normal ölçümde görünmeyen <b>zayıf noktaları</b> yakalar: çok dar hava aralığı, sacın çapağına sürtmüş kablo, kırık izolatör. '
+            + 'Cihaz test sırasında akan akımı ölçer ve ayarlanan limitle karşılaştırır.',
+          degerler: [
+            ["Test gerilimi", "1500 V AC (Sınıf I) · 3000 V AC"],
+            ["Süre", "2–180 sn ayarlanır"],
+            ["Akım limiti", "0,01–2,50 mA"],
+            ["Kabul", "IHV < limit, delinme / ark yok"]
+          ],
+          kabul: "EN 60204-1 makinelerde gerilim testini, besleme geriliminin 2 katı veya 1000 V (hangisi büyükse) değerinde, yaklaşık 1 saniye uygulanan AC gerilimle tarif eder. "
+            + "PAT-820'nin en düşük kademesi 1500 V AC olduğundan bu, 400 V'luk bir makine için standarttan sert bir testtir: süreyi kısa tutun (2 sn) ve akım limitini kalite prosedürünüzde belirleyin.",
+          adimlar: [
+            "Önce <b>topraklama sürekliliği</b> ve <b>izolasyon direnci</b> GEÇMİŞ olmalı. İzolasyonu zayıf olan iletken çiftine flash test yapmayın.",
+            "Enerjiyi kesin, kilitleyin, besleme kablosunu ayırın. Tüm elektronikleri ve parazit (EMC) filtrelerini ayırın — 1500 V bunları kalıcı olarak bozar, filtreler de yüksek kaçak akım gösterir.",
+            "Faz–faz ve faz–nötr testlerinden önce fazlar arasına bağlı yükleri (motor, rezistans, trafo) ayırın; izolasyon ölçümündeki hazırlığın aynısı.",
+            "Test alanını işaretleyin, kimsenin makineye dokunmadığından emin olun. Kuru zemin, yalıtkan eldiven.",
+            "Cihazda <b>Flash test</b>'e basın: <b>1500 V</b>, süre <b>2 sn</b>, akım limiti. Kırmızı 5 kV kablolarla <b>HV1</b>'i birinci, <b>HV2</b>'yi ikinci iletkene bağlayın: L1–PE, L2–PE, L3–PE, N–PE, L1–L2, L1–L3, L2–L3, L1–N, L2–N, L3–N.",
+            "Her testte <b>START</b>'a basın ve test boyunca hiçbir yere dokunmayın. IHV &lt; limit ise <b>GEÇTİ</b>; delinme olursa cihaz testi keser.",
+            "Okunan kaçak akımları formdaki <b>FLASH TEST</b> maddelerine (K3085–K3094) mA olarak yazın. Kabloları sökün, ayırdığınız elemanları geri bağlayın, sonra enerji verip fonksiyon testlerine geçin."
+          ],
+          dikkat: [
+            "ÖLÜMCÜL GERİLİM: Testi sadece eğitimli ve yetkili kişi yapmalı. Kalp pili olan kişiler test alanına yaklaşmamalı.",
+            "3000 V kademesi Sınıf II (çift yalıtımlı) cihazlar içindir; makinelerde kullanmayın.",
+            "Aynı makinede flash testi gereksiz yere tekrarlamayın — her tekrar yalıtımı yorar."
+          ]
+        }
+      ]
+    }
+  ];
+
+  function tcRenderPage() {
+    const pc = document.getElementById('page-content');
+    if (!pc) return;
+    const esc = kfHEsc;
+    const cards = TEST_DEVICES.map(d => {
+      const specs = d.ozellikler.map(([k, v]) =>
+        `<div class="tc-spec"><div class="tc-spec-k">${esc(k)}</div><div class="tc-spec-v">${esc(v)}</div></div>`).join('');
+      const links = d.kaynaklar.map(([k, u]) =>
+        `<a class="tc-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(k)} ↗</a>`).join('');
+      const order = d.testler.map((t, i) =>
+        `<a class="tc-step" href="#tc-${d.id}-${t.id}" style="--c:${t.renk}"><span class="tc-step-n">${i + 1}</span>${esc(t.ad)}</a>`
+        + (i < d.testler.length - 1 ? '<span class="tc-step-arrow">→</span>' : '')).join('')
+        + '<span class="tc-step-arrow">→</span><span class="tc-step tc-step-last"><span class="tc-step-n">✓</span>Enerji ver · fonksiyon testleri</span>';
+      const tests = d.testler.map(t => `
+        <section class="tc-test${t.tehlike ? ' tc-danger' : ''}" id="tc-${d.id}-${t.id}" style="--c:${t.renk};--bg:${t.acik}">
+          <div class="tc-test-hd">
+            <div class="tc-test-ic"><i data-lucide="${t.ikon}" class="w-5 h-5"></i></div>
+            <div><h3>${esc(t.ad)}</h3><div class="tc-test-en">${esc(t.en)}</div></div>
+          </div>
+          <p class="tc-test-amac">${t.amac}</p>
+          <div class="tc-vals">${t.degerler.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>
+          <div class="tc-kabul"><b>Kabul kriteri.</b> ${esc(t.kabul)}</div>
+          <details class="tc-how">
+            <summary>Nasıl yapılır? <span>${t.adimlar.length} adım</span></summary>
+            <ol>${t.adimlar.map(a => `<li>${a}</li>`).join('')}</ol>
+          </details>
+          <div class="tc-warn${t.tehlike ? ' tc-warn-red' : ''}">
+            <div class="tc-warn-t"><i data-lucide="alert-triangle" class="w-4 h-4"></i> ${t.tehlike ? 'Tehlike' : 'Dikkat'}</div>
+            <ul>${t.dikkat.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+          </div>
+        </section>`).join('');
+      return `
+        <article class="tc-card">
+          <div class="tc-hero">
+            <div class="tc-photo"><img src="${esc(d.foto)}" alt="${esc(d.marka + ' ' + d.model)}" loading="lazy"></div>
+            <div class="tc-info">
+              <div class="tc-brand">${esc(d.marka)}</div>
+              <h2 class="tc-model">${esc(d.model)}</h2>
+              <div class="tc-type">${esc(d.tur)}</div>
+              <p class="tc-ozet">${esc(d.ozet)}</p>
+              <div class="tc-specs">${specs}</div>
+              <div class="tc-links">${links}</div>
+            </div>
+          </div>
+          <div class="tc-order"><div class="tc-order-t">Test sırası</div><div class="tc-steps">${order}</div></div>
+          <div class="tc-tests">${tests}</div>
+        </article>`;
+    }).join('');
+    pc.innerHTML = `
+      <style>
+        .tc-wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px;}
+        .tc-head h1{font-size:26px;font-weight:900;color:#111827;letter-spacing:-.01em;}
+        .tc-head p{font-size:13px;color:#6b7280;margin-top:2px;}
+        .tc-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 4px 24px rgba(17,24,39,.06);overflow:hidden;}
+        .tc-hero{display:grid;grid-template-columns:minmax(260px,400px) 1fr;}
+        .tc-photo{background:radial-gradient(circle at 50% 40%,#374151 0%,#111827 75%);display:flex;align-items:center;justify-content:center;padding:28px;min-height:280px;}
+        .tc-photo img{max-width:100%;max-height:300px;object-fit:contain;filter:drop-shadow(0 18px 30px rgba(0,0,0,.55));}
+        .tc-info{padding:24px 26px;display:flex;flex-direction:column;gap:6px;}
+        .tc-brand{display:inline-block;align-self:flex-start;font-size:10px;font-weight:800;letter-spacing:.16em;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:999px;padding:3px 10px;}
+        .tc-model{font-size:34px;font-weight:900;color:#111827;line-height:1;margin-top:4px;}
+        .tc-type{font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;}
+        .tc-ozet{font-size:13px;color:#374151;line-height:1.6;margin:6px 0 4px;}
+        .tc-specs{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-top:4px;}
+        .tc-spec{background:#f9fafb;border:1px solid #f0f0f0;border-radius:10px;padding:8px 11px;}
+        .tc-spec-k{font-size:9.5px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;}
+        .tc-spec-v{font-size:12px;font-weight:700;color:#111827;margin-top:2px;}
+        .tc-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+        .tc-link{font-size:11px;font-weight:700;color:#2563eb;text-decoration:none;}
+        .tc-link:hover{text-decoration:underline;}
+        .tc-order{border-top:1px solid #f0f0f0;padding:14px 26px;background:#fcfcfd;}
+        .tc-order-t{font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+        .tc-steps{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+        .tc-step{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#111827;text-decoration:none;background:#fff;border:1.5px solid #e5e7eb;border-radius:999px;padding:5px 12px 5px 5px;}
+        .tc-step:hover{border-color:var(--c);}
+        .tc-step-n{width:22px;height:22px;border-radius:50%;background:var(--c,#111827);color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;}
+        .tc-step-last{--c:#6b7280;color:#6b7280;}
+        .tc-step-arrow{color:#d1d5db;font-weight:800;}
+        .tc-tests{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:4px 18px 20px;}
+        .tc-test{border:1px solid #e5e7eb;border-top:4px solid var(--c);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:12px;}
+        .tc-test-hd{display:flex;align-items:center;gap:10px;}
+        .tc-test-ic{width:38px;height:38px;border-radius:11px;background:var(--bg);color:var(--c);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+        .tc-test h3{font-size:16px;font-weight:900;color:#111827;line-height:1.15;}
+        .tc-test-en{font-size:10.5px;color:#9ca3af;font-weight:600;}
+        .tc-test-amac{font-size:12.5px;color:#374151;line-height:1.6;}
+        .tc-vals{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+        .tc-vals div{background:var(--bg);border-radius:9px;padding:7px 9px;}
+        .tc-vals span{display:block;font-size:9.5px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;}
+        .tc-vals b{font-size:11.5px;color:#111827;}
+        .tc-kabul{font-size:11.5px;color:#4b5563;line-height:1.55;border-left:3px solid var(--c);padding:2px 0 2px 10px;}
+        .tc-how{border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;}
+        .tc-how summary{cursor:pointer;list-style:none;padding:9px 12px;font-size:12.5px;font-weight:800;color:var(--c);display:flex;justify-content:space-between;align-items:center;background:#fafafa;user-select:none;}
+        .tc-how summary::-webkit-details-marker{display:none;}
+        .tc-how summary::after{content:'▾';transition:transform .15s;}
+        .tc-how[open] summary::after{transform:rotate(180deg);}
+        .tc-how summary span{font-size:10px;color:#9ca3af;font-weight:700;margin-left:auto;margin-right:8px;}
+        .tc-how ol{margin:0;padding:10px 14px 12px 32px;font-size:12px;color:#1f2937;line-height:1.55;list-style:decimal;}
+        .tc-how li{margin-bottom:6px;} .tc-how li::marker{color:var(--c);font-weight:800;}
+        .tc-warn{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:9px 12px;}
+        .tc-warn-red{background:#fef2f2;border-color:#fecaca;}
+        .tc-warn-t{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:900;color:#b45309;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+        .tc-warn-red .tc-warn-t{color:#dc2626;}
+        .tc-warn ul{margin:0;padding-left:16px;list-style:disc;font-size:11.5px;color:#374151;line-height:1.5;}
+        .tc-note{font-size:11px;color:#9ca3af;text-align:center;}
+        @media(max-width:1100px){.tc-tests{grid-template-columns:1fr;}}
+        @media(max-width:760px){.tc-hero{grid-template-columns:1fr;}.tc-photo{min-height:220px;}.tc-info{padding:18px;}.tc-order{padding:12px 18px;}.tc-tests{padding:4px 12px 14px;}}
+      </style>
+      <div class="tc-wrap page-fade">
+        <div class="tc-head">
+          <h1>Test Cihazları</h1>
+          <p>Kalite kontrol testlerinde kullanılan cihazlar ve test yöntemleri</p>
+        </div>
+        ${cards}
+        <div class="tc-note">Cihaz değerleri üretici kılavuzundan alınmıştır. Testleri her zaman cihazın kendi kılavuzu ve firma güvenlik talimatlarına göre yapın.</div>
+      </div>`;
+    lucide.createIcons();
   }
 
   applyConfig(defaultConfig);
