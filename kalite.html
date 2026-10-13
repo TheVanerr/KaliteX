@@ -646,6 +646,10 @@
     showSel: false,
     BUFFER: 30,        // görünür alanın üstünde/altında çizili tutulan satır sayısı
     BLOK: 10,          // çizim aralığı bu katlara yuvarlanır
+    csStart: -1,       // çizili sütun aralığı (yalnızca ekrana yakın sütunlar çizilir)
+    csEnd: -1,
+    colW: null,        // sütun genişlikleri (px) — başlıkta bir kez ölçülüp sabitlenir
+    colX: null,        // sütunların # sütunundan sonraki sol konumu
     paramData: [],     // paramData[ri][0..6] = string
     assignments: {},   // modelId -> Set<rowIdx>
     filteredRows: [],  // array of rowIdx after filter/sort
@@ -1539,8 +1543,44 @@
   let _khDurZaman = null;
   function khOnScroll() {
     clearTimeout(_khDurZaman);
-    _khDurZaman = setTimeout(() => khPencere(KH.BUFFER / 2), 140);
+    _khDurZaman = setTimeout(() => { khKolonPencere(300); khPencere(KH.BUFFER / 2); }, 140);
+    khKolonPencere(80);
     khPencere(10);
+  }
+  // Görünür alanın solunda/sağında pay piksellik sütun çizili değilse sütun aralığını yenile (tam çizim).
+  // true dönerse tablo yeniden çizilmiştir.
+  const KH_RN_W = 46, KH_SON_W = 30;
+  function khKolonAraligi(pay) {
+    const w = document.getElementById('kh-scroll');
+    const n = khTC();
+    if (!w || !KH.colX || KH.colX.length !== n) return [0, n - 1];
+    const sol = w.scrollLeft - pay, sag = w.scrollLeft + w.clientWidth + pay;
+    let a = 0; while (a < n - 1 && KH_RN_W + KH.colX[a] + KH.colW[a] < sol) a++;
+    let b = n - 1; while (b > a && KH_RN_W + KH.colX[b] > sag) b--;
+    return [a, b];
+  }
+  function khKolonPencere(pay) {
+    if (!KH.colX || KH.csStart < 0) return false;
+    if (KH.mousedown && pay > 80) return false;
+    const [a, b] = khKolonAraligi(pay);
+    if (a >= KH.csStart && b <= KH.csEnd) return false;
+    const w = document.getElementById('kh-scroll');
+    const [ys, ye] = khKolonAraligi(Math.max(400, (w ? w.clientWidth : 1000) * 0.45));
+    KH.csStart = ys; KH.csEnd = ye;
+    const n = KH.filteredRows.length, H = KH.ROW_H, ilk = Math.floor(w.scrollTop / H), son = Math.ceil((w.scrollTop + w.clientHeight) / H);
+    KH.vsStart = Math.max(0, Math.floor((ilk - 6) / KH.BLOK) * KH.BLOK); KH.vsEnd = Math.max(0, Math.min(n - 1, Math.ceil((son + 6) / KH.BLOK) * KH.BLOK));
+    khVSR();
+    return true;
+  }
+  // Seçilen / düzenlenen sütun ekranda değilse tabloyu o sütuna kaydır
+  function khKolonGorunur(ci) {
+    const w = document.getElementById('kh-scroll');
+    if (!w || !KH.colX || ci < 0 || ci >= KH.colX.length) return;
+    const x0 = KH_RN_W + KH.colX[ci], x1 = x0 + KH.colW[ci];
+    if (x0 < w.scrollLeft + KH_RN_W) w.scrollLeft = x0 - KH_RN_W;
+    else if (x1 > w.scrollLeft + w.clientWidth) w.scrollLeft = x1 - w.clientWidth;
+    else return;
+    khOnScroll();
   }
   // Çizili aralık görünür alanın en az "pay" satır ötesini kapsamıyorsa yeniden çiz
   function khPencere(pay) {
@@ -1599,7 +1639,12 @@
 
   function khSatirCtx() {
     const { r1, c1, r2, c2 } = KH.sel;
-    return { r1, minR: Math.min(r1, r2), maxR: Math.max(r1, r2), minC: Math.min(c1, c2), maxC: Math.max(c1, c2), cols: mxCols() };
+    const n = khTC();
+    if (KH.csStart < 0 || KH.csEnd >= n || KH.csStart > KH.csEnd) {
+      const w = document.getElementById('kh-scroll');
+      [KH.csStart, KH.csEnd] = khKolonAraligi(Math.max(400, (w ? w.clientWidth : 1000) * 0.45));
+    }
+    return { r1, minR: Math.min(r1, r2), maxR: Math.max(r1, r2), minC: Math.min(c1, c2), maxC: Math.max(c1, c2), cols: mxCols(), cs: KH.csStart, ce: KH.csEnd, n };
   }
   function khSatirHtml(vi, ctx) {
       const { r1, minR, maxR, minC, maxC } = ctx;
@@ -1608,21 +1653,23 @@
       const rSel = KH.showSel && r1 >= 0 && ri >= minR && ri <= maxR;
       html += `<tr class="khr${vi % 2 ? ' khr-c' : ''}${rSel?' khra':''}" data-ri="${ri}">`;
       html += `<td class="khrn khrn-fr${rSel?' khrns':''}" data-ri="${ri}" onmousedown="khRND(event,${ri})">${ri+1}</td>`;
-      for (let ci = 0; ci < KH_FIXED.length; ci++) {
+      const { cs, ce, n } = ctx;
+      if (cs > 0) html += `<td class="khsp" colspan="${cs}"></td>`;
+      for (let ci = cs; ci < KH_FIXED.length && ci <= ce; ci++) {
         const v = KH.paramData[ri][ci] || '';
         const s = rSel && ci >= minC && ci <= maxC;
-        const w5 = ci === 4 ? ' style="min-width:270px;"' : '';
         const ctr = (ci === 0 || ci === 1 || ci === 2 || ci === 3 || ci === 5 || ci === 6) ? ' khcv-c' : '';
-        html += `<td class="khc${s?' khs':''}" data-ri="${ri}" data-ci="${ci}" onmousedown="khCD(event,${ri},${ci})" onmouseover="khCO(event,${ri},${ci})" ondblclick="khDD(event,${ri},${ci})"${w5}><div class="khcv${ctr}">${khEsc(v)}</div></td>`;
+        html += `<td class="khc${s?' khs':''}" data-ri="${ri}" data-ci="${ci}" onmousedown="khCD(event,${ri},${ci})" onmouseover="khCO(event,${ri},${ci})" ondblclick="khDD(event,${ri},${ci})"><div class="khcv${ctr}">${khEsc(v)}</div></td>`;
       }
       const cols = ctx.cols;
-      for (let mi = 0; mi < cols.length; mi++) {
+      for (let mi = Math.max(0, cs - KH_FIXED.length); mi < cols.length && KH_FIXED.length + mi <= ce; mi++) {
         const ci = KH_FIXED.length + mi;
         const xv = khMVal(cols[mi].id, ri);
         const xs = rSel && ci >= minC && ci <= maxC;
         html += `<td class="khc${xs?' khs':''}" data-ri="${ri}" data-ci="${ci}" onmousedown="khCD(event,${ri},${ci})" onmouseover="khCO(event,${ri},${ci})" ondblclick="khDD(event,${ri},${ci})"><div class="khcv khcv-c">${khEsc(xv)}</div></td>`;
       }
-      html += `<td style="min-width:30px;border:none;"></td></tr>`;
+      if (ce < n - 1) html += `<td class="khsp" colspan="${n - 1 - ce}"></td>`;
+      html += `<td style="border:none;"></td></tr>`;
       return html;
   }
 
@@ -1661,7 +1708,7 @@
     KH_FIXED.forEach((col, ci) => {
       const sorted = ss.col === ci;
       const fActive = !!KH.filters[ci];
-      h += `<th class="khth" data-ci="${ci}" style="min-width:${fixedW[ci]}px;"><div class="khth-inner">`;
+      h += `<th class="khth" data-ci="${ci}"><div class="khth-inner">`;
       h += `<span style="white-space:nowrap;">${col}</span>`;
       h += `<button class="khsb" onclick="khTS(${ci})" title="Sırala">${sorted?(ss.asc?'▲':'▼'):'⇅'}</button>`;
       h += `<button class="khfb${fActive?' khfb-on':''}" onclick="khOpenFilter(${ci})" title="Filtrele">▼</button>`;
@@ -1672,8 +1719,32 @@
       const sorted = ss.col === ci;
       h += `<th class="khth khxth" data-ci="${ci}"><div class="khth-inner"><span style="white-space:nowrap;">${m.label}</span><button class="khsb" onclick="khTS(${ci})" title="Sırala">${sorted?(ss.asc?'▲':'▼'):'⇅'}</button></div></th>`;
     });
-    h += `<th class="khth" style="min-width:30px;border:none;background:#dc2626;"></th></tr>`;
-    document.getElementById('kh-thead').innerHTML = h;
+    h += `<th class="khth" style="border:none;background:#dc2626;"></th></tr>`;
+    const thead = document.getElementById('kh-thead');
+    thead.innerHTML = h;
+    khKolonlariSabitle(thead, fixedW);
+  }
+  // Sabit sütunlar: tanımlı genişlik (AÇIKLAMA geniş). Model/proje sütunları: başlık yazısına göre.
+  // Genişlikler sabit olunca tarayıcı her çizimde içerik ölçmez; çizilmeyen sütunlar doğru yer kaplar.
+  function khKolonlariSabitle(thead, fixedW) {
+    const tbl = thead.closest('table');
+    const sabit = [90, 121, 112, 108, 440, 134, 124]; // KOD, ALAN TÜRÜ, UZUNLUK, DESİMAL, AÇIKLAMA, GRUP, GRUP KODU
+    const ths = [...thead.querySelectorAll('th[data-ci]')];
+    const colW = ths.map(th => {
+      const ci = +th.dataset.ci;
+      if (ci < KH_FIXED.length) return Math.max(sabit[ci] || fixedW[ci] || 90, 60);
+      const sp = th.querySelector('span');
+      const yazi = sp ? sp.getBoundingClientRect().width : 50;
+      return Math.max(90, Math.ceil(yazi + 46));
+    });
+    const colX = []; let x = 0;
+    colW.forEach(w => { colX.push(x); x += w; });
+    KH.colW = colW; KH.colX = colX;
+    let cg = tbl.querySelector('colgroup');
+    if (!cg) { cg = document.createElement('colgroup'); tbl.insertBefore(cg, tbl.firstChild); }
+    cg.innerHTML = `<col style="width:${KH_RN_W}px">` + colW.map(w => `<col style="width:${w}px">`).join('') + `<col style="width:${KH_SON_W}px">`;
+    tbl.style.width = (KH_RN_W + x + KH_SON_W) + 'px';
+    KH.csStart = -1; KH.csEnd = -1; // sütun sayısı/genişliği değişmiş olabilir — aralık yeniden hesaplanır
   }
 
   // ── Full render ──────────────────────────────────────────────
@@ -1748,6 +1819,7 @@
       if (ev.key === 'Tab') {
         khCE();
         const nc = ci + (ev.shiftKey ? -1 : 1);
+        if (nc >= 0 && nc < khTC()) khKolonGorunur(nc);
         if (nc >= 0 && nc < khTC()) setTimeout(() => {
           const n = document.querySelector(`.khc[data-ri="${ri}"][data-ci="${nc}"]`);
           if (n) khDD({ currentTarget: n, stopPropagation: () => {} }, ri, nc);
@@ -1933,6 +2005,7 @@
     KH._dirty = true;
     khBuildFR(); khVSR();
     khScrollTo(insertAt);
+    khKolonGorunur(4);
     khToast(yeniKod ? 'Satır eklendi: ' + yeniKod + (kopyaModel.length ? ' · ' + kopyaModel.length + ' model ataması kopyalandı' : '') + ' — açıklamayı yazın (Ctrl+Enter: yeni satır)' : 'Satır eklendi ✓', 3500);
     // AÇIKLAMA hücresini düzenlemeye aç (kaydırma sonrası satır çizilsin diye kısa gecikme)
     setTimeout(() => {
@@ -2005,7 +2078,7 @@
       if (e.key === 'ArrowRight') c = Math.min(khTC()-1, c+1);
       if (e.shiftKey) { KH.sel.r2 = r; KH.sel.c2 = c; } else KH.sel = { r1:r, c1:c, r2:r, c2:c };
       KH.showSel = true;
-      khScrollTo(r); khSelUI(); e.preventDefault(); return;
+      khScrollTo(r); khKolonGorunur(c); khSelUI(); e.preventDefault(); return;
     }
     if (!cmd && e.key.length === 1 && KH.sel.r1 >= 0 && KH.sel.r1 === KH.sel.r2 && KH.sel.c1 === KH.sel.c2) {
       if (!isEditor()) return; // Salt okunur modda klavye ile düzenleme engellendi
@@ -2079,11 +2152,11 @@
           .khbg { background:#f3f4f6;color:#374151; } .khbg:hover { background:#e5e7eb; }
           .khbgr { background:#16a34a;color:#fff; } .khbgr:hover { background:#15803d; }
           .kh-scroll { flex:1; overflow:auto; min-height:0; }
-          .khtbl { border-collapse:collapse; table-layout:fixed; }
+          .khtbl { border-collapse:collapse; table-layout:fixed; } .khsp { padding:0;border:none;background:#fff; } .khth { overflow:hidden; }
           .khtbl thead { position:sticky; top:0; z-index:12; }
           .khth { background:#dc2626; color:#fff; font-size:11px; font-weight:700; text-align:center; user-select:none; padding:7px 10px; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.15); }
           .khth-fr { min-width:46px; width:46px; background:#dc2626; position:sticky; left:0; z-index:15; padding:7px 4px; }
-          .khxth { min-width:90px; white-space:nowrap; }
+          .khxth { white-space:nowrap; }
           .khth-inner { display:inline-flex; align-items:center; justify-content:center; gap:5px; }
           .khsb { background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.75);font-size:10px;padding:0 1px;flex-shrink:0;line-height:1; }
           .khsb:hover { color:#fff; }
@@ -2143,11 +2216,11 @@
         <style>
           .kho { display:flex; flex-direction:column; height:calc(100vh - 56px); background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 1px 6px rgba(0,0,0,0.06); overflow:hidden; }
           .kh-scroll { flex:1; overflow:auto; min-height:0; }
-          .khtbl { border-collapse:collapse; table-layout:fixed; }
+          .khtbl { border-collapse:collapse; table-layout:fixed; } .khsp { padding:0;border:none;background:#fff; } .khth { overflow:hidden; }
           .khtbl thead { position:sticky; top:0; z-index:12; }
           .khth { background:#dc2626; color:#fff; font-size:11px; font-weight:700; text-align:center; user-select:none; padding:7px 10px; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.15); }
           .khth-fr { min-width:46px; width:46px; background:#dc2626; position:sticky; left:0; z-index:15; padding:7px 4px; }
-          .khxth { min-width:90px; white-space:nowrap; }
+          .khxth { white-space:nowrap; }
           .khth-inner { display:inline-flex; align-items:center; justify-content:center; gap:5px; }
           .khsb { background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.75);font-size:10px;padding:0 1px;flex-shrink:0;line-height:1; }
           .khsb:hover { color:#fff; }
@@ -8426,7 +8499,7 @@
     // kalite.html ağdan geldiği için çoğu zaman sayfa zaten yenidir — o zaman ikinci yenileme yapılmaz.
     // Yenileme gerektiren durum: uygulama çevrimdışıyken önbellekteki eski sürümle açılmışsa.
     // İlk kurulumda (önceden SW yokken) yenileme gereksiz.
-    const KX_SURUM = 'kalitex-v24'; // sw.js içindeki CACHE ile AYNI olmalı
+    const KX_SURUM = 'kalitex-v25'; // sw.js içindeki CACHE ile AYNI olmalı
     const _kxHadSW = !!navigator.serviceWorker.controller;
     const _kxSwSurum = () => new Promise(res => {
       const c = navigator.serviceWorker.controller;
