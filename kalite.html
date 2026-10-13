@@ -328,7 +328,9 @@
       <div id="kh-header-bar" style="display:none;flex:1;" class="flex items-center gap-1">
         <button onclick="khSave()" class="kfhb kfhb-red kh-editor-only" title="Kaydet"><i data-lucide="save" class="w-4 h-4"></i><span class="kfhb-lbl">Kaydet</span></button>
         <button onclick="khImportCSV()" class="kfhb kfhb-org kh-editor-only" title="CSV Yükle"><i data-lucide="folder-open" class="w-4 h-4"></i><span class="kfhb-lbl">CSV Yükle</span></button>
-        <button onclick="khAddRow()" class="kfhb kfhb-grn kh-editor-only" title="Satır Ekle"><i data-lucide="plus" class="w-4 h-4"></i><span class="kfhb-lbl">Satır Ekle</span></button>
+        <button onclick="ymAc('havuz')" class="kfhb kfhb-grn kh-editor-only" title="Yeni madde: grup, KOD önerisi, model seçimi, toplu ekleme"><i data-lucide="plus-circle" class="w-4 h-4"></i><span class="kfhb-lbl">Yeni Madde</span></button>
+        <button onclick="khAddRow()" class="kfhb kfhb-grn kh-editor-only" title="Seçili satırın altına kopyasını ekle (Ctrl+Enter) — model atamaları da kopyalanır"><i data-lucide="plus" class="w-4 h-4"></i><span class="kfhb-lbl">Satır Ekle</span></button>
+        <button onclick="khTopluAta()" class="kfhb kfhb-tel kh-editor-only" title="Seçili maddeleri modellere toplu ata / kaldır"><i data-lucide="check-square" class="w-4 h-4"></i><span class="kfhb-lbl">Toplu Ata</span></button>
         <button onclick="khForceReload()" class="kfhb kfhb-pur" title="Supabase'den Yenile"><i data-lucide="refresh-cw" class="w-4 h-4"></i><span class="kfhb-lbl">Yenile</span></button>
         <button onclick="kxDriveBackup()" class="kfhb kh-editor-only" title="Google Drive'a Yedekle" style="background:#fff;color:#374151;border:1.5px solid #e5e7eb;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M6.28 19l-4.03-6.97L5.66 7h12.68l3.41 5.03L17.72 19H6.28z" fill="#4285F4"/><path d="M15.73 19l3.41-5.97H5.66L2.25 19h13.48z" fill="#0F9D58"/><path d="M5.66 7l4.03 6.97h4.62L18.34 7H5.66z" fill="#FBBC05"/></svg><span class="kfhb-lbl">Yedekle</span></button>
         <span id="kh-sync-st" style="font-size:11px;font-weight:700;padding:0 4px;"></span>
@@ -725,8 +727,13 @@
     try {
       console.log(`[KaliteX] KH yenileniyor (${reason})`);
       khSyncStatus('syncing');
-      await khLoadFromSupabase();
+      // Veri gelene kadar düzenleme yapıldıysa (ör. açılır açılmaz satır eklendi) sunucu verisi uygulanmaz
+      const uygulandi = await khLoadFromSupabase(() => !KH._dirty && !PH._dirty && !KH.editCell);
       khSyncStatus('ok');
+      if (uygulandi === false) {
+        console.log(`[KaliteX] KH yenileme uygulanmadı (${reason}): yükleme sırasında düzenleme yapıldı`);
+        return false;
+      }
       const isModelPage = KH_MODELS.some(m => m.id === currentPage);
       if (currentPage === 'kalite-havuzu') {
         await khRenderPage();
@@ -778,7 +785,9 @@
     KH._ready = true;
     khSyncStatus('syncing');
     try {
-      await khLoadFromSupabase();
+      // İlk yüklemede havuz boştur; sonraki yüklemelerde arada yapılan düzenleme ezilmesin
+      const ilk = !KH.paramData.some(r => r && r[0]);
+      await khLoadFromSupabase(ilk ? null : () => !KH._dirty && !PH._dirty && !KH.editCell);
       khSyncStatus('ok');
       console.log('[KaliteX] Supabase\'den yüklendi ✓');
     } catch(e) {
@@ -874,11 +883,12 @@
     }
   }
 
-  async function khLoadFromSupabase() {
+  async function khLoadFromSupabase(uygulaKosul) {
     const [paramsRaw, atamaList] = await Promise.all([
       sbGetAll('kalite_parametreleri', 'order=id.asc'),
       sbGetAll('model_atama', 'select=model_id,parametre_kod&order=model_id,parametre_kod')
     ]);
+    if (uygulaKosul && !uygulaKosul()) return false;
     const params = khApplyKodOrder(paramsRaw);
 
     const phSnap = phSnapshotKodlar();
@@ -1332,11 +1342,12 @@
     el.textContent = map[s] || ''; el.style.color = col[s] || '#6b7280';
   }
 
-  async function phLoadFromSupabase() {
+  async function phLoadFromSupabase(uygulaKosul) {
     const [projects, atamaList] = await Promise.all([
       sbGetAll('projeler', 'select=id,label,status,sort_order&order=sort_order.asc,label.asc'),
       sbGetAll('proje_atama', 'select=project_id,parametre_kod&order=project_id,parametre_kod')
     ]);
+    if (uygulaKosul && !uygulaKosul()) return false;
     PH_PROJECTS = projects.filter(p => p.status === 'active').map(p => ({ id: p.id, label: p.label }));
     PH.assignments = {};
     PH_PROJECTS.forEach(p => { PH.assignments[p.id] = {}; });
@@ -1455,9 +1466,10 @@
     _phAutoRefreshInFlight = true;
     try {
       phSyncStatus('syncing');
-      PH._ready = false;
-      await phLoadFromSupabase();
+      // Veri gelene kadar düzenleme yapıldıysa sunucu verisi uygulanmaz (düzenleme kaybolmasın)
+      const uygulandi = await phLoadFromSupabase(() => !PH._dirty && !KH._dirty && !KH.editCell);
       phSyncStatus('ok');
+      if (uygulandi === false) return false;
       if (currentPage === 'proje-havuzu') await phRenderPage();
       else if (phIsProjectPage()) renderPage();
       return true;
@@ -1856,30 +1868,16 @@
     const srcRow = Math.max(KH.sel.r1, KH.sel.r2);
     const insertAt = srcRow + 1;
     const src = KH.paramData[srcRow] || [];
-    KH.TOTAL_ROWS++;
-    KH.paramData.splice(insertAt, 0, new Array(KH_FIXED.length).fill(''));
-    // Shift assignment row indices for rows at or after insertAt
-    // (proje atamaları da aynı satır indekslerini kullanır — onlar da kaydırılmalı)
-    [KH.assignments, PH.assignments].forEach(asg => {
-      for (const [mid, obj] of Object.entries(asg)) {
-        const newObj = {};
-        for (const [ri, v] of Object.entries(obj)) {
-          const n = +ri;
-          newObj[n >= insertAt ? n + 1 : n] = v;
-        }
-        asg[mid] = newObj;
-      }
-    });
-    // Üst satırdan kopyala (AÇIKLAMA hariç — her maddede farklı)
+    // Üst satırdan kopyala (AÇIKLAMA hariç — her maddede farklı) + aynı model atamaları
     const yeniKod = khNextKod(src[0]);
-    if (yeniKod) khSetFixed(insertAt, 0, yeniKod);
-    [1, 2, 3, 5, 6].forEach(ci => { if (src[ci]) khSetFixed(insertAt, ci, src[ci]); });
+    const kopyaModel = src[0] ? khSatirModelleri(srcRow) : [];
+    khSatirEkle(insertAt, [yeniKod, src[1], src[2], src[3], '', src[5], src[6]], kopyaModel);
     KH.sel = { r1: insertAt, c1: 4, r2: insertAt, c2: 4 };
     KH.showSel = true;
     KH._dirty = true;
     khBuildFR(); khVSR();
     khScrollTo(insertAt);
-    khToast(yeniKod ? 'Satır eklendi: ' + yeniKod + ' — açıklamayı yazın (Ctrl+Enter: kaydet ve yeni satır)' : 'Satır eklendi ✓', 3500);
+    khToast(yeniKod ? 'Satır eklendi: ' + yeniKod + (kopyaModel.length ? ' · ' + kopyaModel.length + ' model ataması kopyalandı' : '') + ' — açıklamayı yazın (Ctrl+Enter: yeni satır)' : 'Satır eklendi ✓', 3500);
     // AÇIKLAMA hücresini düzenlemeye aç (kaydırma sonrası satır çizilsin diye kısa gecikme)
     setTimeout(() => {
       khOnScroll();
@@ -2078,7 +2076,8 @@
         <div id="kh-filter-modal" class="khfm-overlay" style="display:none;" onclick="if(event.target===this)khCloseFilter()"></div>
         <div id="kh-toast"></div>
       `;
-      KH._ready = false; // force re-init on load
+      // Sunucudan yeniden yükle — kaydedilmemiş havuz değişikliği varsa silinmesin
+      if (!KH._dirty && !PH._dirty && !KH.editCell) KH._ready = false;
       khRenderPage();
       return;
     }
@@ -2135,7 +2134,7 @@
         <div id="kh-filter-modal" class="khfm-overlay" style="display:none;" onclick="if(event.target===this)khCloseFilter()"></div>
         <div id="kh-toast"></div>
       `;
-      KH._ready = false;
+      if (!KH._dirty && !PH._dirty && !KH.editCell) KH._ready = false;
       phRenderPage();
       return;
     }
@@ -2190,7 +2189,7 @@
               if (at === 'T') {
                 html += `<td class="kf-cell kf-sonuc-t" data-ri="${ri}" data-ci="${ci}">${kfSegHtml(ri, raw)}</td>`;
               } else if (at === 'N') {
-                html += `<td class="kf-cell kf-sonuc-n" data-ri="${ri}" data-ci="${ci}" onclick="kfKbOpen(${ri},'N')"><div class="kf-cv kf-cv-c${!raw?' kf-ph':''}">${raw||'—'}</div></td>`;
+                html += `<td class="kf-cell kf-sonuc-n" data-ri="${ri}" data-ci="${ci}" onclick="kfKbOpen(${ri},'N')"><div class="kf-cv kf-cv-c${!raw?' kf-ph':''}">${raw||'—'}</div>${kxOncekiHtml(row[0])}</td>`;
               } else if (at === 'TN') {
                 const kod0 = (row[0]||'').toUpperCase().trim();
                 if (kod0 === 'K9011') {
@@ -2204,7 +2203,7 @@
                 } else if (kod0 === 'K9013') {
                   html += `<td class="kf-cell kf-cell-ro" data-ri="${ri}" data-ci="${ci}"><div class="kf-cv kf-cv-c" style="font-weight:700;color:#dc2626;">${kfEsc(raw)}</div></td>`;
                 } else {
-                  html += `<td class="kf-cell kf-sonuc-tn" data-ri="${ri}" data-ci="${ci}" onclick="kfKbOpen(${ri},'TN')"><div class="kf-cv kf-cv-c${!raw?' kf-ph':''}">${kfEsc(raw)||'—'}</div></td>`;
+                  html += `<td class="kf-cell kf-sonuc-tn" data-ri="${ri}" data-ci="${ci}" onclick="kfKbOpen(${ri},'TN')"><div class="kf-cv kf-cv-c${!raw?' kf-ph':''}">${kfEsc(raw)||'—'}</div>${kxOncekiHtml(row[0])}</td>`;
                 }
               } else {
                 html += `<td class="kf-cell" data-ri="${ri}" data-ci="${ci}" ondblclick="kfDblClick(event,${ri},${ci})"><div class="kf-cv kf-cv-c">${kfEsc(raw)}</div></td>`;
@@ -2438,6 +2437,7 @@
               <button type="button" data-f="bos" class="${window._kfFiltre === 'bos' ? 'on' : ''}" onclick="kfFiltre('bos')">Boşlar <b id="kf-nav-bos">0</b></button>
               <button type="button" data-f="hayir" class="${window._kfFiltre === 'hayir' ? 'on' : ''}" onclick="kfFiltre('hayir')">HAYIR <b id="kf-nav-hayir">0</b></button>
             </div>
+            <button type="button" id="kf-nav-havuz" class="kf-nav-add" style="display:none;" onclick="ymAc('form')" title="Formda olmayan bir maddeyi havuza ekle — bu forma da eklenir">＋ Havuza madde</button>
             <button type="button" id="kf-nav-next" class="kf-nav-next" onclick="kfSonrakiBos()">Sonraki boş ↓</button>
           </div>
           <div class="kf-tbl-wrap">
@@ -7043,7 +7043,14 @@
     formlar.forEach(f => kfFormGetRows(f).forEach(r => {
       if (r && r[6] === 1 && String(r[3] || '').trim().toUpperCase() === 'HAYIR') hayir[r[0]] = (hayir[r[0]] || 0) + 1;
     }));
-    _kxTekrar = { n: formlar.length, hayir };
+    // Sayı / metin alanlarında aynı modelin en son kaydedilen değeri
+    const onceki = {};
+    formlar.forEach(f => kfFormGetRows(f).forEach(r => {
+      if (!r || r[6] !== 1 || !r[0] || onceki[r[0]]) return;
+      const t = String(r[7] || '').toUpperCase().trim(), v = String(r[3] || '').trim();
+      if ((t === 'N' || t === 'TN') && v) onceki[r[0]] = { v, f: f.name || '' };
+    }));
+    _kxTekrar = { n: formlar.length, hayir, onceki };
   }
   function kxTekrarHtml(kod) {
     const c = _kxTekrar.hayir[kod];
@@ -7709,6 +7716,8 @@
     if (h) h.textContent = hayir;
     const nx = document.getElementById('kf-nav-next');
     if (nx) nx.disabled = !pr.empty;
+    const hv = document.getElementById('kf-nav-havuz');
+    if (hv) hv.style.display = isEditor() && currentPage === 'kalite-formu' && window.kfCurrentModel ? '' : 'none';
     const say = kfGrupSayac();
     tb.querySelectorAll('tr.kf-grup-hdr').forEach(tr => {
       const el = tr.querySelector('.kf-gh-prog');
@@ -7914,6 +7923,398 @@
     .ds-h-f{font-size:11px;color:#9ca3af;white-space:nowrap;}
     @media(max-width:900px){ .ds-tiles{grid-template-columns:repeat(2,1fr);} .ds-grid{grid-template-columns:1fr;} }
     @media(max-width:640px){ .ds-head h1{font-size:22px;} .ds-hrow{grid-template-columns:60px 1fr;} .ds-h-f{grid-column:2;white-space:normal;} .ds-prog-bar{width:56px;} .ds-btn{flex:1;} .ds-actions{width:100%;} }
+  </style>`);
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // HAVUZ — satır ekleme (atamalar dahil), YENİ MADDE PANELİ, TOPLU ATAMA
+  // ═════════════════════════════════════════════════════════════════════════
+  // at konumuna satır ekle; alttaki satırların model/proje atamaları bir aşağı kayar
+  function khSatirEkle(at, vals, mids) {
+    KH.TOTAL_ROWS++;
+    KH.paramData.splice(at, 0, new Array(KH_FIXED.length).fill(''));
+    [KH.assignments, PH.assignments].forEach(asg => {
+      for (const [mid, obj] of Object.entries(asg)) {
+        const yeni = {};
+        for (const [ri, v] of Object.entries(obj)) { const n = +ri; yeni[n >= at ? n + 1 : n] = v; }
+        asg[mid] = yeni;
+      }
+    });
+    vals.forEach((v, ci) => { if (v) khSetFixed(at, ci, v); });
+    (mids || []).forEach(mid => {
+      if (!KH.assignments[mid]) KH.assignments[mid] = {};
+      KH.assignments[mid][at] = 'X';
+      if (vals[0]) _khDeletedAtama[mid]?.delete(vals[0]);
+    });
+    KH._dirty = true;
+  }
+  function khSatirModelleri(ri) { return KH_MODELS.filter(m => (KH.assignments[m.id] || {})[ri]).map(m => m.id); }
+  function ymDoluSatirlar() {
+    const a = [];
+    for (let ri = 0; ri < KH.TOTAL_ROWS; ri++) { const r = KH.paramData[ri]; if (r && r[0] && r[0] !== KH_ORDER_KOD) a.push(ri); }
+    return a;
+  }
+  function ymNorm(s) { return String(s || '').toLocaleUpperCase('tr-TR').replace(/[^0-9A-ZÇĞİÖŞÜ ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function ymGruplar() {
+    const m = new Map();
+    ymDoluSatirlar().forEach(ri => {
+      const g = KH.paramData[ri][5] || '';
+      if (!g) return;
+      const x = m.get(g) || { grup: g, n: 0 };
+      x.n++; m.set(g, x);
+    });
+    return [...m.values()];
+  }
+  // Grup + alan türü şablonu: gruptaki aynı türden son madde (yoksa türün varsayılanları)
+  function ymSablon(grup, tur) {
+    let sonTur = -1, son = -1;
+    ymDoluSatirlar().forEach(ri => {
+      const r = KH.paramData[ri];
+      if (!grup || r[5] !== grup) return;
+      son = ri;
+      if (String(r[1] || '').toUpperCase().trim() === tur) sonTur = ri;
+    });
+    const vars = { T: ['10', '', '!QEH'], N: ['10', '4', ''], TN: ['20', '', ''] }[tur] || ['', '', ''];
+    const r = sonTur >= 0 ? KH.paramData[sonTur] : null;
+    const kodKaynak = r || (son >= 0 ? KH.paramData[son] : null);
+    return {
+      son, sonTur,
+      uzunluk: r ? (r[2] || '') : vars[0],
+      desimal: r ? (r[3] || '') : vars[1],
+      grupKodu: r ? (r[6] || '') : vars[2],
+      kod: kodKaynak ? khNextKod(kodKaynak[0]) : '',
+    };
+  }
+  function ymBenzer(metin) {
+    const n = ymNorm(metin);
+    const a = new Set(n.split(' ').filter(w => w.length > 1));
+    if (!a.size) return [];
+    const out = [];
+    ymDoluSatirlar().forEach(ri => {
+      const r = KH.paramData[ri];
+      const rn = ymNorm(r[4]);
+      const b = new Set(rn.split(' ').filter(w => w.length > 1));
+      if (!b.size) return;
+      let ortak = 0;
+      a.forEach(w => { if (b.has(w)) ortak++; });
+      const skor = ortak / Math.max(a.size, b.size);
+      if (rn === n || skor >= 0.85) out.push({ kod: r[0], ac: r[4], grup: r[5], ayni: rn === n, skor });
+    });
+    return out.sort((x, y) => (y.ayni - x.ayni) || (y.skor - x.skor)).slice(0, 3);
+  }
+  // Başlangıç kodundan itibaren n adet boş KOD (havuzda kullanılanları atlar)
+  function ymKodlar(bas, n) {
+    const used = new Set(ymDoluSatirlar().map(ri => KH.paramData[ri][0]));
+    const k = String(bas || '').trim();
+    if (!k) return { hata: 'KOD boş olamaz' };
+    if (used.has(k)) return { hata: k + ' havuzda zaten var — başka bir KOD yazın' };
+    const out = [k];
+    const m = k.match(/^(.*?)(\d+)$/);
+    let num = m ? parseInt(m[2], 10) : 0;
+    while (out.length < n) {
+      if (!m) return { hata: 'Birden fazla madde için KOD sayıyla bitmeli (ör. K1050)' };
+      num++;
+      const c = m[1] + String(num).padStart(m[2].length, '0');
+      if (!used.has(c)) out.push(c);
+    }
+    return { kodlar: out };
+  }
+
+  // ── Model seçici (Yeni Madde ve Toplu Atama ortak) ──
+  let _ms = { sec: new Set(), gibi: null, zorunlu: '' };
+  function msCiz() {
+    const el = document.getElementById('ms-alan');
+    if (!el) return;
+    const s = _ms.sec;
+    const seriler = [...new Set(KH_MODELS.map(m => m.series))];
+    let h = '<div class="ms-quick">';
+    if (_ms.gibi) h += `<button type="button" class="ms-q" onclick="msGibi()" title="${kfHEsc(_ms.gibi.ac)}">↺ ${kfHEsc(_ms.gibi.kod)} ile aynı</button>`;
+    h += '<button type="button" class="ms-q" onclick="msHepsi(true)">Tümü</button><button type="button" class="ms-q" onclick="msHepsi(false)">Hiçbiri</button>';
+    h += `<span class="ms-say">${s.size} / ${KH_MODELS.length} model</span></div>`;
+    seriler.forEach(se => {
+      const ms = KH_MODELS.filter(m => m.series === se);
+      const n = ms.filter(m => s.has(m.id)).length;
+      h += `<div class="ms-row"><button type="button" class="ms-seri${n === ms.length ? ' on' : n ? ' yarim' : ''}" onclick="msSeri('${se}')" title="${se} serisinin tümü">${se}</button><div class="ms-chips">`
+        + ms.map(m => `<button type="button" class="ms-chip${s.has(m.id) ? ' on' : ''}${m.id === _ms.zorunlu ? ' zorunlu' : ''}" onclick="msTik('${m.id}')" title="${kfHEsc(m.label)}">${kfHEsc(m.label.split(' ').slice(1).join(' ') || m.label)}</button>`).join('')
+        + '</div></div>';
+    });
+    el.innerHTML = h;
+  }
+  function msTik(mid) { _ms.sec.has(mid) ? _ms.sec.delete(mid) : _ms.sec.add(mid); msCiz(); }
+  function msSeri(se) {
+    const ids = KH_MODELS.filter(m => m.series === se).map(m => m.id);
+    const hepsi = ids.every(id => _ms.sec.has(id));
+    ids.forEach(id => hepsi ? _ms.sec.delete(id) : _ms.sec.add(id));
+    msCiz();
+  }
+  function msHepsi(on) { _ms.sec = new Set(on ? KH_MODELS.map(m => m.id) : []); msCiz(); }
+  function msGibi() { if (_ms.gibi) { _ms.sec = new Set(_ms.gibi.mids); if (_ms.zorunlu) _ms.sec.add(_ms.zorunlu); msCiz(); } }
+
+  // ── Yeni Madde paneli ──
+  let _ym = null;
+  function ymAc(kaynak) {
+    if (!isEditor()) { kfToast('Havuza sadece düzenleyici madde ekleyebilir.'); return; }
+    if (!navigator.onLine || KH._offline) { kfToast('📴 Çevrimdışı — havuza madde eklemek için internet gerekli'); khToast('📴 Çevrimdışı — havuz salt okunur', 2500); return; }
+    if (kaynak === 'form' && !window.kfCurrentModel) { kfToast('Önce Model seçin'); return; }
+    if (KH.editCell) khCE();
+    const gruplar = ymGruplar();
+    let grup = '';
+    if (kaynak === 'havuz' && KH.sel.r1 >= 0) grup = KH.paramData[Math.max(KH.sel.r1, KH.sel.r2)]?.[5] || '';
+    if (!grup && gruplar.length) grup = gruplar[0].grup;
+    _ym = { kaynak, grup, tur: 'T', eklenen: [] };
+    const esc = kfHEsc;
+    const formModel = kaynak === 'form' ? (window.kfCurrentModelLabel || '') : '';
+    kxModal(`
+      <div class="ym">
+        <div class="kxm-t">＋ Yeni madde — Kalite Havuzu</div>
+        <div class="kxm-s">${kaynak === 'form' ? `Madde havuza kaydedilir ve bu forma (${esc(formModel)}) eklenir.` : 'Seçtiğiniz grubun sonuna eklenir. Bitince üstteki <b>Kaydet</b> ile veritabanına yazın.'}</div>
+        <div class="ym-grid">
+          <label class="kxm-l">Grup
+            <select id="ym-grup" class="kxm-i" onchange="ymGrupSec(this.value)">
+              ${gruplar.map(g => `<option value="${esc(g.grup)}"${g.grup === grup ? ' selected' : ''}>${esc(g.grup)} (${g.n})</option>`).join('')}
+              <option value="__yeni__">＋ Yeni grup…</option>
+            </select>
+            <input id="ym-grup-yeni" class="kxm-i" style="display:none;" placeholder="Yeni grup adı" oninput="ymOnizle()">
+          </label>
+          <div class="kxm-l">Alan türü
+            <div class="ym-tur" id="ym-tur">
+              <button type="button" data-t="T" onclick="ymTurSec('T')">EVET / HAYIR</button><button type="button" data-t="N" onclick="ymTurSec('N')">Sayı</button><button type="button" data-t="TN" onclick="ymTurSec('TN')">Metin</button>
+            </div>
+          </div>
+        </div>
+        <label class="kxm-l">Açıklama <span class="ym-ipucu">— her satır ayrı madde olur; Excel'den alt alta yapıştırabilirsiniz</span>
+          <textarea id="ym-ac" class="kxm-i ym-ac" rows="3" placeholder="ör. POMPA KABLO BAĞLANTISI KONTROLÜ" oninput="ymOnizle()"></textarea>
+        </label>
+        <div class="ym-grid ym-grid-4">
+          <label class="kxm-l">KOD <span class="ym-ipucu">(ERP ile aynı)</span><input id="ym-kod" class="kxm-i" oninput="ymOnizle()" autocomplete="off"></label>
+          <label class="kxm-l">Uzunluk<input id="ym-uz" class="kxm-i" inputmode="numeric"></label>
+          <label class="kxm-l">Desimal<input id="ym-des" class="kxm-i" inputmode="numeric"></label>
+          <label class="kxm-l">Grup kodu<input id="ym-gk" class="kxm-i"></label>
+        </div>
+        <div id="ym-oniz" class="ym-oniz"></div>
+        <div class="kxm-l">Hangi modellerde kontrol edilecek?</div>
+        <div id="ms-alan" class="ms-alan"></div>
+        <div id="ym-durum" class="ym-durum"></div>
+        <div class="kxm-btns">
+          <button type="button" class="kxm-cancel" onclick="kxModalClose()">Kapat</button>
+          ${kaynak === 'form'
+            ? '<button type="button" class="kxm-ok" onclick="ymEkle(false)">Havuza kaydet ve forma ekle</button>'
+            : '<button type="button" class="kxm-cancel ym-devam" onclick="ymEkle(true)">Ekle ve yeni</button><button type="button" class="kxm-ok" onclick="ymEkle(false)">Ekle</button>'}
+        </div>
+      </div>`);
+    document.querySelector('#kx-modal .kxm-box')?.classList.add('ym-box');
+    ymGrupSec(grup, true);
+    setTimeout(() => document.getElementById('ym-ac')?.focus(), 50);
+  }
+  function ymGrupAdi() {
+    const sel = document.getElementById('ym-grup')?.value;
+    return sel === '__yeni__' ? String(document.getElementById('ym-grup-yeni')?.value || '').trim().toLocaleUpperCase('tr-TR') : sel;
+  }
+  function ymGrupSec(g) {
+    const yeni = g === '__yeni__';
+    const gi = document.getElementById('ym-grup-yeni');
+    if (gi) { gi.style.display = yeni ? '' : 'none'; if (yeni) gi.focus(); }
+    _ym.grup = yeni ? '' : g;
+    // Varsayılan tür: gruptaki son maddenin türü
+    let tur = 'T';
+    if (!yeni) {
+      const s = ymSablon(g, 'T');
+      if (s.son >= 0) tur = String(KH.paramData[s.son][1] || 'T').toUpperCase().trim() || 'T';
+    }
+    // Varsayılan modeller: gruptaki ataması olan son madde ile aynı (formdan geliyorsa o model mutlaka seçili)
+    let ri = -1;
+    if (!yeni) ymDoluSatirlar().forEach(i => { if (KH.paramData[i][5] === g && khSatirModelleri(i).length) ri = i; });
+    _ms = { sec: new Set(ri >= 0 ? khSatirModelleri(ri) : (_ym.kaynak === 'form' ? [] : KH_MODELS.map(m => m.id))), gibi: null, zorunlu: '' };
+    if (ri >= 0) _ms.gibi = { kod: KH.paramData[ri][0], ac: KH.paramData[ri][4], mids: khSatirModelleri(ri) };
+    if (_ym.kaynak === 'form' && window.kfCurrentModel) { _ms.zorunlu = window.kfCurrentModel; _ms.sec.add(window.kfCurrentModel); }
+    msCiz();
+    ymTurSec(['T', 'N', 'TN'].includes(tur) ? tur : 'T');
+  }
+  function ymTurSec(t) {
+    _ym.tur = t;
+    document.querySelectorAll('#ym-tur button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+    const s = ymSablon(_ym.grup, t);
+    const set = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; };
+    set('ym-uz', s.uzunluk); set('ym-des', s.desimal); set('ym-gk', s.grupKodu);
+    set('ym-kod', s.kod);
+    ymOnizle();
+  }
+  function ymSatirlar() {
+    return String(document.getElementById('ym-ac')?.value || '').split('\n')
+      .map(s => s.replace(/\t.*$/, '').trim().toLocaleUpperCase('tr-TR')).filter(Boolean);
+  }
+  function ymTopla() {
+    const satirlar = ymSatirlar();
+    const grup = ymGrupAdi();
+    const v = { satirlar, grup, kodlar: [], hata: '' };
+    if (!grup) v.hata = 'Grup seçin veya yeni grup adı yazın';
+    else if (!satirlar.length) v.hata = 'Açıklama yazın';
+    else {
+      const k = ymKodlar(document.getElementById('ym-kod')?.value, satirlar.length);
+      if (k.hata) v.hata = k.hata; else v.kodlar = k.kodlar;
+    }
+    return v;
+  }
+  function ymOnizle() {
+    const el = document.getElementById('ym-oniz');
+    if (!el) return;
+    const esc = kfHEsc;
+    const v = ymTopla();
+    let h = '';
+    if (v.hata && v.satirlar.length) h += `<div class="ym-hata">⛔ ${esc(v.hata)}</div>`;
+    if (v.kodlar.length) {
+      h += `<div class="ym-ozet">${v.kodlar.length === 1 ? '1 madde' : v.kodlar.length + ' madde'} eklenecek: <b>${esc(v.kodlar.slice(0, 6).join(', '))}${v.kodlar.length > 6 ? ' … ' + esc(v.kodlar[v.kodlar.length - 1]) : ''}</b></div>`;
+    }
+    v.satirlar.slice(0, 20).forEach(s => {
+      ymBenzer(s).forEach(b => {
+        h += `<div class="ym-benzer${b.ayni ? ' ayni' : ''}">${b.ayni ? '⛔ Aynısı var' : '⚠ Benzer'}: <b>${esc(b.kod)}</b> ${esc(b.ac)} <span>(${esc(b.grup)})</span></div>`;
+      });
+    });
+    el.innerHTML = h;
+  }
+  async function ymEkle(devam) {
+    if (!_ym) return;
+    const v = ymTopla();
+    if (v.hata) { ymDurum('⛔ ' + v.hata, true); return; }
+    const ayni = v.satirlar.filter(s => ymBenzer(s).some(b => b.ayni));
+    if (ayni.length && !window.confirm('Havuzda aynı açıklamalı madde var:\n\n' + ayni.slice(0, 5).join('\n') + '\n\nYine de eklensin mi?')) return;
+    if (!_ms.sec.size && !window.confirm('Hiçbir model seçilmedi — madde hiçbir formda görünmez.\n\nYine de eklensin mi?')) return;
+    const uz = document.getElementById('ym-uz').value.trim(), des = document.getElementById('ym-des').value.trim(), gk = document.getElementById('ym-gk').value.trim();
+    const sb = ymSablon(v.grup, _ym.tur);
+    const dolu = ymDoluSatirlar();
+    let at = sb.son >= 0 ? sb.son + 1 : (dolu.length ? dolu[dolu.length - 1] + 1 : 0);
+    const ilk = at;
+    const mids = [..._ms.sec];
+    v.satirlar.forEach((ac, i) => khSatirEkle(at + i, [v.kodlar[i], _ym.tur, uz, des, ac, v.grup, gk], mids));
+    const son = at + v.satirlar.length - 1;
+    _ym.eklenen.push(...v.kodlar);
+    if (currentPage === 'kalite-havuzu') {
+      khBuildFR();
+      KH.sel = { r1: ilk, c1: 4, r2: son, c2: 4 }; KH.showSel = true;
+      const w = document.getElementById('kh-scroll');
+      const idx = KH.filteredRows.indexOf(son);
+      if (w && idx >= 0) w.scrollTop = Math.max(0, idx * KH.ROW_H - w.clientHeight / 2);
+      KH.vsStart = -1; khOnScroll(); khVSR();
+    }
+    const mesaj = v.kodlar.length === 1 ? v.kodlar[0] + ' eklendi' : v.kodlar.length + ' madde eklendi (' + v.kodlar[0] + ' – ' + v.kodlar[v.kodlar.length - 1] + ')';
+    if (_ym.kaynak === 'form') { await ymFormaEkle(v, mids); return; }
+    if (devam) {
+      document.getElementById('ym-ac').value = '';
+      ymTurSec(_ym.tur); // KOD bir sonrakine geçer
+      ymDurum('✓ ' + mesaj + ' — sıradakini yazın. Toplam ' + _ym.eklenen.length + ' madde; bitince Kaydet\'e basın.');
+      document.getElementById('ym-ac').focus();
+    } else {
+      kxModalClose();
+      khToast('✓ ' + mesaj + ' — Kaydet ile veritabanına yazın', 4000);
+    }
+  }
+  function ymDurum(m, hata) {
+    const el = document.getElementById('ym-durum');
+    if (el) { el.textContent = m; el.className = 'ym-durum ' + (hata ? 'hata' : 'ok'); }
+  }
+  // Formdan eklenen maddeyi havuza kaydet, sonra açık forma ekle
+  async function ymFormaEkle(v, mids) {
+    kxModalClose();
+    kfToast('Havuza kaydediliyor…');
+    let ok = false;
+    try { if (khPreSaveCheck()) ok = await khSyncToSupabase(); } catch (e) { ok = false; }
+    if (mids.includes(window.kfCurrentModel) && Array.isArray(window.kfData)) {
+      let at = -1;
+      window.kfData.forEach((r, i) => { if (r[6] === 1 && r[2] === v.grup) at = i; });
+      if (at < 0) window.kfData.forEach((r, i) => { if (r[6] === 1) at = i; });
+      const yeni = v.satirlar.map((ac, i) => [v.kodlar[i], ac, v.grup, '', '', '', 1, _ym.tur]);
+      window.kfData.splice(at + 1, 0, ...yeni);
+      kfRebuildTbody();
+      setTimeout(() => {
+        const tr = document.querySelector(`#kf-tbody tr.kf-row[data-ri="${at + 1}"]`);
+        if (tr) { tr.scrollIntoView({ block: 'center', behavior: 'smooth' }); tr.classList.add('kf-flash'); }
+      }, 50);
+    }
+    kfToast(ok ? '✓ Havuza kaydedildi ve forma eklendi' : '⚠️ Havuza kaydedilemedi — Kalite Havuzu sayfasında Kaydet\'e basın');
+  }
+
+  // ── Toplu model atama (havuzda seçili satırlar) ──
+  let _ta = [];
+  function khTopluAta() {
+    if (!khCanEdit() || currentPage !== 'kalite-havuzu') return;
+    if (KH.editCell) khCE();
+    const { r1, r2 } = KH.sel;
+    if (r1 < 0) { khToast('Önce maddeleri seçin — satır numarasından sürükleyin veya Shift ile tıklayın', 3500); return; }
+    const minR = Math.min(r1, r2), maxR = Math.max(r1, r2);
+    _ta = KH.filteredRows.filter(ri => ri >= minR && ri <= maxR && KH.paramData[ri]?.[0]);
+    if (!_ta.length) { khToast('Seçili satırlarda madde yok', 2500); return; }
+    const kodlar = _ta.map(ri => KH.paramData[ri][0]);
+    _ms = { sec: new Set(), gibi: null, zorunlu: '' };
+    kxModal(`
+      <div class="kxm-t">Toplu model atama</div>
+      <div class="kxm-s"><b>${_ta.length} madde</b> seçili: ${kfHEsc(kodlar.slice(0, 8).join(', '))}${kodlar.length > 8 ? ' … ' + kfHEsc(kodlar[kodlar.length - 1]) : ''}<br>Modelleri seçin, sonra <b>Ata</b> ya da <b>Kaldır</b>. Diğer modellerdeki atamalar değişmez.</div>
+      <div id="ms-alan" class="ms-alan"></div>
+      <div class="kxm-btns">
+        <button type="button" class="kxm-cancel" onclick="kxModalClose()">Kapat</button>
+        <button type="button" class="kxm-cancel ym-kaldir" onclick="khTopluUygula(false)">Atamayı kaldır</button>
+        <button type="button" class="kxm-ok" onclick="khTopluUygula(true)">X ata</button>
+      </div>`);
+    document.querySelector('#kx-modal .kxm-box')?.classList.add('ym-box');
+    msCiz();
+  }
+  function khTopluUygula(ata) {
+    const mids = [..._ms.sec];
+    if (!mids.length) { khToast('En az bir model seçin', 2000); return; }
+    let n = 0;
+    _ta.forEach(ri => mids.forEach(mid => {
+      const once = khMVal(mid, ri);
+      if (ata ? once : !once) return;
+      khMValSet(mid, ri, ata ? 'X' : '');
+      n++;
+    }));
+    kxModalClose();
+    khVSR();
+    khToast(n ? n + ' atama ' + (ata ? 'eklendi' : 'kaldırıldı') + ' — Kaydet ile veritabanına yazın' : 'Değişiklik yok — seçili maddeler zaten öyle', 3500);
+  }
+
+  // ── Formda önceki makine değeri (sayı / metin alanları) ──
+  function kxOncekiHtml(kod) {
+    const o = ((typeof _kxTekrar !== 'undefined' && _kxTekrar.onceki) || {})[kod];
+    return o ? `<div class="kf-onceki" title="Aynı modelin son kaydedilen formu: ${kfHEsc(o.f)}">önceki: ${kfHEsc(o.v)}</div>` : '';
+  }
+
+  document.head.insertAdjacentHTML('beforeend', `<style>
+    .kxm-box.ym-box{width:min(680px,96vw);}
+    .ym-box .kxm-btns{position:sticky;bottom:-18px;background:#fff;margin:14px -20px -18px;padding:10px 20px 14px;border-top:1px solid #f3f4f6;flex-wrap:wrap;}
+    .ym-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:0 12px;}
+    .ym-grid-4{grid-template-columns:1.4fr .8fr .8fr 1fr;}
+    .ym-ipucu{font-weight:500;color:#9ca3af;}
+    .ym-ac{resize:vertical;min-height:64px;text-transform:uppercase;}
+    .ym-tur{display:flex;margin-top:4px;border:1.5px solid #d1d5db;border-radius:8px;overflow:hidden;}
+    .ym-tur button{flex:1;border:none;background:#fff;padding:9px 6px;font-size:12px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .ym-tur button + button{border-left:1.5px solid #d1d5db;}
+    .ym-tur button.on{background:#111827;color:#fff;}
+    .ym-oniz{display:flex;flex-direction:column;gap:4px;margin-top:8px;}
+    .ym-ozet{font-size:12px;color:#374151;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:6px 10px;}
+    .ym-hata{font-size:12px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:6px 10px;}
+    .ym-benzer{font-size:11.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:5px 10px;}
+    .ym-benzer.ayni{color:#b91c1c;background:#fef2f2;border-color:#fecaca;}
+    .ym-benzer span{color:#9ca3af;}
+    .ym-durum{font-size:12px;font-weight:700;margin-top:8px;min-height:1px;}
+    .ym-durum.ok{color:#15803d;} .ym-durum.hata{color:#b91c1c;}
+    .ym-devam{background:#fff;border:1.5px solid #e5e7eb;}
+    .ym-kaldir{color:#b91c1c;}
+    .ms-alan{margin-top:6px;border:1.5px solid #e5e7eb;border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:5px;}
+    .ms-quick{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:6px;border-bottom:1px solid #f3f4f6;margin-bottom:2px;}
+    .ms-q{border:1.5px solid #e5e7eb;background:#fff;border-radius:999px;padding:4px 11px;font-size:11.5px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .ms-q:hover{border-color:#cbd5e1;background:#f9fafb;}
+    .ms-say{margin-left:auto;font-size:11px;font-weight:700;color:#6b7280;}
+    .ms-row{display:flex;align-items:flex-start;gap:6px;}
+    .ms-seri{flex-shrink:0;width:48px;border:1.5px solid #e5e7eb;background:#fff;border-radius:7px;padding:4px 0;font-size:11px;font-weight:800;color:#6b7280;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .ms-seri.on{background:#dc2626;border-color:#dc2626;color:#fff;}
+    .ms-seri.yarim{border-color:#fca5a5;color:#dc2626;background:#fef2f2;}
+    .ms-chips{display:flex;flex-wrap:wrap;gap:4px;}
+    .ms-chip{border:1.5px solid #e5e7eb;background:#fff;border-radius:7px;padding:4px 9px;font-size:11.5px;font-weight:700;color:#4b5563;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .ms-chip.on{background:#fef2f2;border-color:#dc2626;color:#b91c1c;}
+    .ms-chip.zorunlu{box-shadow:0 0 0 2px #fde68a;}
+    .kf-onceki{font-size:10.5px;color:#9ca3af;text-align:center;margin:-3px 0 4px;font-weight:600;}
+    .kf-nav-add{border:1.5px solid #e5e7eb;background:#fff;color:#374151;border-radius:9px;padding:6px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .kf-nav-add:hover{border-color:#cbd5e1;background:#f9fafb;}
+    @media(max-width:640px){ .ym-grid,.ym-grid-4{grid-template-columns:1fr 1fr;} .ms-row{flex-direction:column;gap:3px;} .ms-seri{width:auto;padding:3px 10px;} }
   </style>`);
 
   applyConfig(defaultConfig);
