@@ -460,15 +460,16 @@
     'knv-60-6000-2b': { title: 'KNV 60 6000 2B', desc: 'KNV 60 6000 2B modeli kalite kontrol parametreleri.' },
   };
 
+  // Varsayılan: tüm seri alt menüleri kapalı (açılışta kxCollapseAllSeries ile uygulanır)
   const seriesStates = {
-    lym: true,
-    vdl: true,
-    kbn: true,
-    rts: true,
-    pyt: true,
-    mst: true,
-    ult: true,
-    knv: true,
+    lym: false,
+    vdl: false,
+    kbn: false,
+    rts: false,
+    pyt: false,
+    mst: false,
+    ult: false,
+    knv: false,
     proje: false,
   };
 
@@ -2472,17 +2473,19 @@
     sb.style.position = sidebarOpen ? 'relative' : 'absolute';
     sb.style.height = '100%';
     document.body.classList.toggle('sidebar-open', sidebarOpen);
-    // Sidebar açılınca tüm serileri kapat (kullanıcı manuel açsın)
-    if (sidebarOpen) {
-      Object.keys(seriesStates).forEach(series => {
-        if (series === 'proje') return;
-        seriesStates[series] = false;
-        const modelsDiv = document.getElementById(`${series}-models`);
-        const chevron = document.querySelector(`.series-chevron-${series}`);
-        if (modelsDiv) modelsDiv.style.display = 'none';
-        if (chevron) chevron.style.transform = 'rotate(-90deg)';
-      });
-    }
+    // Menü her açılıp kapandığında seri alt menüleri sıfırlansın (hepsi kapalı)
+    kxCollapseAllSeries();
+  }
+
+  // Tüm seri alt menülerini (LYM, VDL, … ve Proje) kapalı duruma getir
+  function kxCollapseAllSeries() {
+    Object.keys(seriesStates).forEach(series => {
+      seriesStates[series] = false;
+      const modelsDiv = document.getElementById(`${series}-models`);
+      const chevron = document.querySelector(`.series-chevron-${series}`);
+      if (modelsDiv) modelsDiv.style.display = 'none';
+      if (chevron) chevron.style.transform = 'rotate(-90deg)';
+    });
   }
 
   // ── Auth — Google OAuth ──────────────────────────────────────────────────
@@ -6488,6 +6491,7 @@
   (async () => {
     authCheckSession();          // localStorage'dan editör oturumu yükle
     await authCheckCallback();  // Google OAuth geri dönüşü varsa işle
+    kxCollapseAllSeries(); // açılışta tüm seri alt menüleri kapalı (uygulama görünmeden önce)
     const app = document.getElementById('app');
     app.style.removeProperty('display');
     app.style.display = 'flex';
@@ -6496,8 +6500,6 @@
     try { await phEnsureLoaded(); } catch (e) {
       console.warn('[KaliteX] Proje yukleme (tablolar yoksa supabase-proje-schema.sql calistirin):', e.message || e);
     }
-    const _projeCh = document.querySelector('.series-chevron-proje');
-    if (_projeCh && !seriesStates.proje) _projeCh.style.transform = 'rotate(-90deg)';
     kfNotesWireEvents();
     renderPage(currentPage);
     lucide.createIcons();
