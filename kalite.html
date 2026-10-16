@@ -2556,6 +2556,8 @@
           .kfkb-sp:hover{background:#fef08a;}
           .kfkb-ok{background:#dc2626!important;color:#fff!important;border-color:#dc2626!important;}
           .kfkb-ok:hover{background:#b91c1c!important;}
+          .kfkb-kd{background:#f3f4f6;color:#4b5563;border-color:#d1d5db;font-weight:800;}
+          .kfkb-kd:hover{background:#e5e7eb;}
           .kfkb-shift-on{background:#dc2626!important;color:#fff!important;border-color:#dc2626!important;}
           .kfkb-space{flex:4!important;font-size:11px;letter-spacing:.06em;}
         </style>
@@ -3200,10 +3202,17 @@
     kfKbClose();
   };
 
+  // Ölçüm bu makinede yok (ör. kurutma fanı) — tek dokunuşla KD yazılır, madde dolu sayılır
+  window.kfKbKD = function() {
+    window.kfKb.val = 'KD';
+    kfKbOK();
+  };
+
   window.kfKbType = function(ch) {
     const kb = window.kfKb;
     const TR = {'ı':'I','i':'İ','ğ':'Ğ','ü':'Ü','ş':'Ş','ö':'Ö','ç':'Ç'};
     if (kb.type === 'N') {
+      if (kb.val === 'KD') kb.val = ''; // KD'li kutuya sayı girilirse KD silinir
       if (ch === 'BS')       kb.val = kb.val.slice(0,-1);
       else if (ch === 'C')   kb.val = '';
       else if (ch === 'PM')  kb.val = kb.val.startsWith('-') ? kb.val.substring(1) : (kb.val ? '-'+kb.val : '');
@@ -3235,13 +3244,14 @@
     const TR = {'ı':'I','i':'İ','ğ':'Ğ','ü':'Ü','ş':'Ş','ö':'Ö','ç':'Ç'};
     let keys = '';
     if (isN) {
-      [['7','8','9','BS'],['4','5','6','C'],['1','2','3',''],['DOT','0','','OK']].forEach(row => {
+      [['7','8','9','BS'],['4','5','6','C'],['1','2','3','KD'],['DOT','0','','OK']].forEach(row => {
         keys += '<div class="kfkb-row">';
         const lab = {'BS':'⌫','C':'C','PM':'±','DOT':'.','OK':'✓'};
         const sp  = new Set(['BS','C','PM']);
         row.forEach(k => {
           if (!k) { keys += '<button class="kfkb-btn" style="visibility:hidden;pointer-events:none;"></button>'; return; }
           if (k === 'OK') { keys += `<button class="kfkb-btn kfkb-ok" onclick="kfKbOK()">${lab[k]}</button>`; return; }
+          if (k === 'KD') { keys += `<button class="kfkb-btn kfkb-kd" onclick="kfKbKD()" title="Bu makinede yok — Kapsam Dışı">KD</button>`; return; }
           const cls = sp.has(k) ? 'kfkb-btn kfkb-sp' : 'kfkb-btn';
           keys += `<button class="${cls}" onclick="kfKbType('${k}')">${lab[k]||k}</button>`;
         });
@@ -6035,7 +6045,8 @@
     const val = k => { const r = rows.find(x => String(x[0]).toUpperCase().trim() === k); return r ? String(r[3] || '') : ''; };
     const SPECIAL = ['K9011', 'K9012', 'K9013']; // personel — bilgi kutusunda gösterilir
     const tRows = rows.filter(r => String(r[7] || '').toUpperCase().trim() === 'T');
-    const cnt = v => tRows.filter(r => r[3] === v).length;
+    // KD sayı kutularında da olabilir (ölçüm o makinede yok) — onlar da sayılır
+    const cnt = v => (v === 'KD' ? rows : tRows).filter(r => String(r[3] || '').trim() === v).length;
     const pr = kfFormProgress(doc.rows);
     const done = doc.status === 'tamamlandi';
     // Fotoğraf sırası: tablo sırası, genel fotoğraflar en sonda → F1, F2…
@@ -8499,7 +8510,7 @@
     // kalite.html ağdan geldiği için çoğu zaman sayfa zaten yenidir — o zaman ikinci yenileme yapılmaz.
     // Yenileme gerektiren durum: uygulama çevrimdışıyken önbellekteki eski sürümle açılmışsa.
     // İlk kurulumda (önceden SW yokken) yenileme gereksiz.
-    const KX_SURUM = 'kalitex-v25'; // sw.js içindeki CACHE ile AYNI olmalı
+    const KX_SURUM = 'kalitex-v26'; // sw.js içindeki CACHE ile AYNI olmalı
     const _kxHadSW = !!navigator.serviceWorker.controller;
     const _kxSwSurum = () => new Promise(res => {
       const c = navigator.serviceWorker.controller;

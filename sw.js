@@ -5,7 +5,7 @@
 //   - Supabase REST API: Network-first, offline'da cache'den dön
 
   // Sürüm: kalite.html içindeki KX_SURUM ile AYNI olmalı — her yayında ikisi birlikte artırılır
-  const CACHE = 'kalitex-v25';
+  const CACHE = 'kalitex-v26';
 
 const LOCAL_ASSETS = [
   './',
