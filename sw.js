@@ -5,7 +5,7 @@
 //   - Supabase REST API: Network-first, offline'da cache'den dön
 
   // Sürüm: kalite.html içindeki KX_SURUM ile AYNI olmalı — her yayında ikisi birlikte artırılır
-  const CACHE = 'kalitex-v26';
+  const CACHE = 'kalitex-v27';
 
 const LOCAL_ASSETS = [
   './',
@@ -28,7 +28,10 @@ const CDN_ASSETS = [
   'https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js',
   'https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap',
   'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js',
+  // Form raporu (PDF + Excel): çevrimdışı da üretilebilsin
+  'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.12/pdfmake.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.12/vfs_fonts.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js',
 ];
 
 // ── Kurulum ─────────────────────────────────────────────────────────────────

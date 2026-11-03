@@ -263,8 +263,9 @@
         <button onclick="handleFormAction('load')" class="kfhb kfhb-blu" title="Yükle"><i data-lucide="upload" class="w-4 h-4"></i><span class="kfhb-lbl">Yükle</span></button>
         <button onclick="handleFormAction('notes')" class="kfhb kfhb-grn" title="Not" style="position:relative;"><i data-lucide="sticky-note" class="w-4 h-4"></i><span class="kfhb-lbl">Not</span><span id="kf-note-badge" class="kfhb-note-badge"></span></button>
         <button onclick="kxPhotoOpen(null)" class="kfhb kfhb-pur" title="Fotoğraflar"><i data-lucide="camera" class="w-4 h-4"></i><span class="kfhb-lbl">Foto</span></button>
+        <button onclick="kfRaporAc()" class="kfhb kfhb-rap" title="Rapor al: PDF veya Excel"><i data-lucide="file-bar-chart" class="w-4 h-4"></i><span class="kfhb-lbl">Rapor</span></button>
         <button id="kf-status-btn" onclick="kfStatusClick()" class="kfhb" style="display:none;background:#f59e0b;color:#fff;" title="Form durumu"></button>
-        <button onclick="kfFormMenu(this)" class="kfhb kfhb-more" title="Diğer: Farklı kaydet, PDF kalite belgesi"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+        <button onclick="kfFormMenu(this)" class="kfhb kfhb-more" title="Diğer: Farklı kaydet"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
         <div style="position:relative;">
           <button id="model-select-btn" onclick="toggleModelDropdown()" class="kfhb kfhb-tel" title="Model Seç">
             <i data-lucide="filter" class="w-4 h-4"></i><span class="kfhb-lbl" id="model-select-label">Model</span>
@@ -348,8 +349,9 @@
         <button onclick="handleFormAction('load')" class="kfhb kfhb-blu" title="Yükle"><i data-lucide="upload" class="w-4 h-4"></i><span class="kfhb-lbl">Yükle</span></button>
         <button onclick="handleFormAction('notes')" class="kfhb kfhb-grn" title="Not" style="position:relative;"><i data-lucide="sticky-note" class="w-4 h-4"></i><span class="kfhb-lbl">Not</span><span id="pf-note-badge" class="kfhb-note-badge"></span></button>
         <button onclick="kxPhotoOpen(null)" class="kfhb kfhb-pur" title="Fotoğraflar"><i data-lucide="camera" class="w-4 h-4"></i><span class="kfhb-lbl">Foto</span></button>
+        <button onclick="kfRaporAc()" class="kfhb kfhb-rap" title="Rapor al: PDF veya Excel"><i data-lucide="file-bar-chart" class="w-4 h-4"></i><span class="kfhb-lbl">Rapor</span></button>
         <button id="pf-status-btn" onclick="kfStatusClick()" class="kfhb" style="display:none;background:#f59e0b;color:#fff;" title="Form durumu"></button>
-        <button onclick="kfFormMenu(this)" class="kfhb kfhb-more" title="Diğer: Farklı kaydet, PDF kalite belgesi"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+        <button onclick="kfFormMenu(this)" class="kfhb kfhb-more" title="Diğer: Farklı kaydet"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
         <div style="position:relative;">
           <button id="project-select-btn" onclick="toggleProjectDropdown()" class="kfhb kfhb-tel" title="Proje Seç">
             <i data-lucide="filter" class="w-4 h-4"></i><span class="kfhb-lbl" id="project-select-label">Proje</span>
@@ -3820,19 +3822,17 @@
       : 'https://www.googleapis.com/auth/drive.file';
     let client = isBackup ? _kxTokenClientBackup : _kxTokenClientExport;
     if (!client) {
-      client = google.accounts.oauth2.initTokenClient({
-        client_id: KX_GDRIVE_CLIENT_ID,
-        scope,
-        callback: (resp) => {
-          if (resp.error) { kfToast('Google yetkilendirme hatası: ' + resp.error); return; }
-          if (isBackup) _kxDriveTokenBackup = resp.access_token;
-          else _kxDriveTokenExport = resp.access_token;
-          onToken(resp.access_token);
-        }
-      });
+      client = google.accounts.oauth2.initTokenClient({ client_id: KX_GDRIVE_CLIENT_ID, scope, callback: () => {} });
       if (isBackup) _kxTokenClientBackup = client;
       else _kxTokenClientExport = client;
     }
+    // İstemci tekrar kullanılır; izin süresi dolunca ilk çağıranın işi değil, bu çağrının işi devam etsin
+    client.callback = (resp) => {
+      if (resp.error) { kfToast('Google yetkilendirme hatası: ' + resp.error); return; }
+      if (isBackup) _kxDriveTokenBackup = resp.access_token;
+      else _kxDriveTokenExport = resp.access_token;
+      onToken(resp.access_token);
+    };
     const cached = isBackup ? _kxDriveTokenBackup : _kxDriveTokenExport;
     if (cached) onToken(cached);
     else client.requestAccessToken();
@@ -5386,7 +5386,7 @@
     document.getElementById('rp-mbox').innerHTML = `
       <div style="background:#dc2626;color:#fff;padding:15px 18px;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;">
         <div><div style="font-size:14px;font-weight:800;">${kfHEsc(f.name||'Form')}</div><div style="font-size:11px;opacity:.8;margin-top:2px;">${kfHEsc(f.modelLabel||'—')} · ${tarih} · ${kfFormGetStatus(f)==='tamamlandi'?'✓ Tamamlandı':'Taslak'}</div></div>
-        <button onclick="rpPrintForm('${f.id}')" style="margin-left:auto;margin-right:8px;background:#fff;color:#dc2626;border:none;border-radius:7px;padding:5px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">🖨️ PDF</button>
+        <button onclick="rpPrintForm('${f.id}')" style="margin-left:auto;margin-right:8px;background:#fff;color:#dc2626;border:none;border-radius:7px;padding:5px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">📊 Rapor</button>
         <button onclick="rpCloseModal()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:26px;height:26px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
       </div>
       <div style="padding:14px 18px;">
@@ -6002,34 +6002,47 @@
   }
 
   // ═════════════════════════════════════════════════════════════════════════
-  // PDF KALİTE BELGESİ — tarayıcının "PDF olarak kaydet" yazdırma çıktısı
+  // RAPOR GİRİŞİ — formdaki Rapor butonu ve Rapor sayfası aynı pencereyi açar (bkz. FORM RAPORU)
   // ═════════════════════════════════════════════════════════════════════════
-  function kfPrintCurrent() {
+  function kfRaporAc() {
+    if (window.kfCommit) window.kfCommit(); // düzenlenmekte olan hücredeki yazı da rapora girsin
     if (!kfRequireModel()) return;
-    if (!(window.kfData || []).length) { kfToast('Formda yazdırılacak madde yok.'); return; }
+    if (!kfFormProgress(window.kfData).total) { kfToast('Formda rapora girecek madde yok.'); return; }
     const saved = window.kfCurrentSaveId ? kfGetForms().find(f => f.id === window.kfCurrentSaveId) : null;
-    kfPrintDoc({
+    // Kayıtlı cihazlarda kayıt anındaki kalibrasyon durumu korunur, yeni eklenen cihaz güncel haliyle gelir
+    const kayitliCihaz = saved ? kfFormGetCihazlar(saved) : [];
+    kxRaporSecim({
+      id: window.kfCurrentSaveId || '', modelId: kxAktifModelId(),
       name: window.kfCurrentSaveName || '',
       modelLabel: currentPage === 'proje-formu' ? 'Proje: ' + (window.kfCurrentProjectLabel || '') : (window.kfCurrentModelLabel || ''),
       savedAt: (saved && saved.savedAt) || new Date().toISOString(),
+      updatedAt: saved && saved.updatedAt,
       status: window.kfStatus || 'taslak',
-      rows: window.kfData, notes: window.kfNotes, photos: window.kfPhotos || [],
-      sure: window.kfTiming, cihazlar: kxCihazSnapshot(window.kfDevices, saved && saved.savedAt)
+      kaydedilmemis: !saved || kfHasUnsavedChanges(),
+      rows: JSON.parse(JSON.stringify(window.kfData)), notes: kfNotesNormalize(window.kfNotes), photos: window.kfPhotos || [],
+      sure: window.kfTiming,
+      cihazlar: kxCihazSnapshot(window.kfDevices, saved && saved.savedAt).map(c => kayitliCihaz.find(k => k.id === c.id) || c)
     });
   }
-  function kfPrintFormEntry(f) {
-    kfPrintDoc({
-      name: f.name || '', modelLabel: f.modelLabel || '', savedAt: f.savedAt || f.updatedAt,
+  function kfRaporKayittan(f) {
+    const proje = String(f.modelId || '').startsWith('proje:');
+    kxRaporSecim({
+      id: f.id, modelId: f.modelId,
+      name: f.name || '', modelLabel: (proje ? 'Proje: ' : '') + (f.modelLabel || ''),
+      savedAt: f.savedAt || f.updatedAt, updatedAt: f.updatedAt,
       status: kfFormGetStatus(f), rows: kfFormGetRows(f), notes: kfFormGetNotes(f), photos: kfFormGetPhotos(f),
       sure: kfFormGetSure(f), cihazlar: kfFormGetCihazlar(f)
     });
   }
   function rpPrintForm(id) {
     const f = (window._rpForms || []).find(x => x.id === id);
-    if (f) kfPrintFormEntry(f);
+    if (f) kfRaporKayittan(f);
   }
-  // PDF butonu: Paylaş / İndir / Yazdır seçimi
-  function kfPrintDoc(doc) { kfPdfSecim(doc); }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // YAZDIRMA YEDEĞİ — rapor kütüphanesi yüklenemezse (ör. ilk açılış, internet yok)
+  // tarayıcının yazdırma ekranıyla kapaksız kalite belgesi çıkarır
+  // ═════════════════════════════════════════════════════════════════════════
   async function kfPrintBuild(doc) {
     const el = document.getElementById('kf-print');
     if (!el) return;
@@ -6037,7 +6050,7 @@
     el.innerHTML = await kfPdfHtml(doc);
     await kfPrintGoster(el, doc);
   }
-  // Kalite belgesinin HTML'i (yazdırma ve PDF paylaşımı aynı içeriği kullanır)
+  // Kalite belgesinin HTML'i
   async function kfPdfHtml(doc) {
     const esc = kfHEsc;
     const fmt = d => d ? new Date(d).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -7144,7 +7157,7 @@
       const d = TEST_DEVICES.find(x => x.id === id);
       if (!d) return null;
       const k = kxKal(id), s = kxKalDurum(id, tarih);
-      return { id, ad: d.marka + ' ' + d.model, seriNo: k.seriNo || '', kalSeviye: s.seviye, kalMetin: s.metin };
+      return { id, ad: d.marka + ' ' + d.model, tur: d.tur || '', seriNo: k.seriNo || '', kalSeviye: s.seviye, kalMetin: s.metin, sertifika: k.sertifika || '', kurum: k.kurum || '' };
     }).filter(Boolean);
   }
   let _kfDevSel = [];
@@ -7490,96 +7503,173 @@
   }
 
   // ═════════════════════════════════════════════════════════════════════════
-  // PDF PAYLAŞ — yazdırma ekranına gitmeden PDF dosyası üret, WhatsApp / e-posta ile gönder
+  // FORM RAPORU — açık veya kayıtlı formdan PDF (DOLFIN kapaklı) ya da Excel (.xlsx)
+  // İkisi de aynı veriden (kxRaporVeri) beslenir; sayılar her çıktıda aynıdır.
+  // PDF → pdfmake: seçilebilir metin, tekrar eden başlıklar, sayfa numarası, küçük dosya
+  // Excel → ExcelJS: SheetJS'in ücretsiz sürümü biçim ve resim yazamıyor
+  // Kütüphaneler ilk kullanımda yüklenir; Service Worker önbelleğiyle çevrimdışı da çalışır.
   // ═════════════════════════════════════════════════════════════════════════
-  const KX_HTML2PDF = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js';
+  const KX_RAPOR_JS = {
+    pdfmake: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.12/pdfmake.min.js',
+    fontlar: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.12/vfs_fonts.js',
+    exceljs: 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js'
+  };
+  const _kxScriptler = {};
   function kxScriptYukle(src) {
-    return new Promise((res, rej) => {
-      if (window.html2pdf) return res();
-      const s = document.createElement('script');
-      s.src = src; s.async = true;
-      s.onload = () => res();
-      s.onerror = () => rej(new Error('PDF kütüphanesi yüklenemedi (ilk kullanımda internet gerekir)'));
-      document.head.appendChild(s);
-    });
+    if (!_kxScriptler[src]) {
+      _kxScriptler[src] = new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = src; s.async = true;
+        s.onload = () => res();
+        s.onerror = () => {
+          delete _kxScriptler[src]; // sonraki denemede yeniden yüklensin
+          s.remove();
+          rej(new Error('Rapor kütüphanesi yüklenemedi. İlk kullanımda internet bağlantısı gerekir.'));
+        };
+        document.head.appendChild(s);
+      });
+    }
+    return _kxScriptler[src];
   }
   function kxDriveIzniGerekli(doc) {
     return navigator.onLine && (doc.photos || []).some(p => p.loc === 'drive') && !_kxDriveTokenExport && window.google && window.google.accounts;
   }
-  let _kxPdfDoc = null;
-  function kfPdfSecim(doc) {
-    _kxPdfDoc = doc;
-    const ad = doc.name || '(kaydedilmemiş form)';
+
+  // ── Rapor penceresi: format seçimi → hazırlık → indir / paylaş / aç ──
+  let _kxRapor = null;            // { doc, dosya }
+  let _kxRaporUretiliyor = false;
+  const KX_RAPOR_BICIM = {
+    pdf: { ad: 'PDF', uzanti: '.pdf', mime: 'application/pdf' },
+    xlsx: { ad: 'Excel', uzanti: '.xlsx', mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+  };
+
+  function kxRaporSecim(doc) {
+    _kxRapor = { doc };
+    const esc = kfHEsc;
+    const pr = kfFormProgress(doc.rows);
+    const hayir = (doc.rows || []).filter(r => r && r[6] === 1 && r[0] && kxRaporTur(r[3]) === 'hayir').length;
+    const n = kfNotesNormalize(doc.notes);
+    const notSay = n.aksilikler.length + n.revizeler.length;
+    const done = doc.status === 'tamamlandi';
+    const ad = doc.name || 'Kaydedilmemiş form';
+    const kaydet = doc.kaydedilmemis && isEditor()
+      ? `<button type="button" class="kxr-kaydet" onclick="kxRaporOnceKaydet()">Önce kaydet</button>` : '';
+    const notlar = [
+      doc.kaydedilmemis ? `<div class="kxr-not"><span>Kaydedilmemiş değişiklikler var. Rapor ekrandaki son haliyle hazırlanır.</span>${kaydet}</div>` : '',
+      done ? '' : `<div class="kxr-not"><span>Form taslak durumda${pr.empty ? ' (' + pr.empty + ' madde boş)' : ''}. Raporda TASLAK ibaresi yer alır.</span></div>`
+    ].join('');
     kxModal(`
-      <div class="kxm-t">📄 Kalite belgesi</div>
-      <div class="kxm-s">${kfHEsc(doc.modelLabel || '')} · ${kfHEsc(ad)}</div>
-      <div class="kxm-choices">
-        <button type="button" class="kxm-choice" onclick="kfPdfBaslat('paylas')"><span>📤</span><b>Paylaş</b><small>WhatsApp, e-posta, Drive…</small></button>
-        <button type="button" class="kxm-choice" onclick="kfPdfBaslat('indir')"><span>⬇️</span><b>PDF indir</b><small>Dosya olarak kaydet</small></button>
-        <button type="button" class="kxm-choice" onclick="kfPdfBaslat('yazdir')"><span>🖨️</span><b>Yazdır</b><small>Yazıcı veya "PDF olarak kaydet"</small></button>
+      <div class="kxm-t">📊 Rapor al</div>
+      <div class="kxm-s">${esc(doc.modelLabel || '')} · ${esc(ad)} · ${done ? '✓ Tamamlandı' : 'Taslak'}</div>
+      <div class="kxr-ozet">
+        <span><b>${pr.total}</b> madde</span>
+        <span${hayir ? ' class="no"' : ''}><b>${hayir}</b> uygunsuz</span>
+        <span><b>${notSay}</b> not</span>
+        <span><b>${(doc.photos || []).length}</b> fotoğraf</span>
+        <span><b>${(doc.cihazlar || []).length}</b> cihaz</span>
       </div>
-      <div class="kxm-btns"><button type="button" class="kxm-cancel" onclick="kxModalClose()">Kapat</button></div>`);
+      <div class="kxr-bicimler">
+        <button type="button" class="kxr-bicim" onclick="kxRaporBaslat('pdf')">
+          <span class="kxr-ikon kxr-pdf">PDF</span><b>PDF rapor</b>
+          <small>DOLFIN kapak sayfası, özet, notlar, cihazlar ve fotoğraflar. Yazdırmaya ve paylaşmaya hazır.</small>
+        </button>
+        <button type="button" class="kxr-bicim" onclick="kxRaporBaslat('xlsx')">
+          <span class="kxr-ikon kxr-xls">XLSX</span><b>Excel rapor</b>
+          <small>Filtrelenebilir kontrol listesi; özet, uygunsuzluk, not, cihaz ve fotoğraflar ayrı sayfalarda.</small>
+        </button>
+      </div>
+      ${notlar}
+      <div class="kxm-btns"><button type="button" class="kxm-cancel" onclick="kxModalClose()">Vazgeç</button></div>`);
   }
-  function kfPdfBaslat(mod) {
-    const doc = _kxPdfDoc;
-    if (!doc) return;
-    const devam = () => mod === 'yazdir' ? (kxModalClose(), kfPrintBuild(doc)) : kfPdfOlustur(doc, mod);
+
+  async function kxRaporOnceKaydet() {
+    kxModalClose();
+    if (!window.kfCurrentSaveId) { handleFormAction('save'); return; } // ad sorulur, sonra Rapor'a yeniden basılır
+    await kfDoSave(window.kfCurrentSaveName, false);
+    kfRaporAc();
+  }
+
+  function kxRaporBaslat(bicim) {
+    if (!_kxRapor || _kxRaporUretiliyor) return;
+    const devam = () => kxRaporUret(bicim);
     // Drive arşivindeki fotoğraflar için Google izni tıklama anında istenir
-    if (kxDriveIzniGerekli(doc)) { kxRequestDriveToken(() => devam(), 'export'); return; }
+    if (kxDriveIzniGerekli(_kxRapor.doc)) { kxRequestDriveToken(devam, 'export'); return; }
     devam();
   }
-  async function kfPdfOlustur(doc, mod) {
-    kxModal('<div class="kxm-t">📄 PDF hazırlanıyor…</div><div class="kxm-s">Fotoğraf sayısına göre birkaç saniye sürebilir.</div><div class="kxm-spin"></div>');
-    let host = null;
+
+  async function kxRaporUret(bicim) {
+    if (_kxRaporUretiliyor) return;
+    _kxRaporUretiliyor = true;
+    const doc = _kxRapor.doc, B = KX_RAPOR_BICIM[bicim];
+    const adim = (metin, oran) => {
+      const m = document.getElementById('kxr-adim'), b = document.getElementById('kxr-bar-i');
+      if (m) m.textContent = metin;
+      if (b) b.style.width = Math.round(oran * 100) + '%';
+    };
+    kxModal(`<div class="kxm-t">${B.ad} rapor hazırlanıyor…</div><div id="kxr-adim" class="kxm-s" style="margin-bottom:0;">Başlıyor…</div><div class="kxr-bar"><i id="kxr-bar-i"></i></div>`);
     try {
-      await kxScriptYukle(KX_HTML2PDF);
-      const html = await kfPdfHtml(doc);
-      host = document.createElement('div');
-      host.style.cssText = 'position:fixed;left:-10000px;top:0;width:718px;background:#fff;';
-      host.innerHTML = html;
-      document.body.appendChild(host);
-      await Promise.all([...host.querySelectorAll('img')].map(img => (img.decode ? img.decode() : Promise.resolve()).catch(() => {})));
-      const ad = kxSafeName('Kalite - ' + (doc.modelLabel || '') + ' - ' + (doc.name || 'Form')) + '.pdf';
-      const blob = await window.html2pdf().set({
-        margin: [10, 10, 10, 10],
-        filename: ad,
-        image: { type: 'jpeg', quality: 0.88 },
-        html2canvas: { scale: 1.6, useCORS: true, backgroundColor: '#ffffff', logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.kp-fig', '.kp-note', '.kp-end', '.kp-info', '.kp-sum', '.kp-hd', '.kp-cih'] }
-      }).from(host.firstElementChild).outputPdf('blob');
-      const file = new File([blob], ad, { type: 'application/pdf' });
-      const kb = Math.round(blob.size / 1024);
-      if (mod === 'indir') { kxDosyaIndir(file); kxModalClose(); kfToast('⬇️ PDF indirildi (' + kb + ' KB)'); return; }
-      window._kxPdfFile = file;
-      const paylasilir = !!(navigator.canShare && navigator.canShare({ files: [file] }));
-      kxModal(`
-        <div class="kxm-t">✓ PDF hazır</div>
-        <div class="kxm-s">${kfHEsc(ad)} · ${kb} KB</div>
-        <div class="kxm-choices">
-          ${paylasilir ? `<button type="button" class="kxm-choice" onclick="kfPdfPaylas()"><span>📤</span><b>Paylaş</b><small>WhatsApp, e-posta…</small></button>` : ''}
-          <button type="button" class="kxm-choice" onclick="kxDosyaIndir(window._kxPdfFile);kxModalClose();"><span>⬇️</span><b>İndir</b><small>Dosya olarak kaydet</small></button>
-        </div>
-        ${paylasilir ? '' : '<div class="kxm-s" style="margin-top:8px;">Bu tarayıcı dosya paylaşımını desteklemiyor — PDF\'i indirip ekleyerek gönderin.</div>'}
-        <div class="kxm-btns"><button type="button" class="kxm-cancel" onclick="kxModalClose()">Kapat</button></div>`);
+      adim('Rapor kütüphanesi yükleniyor…', 0.04);
+      if (bicim === 'pdf') {
+        await kxScriptYukle(KX_RAPOR_JS.pdfmake);
+        await kxScriptYukle(KX_RAPOR_JS.fontlar);
+      } else {
+        await kxScriptYukle(KX_RAPOR_JS.exceljs);
+      }
+      const v = await kxRaporVeri(doc, (i, n) => adim('Fotoğraflar hazırlanıyor (' + i + '/' + n + ')…', 0.08 + 0.62 * i / n));
+      adim(bicim === 'pdf' ? 'Sayfalar diziliyor…' : 'Çalışma kitabı yazılıyor…', 0.78);
+      await new Promise(r => setTimeout(r, 40)); // ilerleme çubuğu ekrana çizilsin
+      const { blob, sayfa } = bicim === 'pdf' ? await kxRaporPdf(v) : await kxRaporExcel(v);
+      adim('Tamamlanıyor…', 1);
+      const ad = kxSafeName('DOLFIN Kalite Raporu - ' + v.model + (doc.name ? ' - ' + doc.name : '')) + B.uzanti;
+      _kxRapor.dosya = new File([blob], ad, { type: B.mime });
+      kxRaporHazir(bicim, sayfa, v.fotolar.filter(f => f.hata));
     } catch (e) {
-      console.error('[KaliteX] PDF oluşturma:', e);
-      kxModal(`<div class="kxm-t">⚠️ PDF oluşturulamadı</div><div class="kxm-s">${kfHEsc(e.message || String(e))}</div>
+      console.error('[KaliteX] Rapor oluşturma:', e);
+      kxModal(`<div class="kxm-t">⚠️ Rapor oluşturulamadı</div><div class="kxm-s">${kfHEsc((e && e.message) || String(e))}</div>
         <div class="kxm-btns"><button type="button" class="kxm-cancel" onclick="kxModalClose()">Kapat</button>
-        <button type="button" class="kxm-ok" onclick="kxModalClose();kfPrintBuild(_kxPdfDoc)">Yazdır ile dene</button></div>`);
+        ${bicim === 'pdf' ? `<button type="button" class="kxm-cancel" onclick="kxModalClose();kfPrintBuild(_kxRapor.doc)">Yazdır ile dene</button>` : ''}
+        <button type="button" class="kxm-ok" onclick="kxRaporBaslat('${bicim}')">Tekrar dene</button></div>`);
     } finally {
-      if (host) host.remove();
+      _kxRaporUretiliyor = false;
     }
   }
-  async function kfPdfPaylas() {
-    const file = window._kxPdfFile;
-    if (!file) return;
+
+  function kxRaporHazir(bicim, sayfa, eksik) {
+    const file = _kxRapor.dosya, esc = kfHEsc;
+    const kb = file.size / 1024;
+    const boyut = kb < 1024 ? Math.round(kb) + ' KB' : (kb / 1024).toFixed(1).replace('.', ',') + ' MB';
+    const paylasilir = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+    // Bilgisayarda dosya hemen iner; tablet / telefonda kullanıcı İndir veya Paylaş'ı seçer
+    const dokunmatik = !!(window.matchMedia && window.matchMedia('(pointer:coarse)').matches);
+    if (!dokunmatik) kxDosyaIndir(file);
+    const eksikHtml = eksik.length ? `<div class="kxr-not kxr-not-kritik"><span><b>${eksik.length} fotoğraf rapora eklenemedi</b> (${esc([...new Set(eksik.map(f => f.hata))].join(', '))}). Raporda yerleri işaretli.</span>
+      <button type="button" class="kxr-kaydet" onclick="kxRaporBaslat('${bicim}')">Tekrar dene</button></div>` : '';
+    kxModal(`
+      <div class="kxm-t">✓ Rapor hazır${dokunmatik ? '' : ' ve indirildi'}</div>
+      <div class="kxm-s">${esc(file.name)}<br>${boyut}${sayfa ? ' · ' + sayfa + ' sayfa' : ''}</div>
+      ${eksikHtml}
+      <div class="kxm-choices" style="margin-top:10px;">
+        ${bicim === 'pdf' ? `<button type="button" class="kxm-choice" onclick="kxRaporGoruntule()"><span>👁️</span><b>Aç / Yazdır</b><small>Yeni sekmede görüntüle</small></button>` : ''}
+        <button type="button" class="kxm-choice" onclick="kxDosyaIndir(_kxRapor.dosya)"><span>⬇️</span><b>${dokunmatik ? 'İndir' : 'Tekrar indir'}</b><small>Dosya olarak kaydet</small></button>
+        ${paylasilir ? `<button type="button" class="kxm-choice" onclick="kxRaporPaylas()"><span>📤</span><b>Paylaş</b><small>WhatsApp, e-posta…</small></button>` : ''}
+      </div>
+      <div class="kxm-btns">
+        <button type="button" class="kxm-cancel" onclick="kxRaporSecim(_kxRapor.doc)">Diğer format</button>
+        <button type="button" class="kxm-ok" onclick="kxModalClose()">Kapat</button>
+      </div>`);
+  }
+  function kxRaporGoruntule() {
+    const url = URL.createObjectURL(_kxRapor.dosya);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 300000);
+  }
+  async function kxRaporPaylas() {
+    const file = _kxRapor.dosya;
     try {
-      await navigator.share({ files: [file], title: file.name.replace(/\.pdf$/, ''), text: 'Kalite kontrol belgesi' });
-      kxModalClose();
+      await navigator.share({ files: [file], title: file.name.replace(/\.[^.]+$/, ''), text: 'Kalite kontrol raporu' });
     } catch (e) {
       if (e && e.name === 'AbortError') return; // kullanıcı vazgeçti
-      kfToast('Paylaşılamadı: ' + (e.message || e) + ' — İndir ile deneyin');
+      kfToast('Paylaşılamadı: ' + ((e && e.message) || e) + ' — İndir ile deneyin');
     }
   }
   function kxDosyaIndir(file) {
@@ -7590,6 +7680,1098 @@
     document.body.appendChild(a);
     a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  }
+
+  // ── Ortak rapor verisi ──
+  function kxRaporTur(deger) {
+    const s = String(deger == null ? '' : deger).trim().toUpperCase();
+    return !s ? 'bos' : s === 'EVET' ? 'evet' : s === 'HAYIR' ? 'hayir' : s === 'KD' ? 'kd' : 'deger';
+  }
+  function kxRaporTarih(d) {
+    if (!d) return '—';
+    const t = new Date(d);
+    return isNaN(t) ? '—' : t.toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+  function kxRaporFotoHata(e) {
+    const m = String((e && e.message) || e);
+    return ({
+      'offline': 'internet yok',
+      'drive-token': 'Drive arşivi için Google izni gerekli',
+      'login': 'düzenleyici girişi gerekli',
+      'notfound': 'henüz buluta yüklenmemiş'
+    })[m] || 'dosya okunamadı';
+  }
+  // Rapora girecek görsel: uzun kenar en fazla 1280 px (A4'te ~350 dpi); büyük değilse JPEG olduğu gibi kullanılır
+  async function kxRaporGorsel(meta) {
+    const blob = await kxPhotoBlob(meta);
+    const url = URL.createObjectURL(blob);
+    try {
+      const img = await new Promise((res, rej) => {
+        const i = new Image();
+        i.onload = () => res(i);
+        i.onerror = () => rej(new Error('bozuk'));
+        i.src = url;
+      });
+      const w0 = img.naturalWidth, h0 = img.naturalHeight, ENCOK = 1280;
+      const oran = Math.min(1, ENCOK / Math.max(w0, h0));
+      if (oran === 1 && /jpe?g/i.test(blob.type)) {
+        const dataUrl = await new Promise((res, rej) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result);
+          r.onerror = () => rej(new Error('bozuk'));
+          r.readAsDataURL(blob);
+        });
+        return { dataUrl, w: w0, h: h0 };
+      }
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(w0 * oran));
+      c.height = Math.max(1, Math.round(h0 * oran));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      return { dataUrl: c.toDataURL('image/jpeg', 0.78), w: c.width, h: c.height };
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+  // Aynı modelin bu formdan önceki son makinelerinde tekrar eden HAYIR'lar
+  function kxRaporTekrar(doc) {
+    if (!doc.modelId) return { n: 0, hayir: {} };
+    const ref = new Date(doc.savedAt || Date.now());
+    const formlar = kfGetForms()
+      .filter(f => f.modelId === doc.modelId && f.id !== doc.id && new Date(f.savedAt) < ref)
+      .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt))
+      .slice(0, KX_TEKRAR_N);
+    const hayir = {};
+    formlar.forEach(f => kfFormGetRows(f).forEach(r => {
+      if (r && r[6] === 1 && kxRaporTur(r[3]) === 'hayir') hayir[r[0]] = (hayir[r[0]] || 0) + 1;
+    }));
+    return { n: formlar.length, hayir };
+  }
+
+  async function kxRaporVeri(doc, ilerle) {
+    const temiz = v => String(v == null ? '' : v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim();
+    const kaynak = doc.rows || [];
+    const parametre = r => r && r[6] === 1 && r[0];
+    const satirYap = (r, i) => ({
+      sira: i + 1, ham: r[0], kod: temiz(r[0]), aciklama: temiz(r[1]), grup: temiz(r[2]),
+      sonuc: temiz(r[3]), durum: temiz(r[4]), referans: temiz(r[5]), tur: kxRaporTur(r[3]), fotolar: []
+    });
+    const satirlar = kaynak.filter(parametre).map(satirYap);
+    // Havuza bağlı olmayan, elle doldurulmuş serbest satırlar
+    const ekSatirlar = kaynak.filter(r => r && !parametre(r) && r.slice(0, 6).some(x => temiz(x))).map(satirYap);
+
+    const oran = x => (x.evet + x.hayir) ? Math.round(x.evet / (x.evet + x.hayir) * 100) : null; // Rapor sayfasıyla aynı: KD hariç
+    const say = { toplam: satirlar.length, evet: 0, hayir: 0, kd: 0, deger: 0, bos: 0 };
+    const grupMap = new Map(), bloklar = [];
+    satirlar.forEach(s => {
+      say[s.tur]++;
+      if (!grupMap.has(s.grup)) grupMap.set(s.grup, { ad: s.grup, toplam: 0, evet: 0, hayir: 0, kd: 0, deger: 0, bos: 0 });
+      const g = grupMap.get(s.grup);
+      g.toplam++; g[s.tur]++;
+      const son = bloklar[bloklar.length - 1];
+      if (son && son.ad === s.grup) son.satirlar.push(s); else bloklar.push({ ad: s.grup, satirlar: [s] }); // formdaki sıra korunur
+    });
+    say.dolu = say.toplam - say.bos;
+    say.gecme = oran(say);
+    const gruplar = [...grupMap.values()].map(g => Object.assign(g, { gecme: oran(g) }));
+
+    const tekrar = kxRaporTekrar(doc);
+    satirlar.forEach(s => {
+      const c = tekrar.hayir[s.ham] || 0;
+      s.tekrar = (s.tur === 'hayir' && c >= KX_TEKRAR_MIN) ? 'Önceki ' + tekrar.n + ' makinede ' + c + ' kez HAYIR' : '';
+    });
+
+    // Fotoğraflar: tablo sırası, genel fotoğraflar en sonda → F1, F2…
+    const sira = new Map();
+    satirlar.forEach((s, i) => { if (!sira.has(s.ham)) sira.set(s.ham, i); });
+    const rank = p => p.kod ? (sira.has(p.kod) ? sira.get(p.kod) : 1e6) : 2e6;
+    const metalar = [...(doc.photos || [])].sort((a, b) => rank(a) - rank(b) || String(a.at || '').localeCompare(String(b.at || '')));
+    const fotolar = metalar.map((p, i) => {
+      const satir = p.kod ? satirlar.find(s => s.ham === p.kod) || null : null;
+      return { no: 'F' + (i + 1), kod: temiz(p.kod), satir, tarih: p.at ? kxRaporTarih(p.at) : '', dataUrl: null, w: 0, h: 0, hata: '' };
+    });
+    fotolar.forEach(f => { if (f.satir) f.satir.fotolar.push(f); });
+    let siradaki = 0, biten = 0;
+    const isci = async () => {
+      while (siradaki < metalar.length) {
+        const i = siradaki++;
+        try { Object.assign(fotolar[i], await kxRaporGorsel(metalar[i])); }
+        catch (e) { fotolar[i].hata = kxRaporFotoHata(e); }
+        biten++;
+        if (ilerle) ilerle(biten, metalar.length);
+      }
+    };
+    await Promise.all([isci(), isci(), isci(), isci()]);
+
+    const personel = kod => (satirlar.find(s => s.kod.toUpperCase() === kod) || {}).sonuc || '';
+    const notlar = kfNotesNormalize(doc.notes);
+    const cihazlar = (doc.cihazlar || []).map(c => {
+      const t = TEST_DEVICES.find(d => d.id === c.id);
+      return {
+        ad: temiz(c.ad), tur: temiz(c.tur || (t && t.tur) || ''), seriNo: temiz(c.seriNo), kalMetin: temiz(c.kalMetin),
+        kalSeviye: c.kalSeviye || 'none', sertifika: temiz(c.sertifika), kurum: temiz(c.kurum)
+      };
+    });
+    const etiket = temiz(doc.modelLabel);
+    const proje = /^Proje:/i.test(etiket);
+    const sure = doc.sure || {};
+    const hayirSonuc = say.hayir > 0, bosSonuc = say.bos > 0;
+    return {
+      tur: proje ? 'Proje' : 'Model',
+      model: etiket.replace(/^Proje:\s*/i, '') || '—',
+      seri: temiz(doc.name) || 'Kaydedilmemiş form',
+      durum: doc.status === 'tamamlandi' ? 'tamamlandi' : 'taslak',
+      kaydedilmemis: !!doc.kaydedilmemis,
+      tarih: kxRaporTarih(doc.savedAt), guncelleme: kxRaporTarih(doc.updatedAt),
+      baslangic: kxRaporTarih(sure.start), bitis: kxRaporTarih(sure.end),
+      sureMetin: kxSureMetin(kxSure(sure)),
+      kontrolEden: personel('K9013'), kaynakci: personel('K9011'), montajci: personel('K9012'),
+      olusturma: new Date(), olusturmaMetin: kxRaporTarih(new Date()),
+      satirlar, ekSatirlar, bloklar, gruplar, say,
+      uygunsuz: satirlar.filter(s => s.tur === 'hayir'),
+      aksilikler: notlar.aksilikler.map(temiz).filter(Boolean),
+      revizeler: notlar.revizeler.map(temiz).filter(Boolean),
+      cihazlar, fotolar,
+      sonuc: hayirSonuc
+        ? { seviye: 'kritik', baslik: say.hayir + ' uygunsuzluk tespit edildi', alt: bosSonuc ? say.bos + ' madde boş bırakılmış' : 'Ayrıntılar Uygunsuzluklar bölümünde' }
+        : bosSonuc
+          ? { seviye: 'uyari', baslik: say.bos + ' madde boş', alt: 'Kontrol henüz tamamlanmamış' }
+          : { seviye: 'iyi', baslik: 'Uygunsuzluk tespit edilmedi', alt: 'Tüm maddeler dolduruldu' }
+    };
+  }
+
+  // ── PDF ──
+  const KX_R = {
+    kirmizi: '#dc2626', koyu: '#991b1b', derin: '#b91c1c', pembe: '#fef2f2', pembe2: '#fee2e2', pembe3: '#fecaca',
+    metin: '#111827', ikincil: '#4b5563', soluk: '#6b7280', cizgi: '#e5e7eb', zemin: '#f9fafb',
+    evet: '#0ca30c', evetY: '#006300', evetZ: '#f0fdf4', kd: '#9ca3af', kdZ: '#f3f4f6',
+    deger: '#2a78d6', bos: '#fab219', bosY: '#92400e', bosZ: '#fffbeb', mavi: '#2563eb', maviZ: '#eff6ff'
+  };
+  // Sıra bilinçli: EVET yeşili ile HAYIR kırmızısı yan yana gelirse kırmızı-yeşil renk körlüğünde ayırt edilemez (ΔE 2,9)
+  const KX_R_PARCA = [['evet', 'Evet'], ['deger', 'Ölçüm / metin'], ['kd', 'KD'], ['bos', 'Boş'], ['hayir', 'Hayır']];
+  const KX_R_PARCA_RENK = { evet: KX_R.evet, hayir: KX_R.kirmizi, kd: KX_R.kd, deger: KX_R.deger, bos: KX_R.bos };
+  // DOLFIN yazısı: uygulamadaki marka fontu (Outfit 900) vektör yola çevrildi — font yüklemeden her yerde aynı görünür
+  const KX_DOLFIN_YOL = 'M36.1 0L19.3 0L19.3-17L35.9-17Q41.5-17 45.6-19.1Q49.7-21.1 51.9-25.3Q54.1-29.5 54.1-35.7L54.1-35.7Q54.1-41.9 51.9-46Q49.6-50.1 45.6-52.2Q41.5-54.2 35.9-54.2L35.9-54.2L18.3-54.2L18.3-71.2L35.9-71.2Q44.3-71.2 51.4-68.7Q58.4-66.2 63.6-61.5Q68.8-56.8 71.7-50.3Q74.5-43.7 74.5-35.6L74.5-35.6Q74.5-27.5 71.7-21.0Q68.8-14.4 63.6-9.7Q58.4-5 51.4-2.5Q44.4 0 36.1 0L36.1 0ZM25.9 0L5.9 0L5.9-71.2L25.9-71.2L25.9 0ZM115.4 1.4L115.4 1.4Q107 1.4 100.0-1.4Q92.9-4.2 87.7-9.2Q82.4-14.2 79.5-21Q76.6-27.8 76.6-35.7L76.6-35.7Q76.6-43.7 79.5-50.4Q82.3-57.1 87.5-62.1Q92.7-67.1 99.8-69.9Q106.8-72.6 115.2-72.6L115.2-72.6Q123.6-72.6 130.7-69.9Q137.7-67.1 142.9-62.1Q148.1-57.1 150.9-50.4Q153.8-43.6 153.8-35.6L153.8-35.6Q153.8-27.7 150.9-21.0Q148.1-14.2 142.9-9.2Q137.7-4.1 130.7-1.4Q123.7 1.4 115.4 1.4ZM115.2-16.2L115.2-16.2Q120.8-16.2 124.9-18.6Q129-21 131.2-25.4Q133.4-29.8 133.4-35.7L133.4-35.7Q133.4-40.1 132.2-43.7Q130.9-47.2 128.5-49.8Q126.1-52.3 122.8-53.7Q119.4-55 115.2-55L115.2-55Q109.6-55 105.5-52.7Q101.4-50.3 99.2-46.0Q97-41.6 97-35.7L97-35.7Q97-31.2 98.3-27.6Q99.5-24 101.9-21.5Q104.3-18.9 107.7-17.6Q111-16.2 115.2-16.2ZM179.5 0L159.5 0L159.5-71.2L179.5-71.2L179.5 0ZM209.1 0L175.8 0L175.8-17L209.1-17L209.1 0ZM234.2 0L214.2 0L214.2-71.2L234.2-71.2L234.2 0ZM265.4-25.3L230.4-25.3L230.4-41.9L265.4-41.9L265.4-25.3ZM266.9-54.6L230.4-54.6L230.4-71.2L266.9-71.2L266.9-54.6ZM293.1 0L273.1 0L273.1-71.2L293.1-71.2L293.1 0ZM322.4 0L302.4 0L302.4-71.2L316.4-71.2L322.4-56.2L322.4 0ZM357.7-19.3L351.4 0L310.1-51.9L316.4-71.2L357.7-19.3ZM366.4 0L351.4 0L346.4-15.8L346.4-71.2L366.4-71.2L366.4 0Z';
+  function kxDolfinSvg(renk) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="360.5" height="74" viewBox="5.9 -72.6 360.5 74"><path fill="${renk}" d="${KX_DOLFIN_YOL}"/></svg>`;
+  }
+  // Roboto'da karşılığı olmayan simgeler kutu olarak çıkmasın (emoji, ok, onay işareti…)
+  function kxPdfTemiz(s) {
+    return String(s == null ? '' : s)
+      .replace(/→/g, '->').replace(/←/g, '<-').replace(/∅/g, 'Ø')
+      .replace(/[​-‍️⃣■-➿⬀-⯿\u{1F000}-\u{1FAFF}]/gu, '')
+      .replace(/[^\S\n]+/g, ' ').trim();
+  }
+  // Parçalı çubuk: oranlar korunur, 0 çizilmez, tek bir HAYIR bile görünür kalır
+  function kxRaporSegment(deger, genislik) {
+    const parcalar = KX_R_PARCA.map(([k]) => ({ k, n: deger[k] || 0 })).filter(p => p.n > 0);
+    if (!parcalar.length) return [];
+    const toplam = parcalar.reduce((a, p) => a + p.n, 0), ENAZ = 3, BOSLUK = 2;
+    const kul = genislik - BOSLUK * (parcalar.length - 1);
+    parcalar.forEach(p => { p.w = p.n / toplam * kul; });
+    const kucuk = parcalar.filter(p => p.w < ENAZ), buyuk = parcalar.filter(p => p.w >= ENAZ);
+    const eksik = kucuk.reduce((a, p) => a + (ENAZ - p.w), 0);
+    const buyukToplam = buyuk.reduce((a, p) => a + p.w, 0);
+    kucuk.forEach(p => { p.w = ENAZ; });
+    buyuk.forEach(p => { p.w -= eksik * p.w / (buyukToplam || 1); });
+    let x = 0;
+    parcalar.forEach(p => { p.x = x; x += p.w + BOSLUK; });
+    return parcalar;
+  }
+
+  // kir: sonraki sayfaya alınacak başlıkların kimlikleri (bkz. kxRaporPdfDuzen)
+  function kxRaporPdfTanim(v, kir) {
+    const K = KX_R, T = kxPdfTemiz, G = 523.28;
+    const tamam = v.durum === 'tamamlandi';
+    const yuzde = n => n == null ? '—' : '%' + n;
+    const images = {};
+    v.fotolar.forEach(f => { if (f.dataUrl) images[f.no] = f.dataUrl; });
+    const seviye = {
+      kritik: { z: K.pembe, c: K.koyu, r: K.kirmizi, ic: '<rect x="10.6" y="5.6" width="2.8" height="8.6" rx="1.4" fill="#fff"/><circle cx="12" cy="17.6" r="1.7" fill="#fff"/>' },
+      uyari: { z: K.bosZ, c: K.bosY, r: K.bos, ic: '<rect x="10.6" y="5.6" width="2.8" height="8.6" rx="1.4" fill="#111827"/><circle cx="12" cy="17.6" r="1.7" fill="#111827"/>' },
+      iyi: { z: K.evetZ, c: K.evetY, r: K.evet, ic: '<path d="M6.8 12.4l3.5 3.5 7-7.2" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>' }
+    }[v.sonuc.seviye];
+    const sonucSimge = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="${seviye.r}"/>${seviye.ic}</svg>`;
+
+    // ── Sayı kutucukları (kapak ve özet) ──
+    const kutucuklar = (liste, toplamG, boyut) => {
+      const ARA = 7, w = (toplamG - ARA * (liste.length - 1)) / liste.length;
+      return {
+        table: {
+          widths: liste.map(() => w),
+          body: [liste.map(k => ({
+            fillColor: K.zemin,
+            stack: [
+              { canvas: [{ type: 'rect', x: 0, y: 0, w, h: 2.5, color: k.renk }] },
+              { text: k.deger, fontSize: boyut, bold: true, color: K.metin, margin: [8, boyut > 18 ? 9 : 7, 4, 0], lineHeight: 1 },
+              { text: k.ad, fontSize: 7.5, color: K.ikincil, margin: [8, 2, 4, 9] }
+            ]
+          }))]
+        },
+        layout: {
+          hLineWidth: () => 0, vLineWidth: (i, n) => (i === 0 || i === n.table.widths.length) ? 0 : ARA, vLineColor: () => '#ffffff',
+          paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0
+        }
+      };
+    };
+
+    // ── KAPAK ──
+    const modelBoyut = T(v.model).length <= 10 ? 48 : T(v.model).length <= 16 ? 40 : T(v.model).length <= 26 ? 30 : 22;
+    const hucreBilgi = (ad, deger) => ({
+      stack: [
+        { text: ad, fontSize: 7, bold: true, color: K.soluk, characterSpacing: 0.6 },
+        { text: T(deger) || '—', fontSize: 11, bold: true, color: K.metin, margin: [0, 2, 0, 0] }
+      ],
+      margin: [0, 5, 6, 5]
+    });
+    const icerik = [v.fotolar.length + ' fotoğraf', (v.aksilikler.length + v.revizeler.length) + ' not', v.cihazlar.length + ' cihaz'].join(' · ');
+    const kapak = [
+      { svg: kxDolfinSvg('#ffffff'), width: 236, absolutePosition: { x: 44, y: 50 } },
+      { text: 'ENDÜSTRİYEL YIKAMA MAKİNELERİ', fontSize: 8.5, bold: true, color: '#ffffff', characterSpacing: 2.3, absolutePosition: { x: 46, y: 106 } },
+      {
+        absolutePosition: { x: 46, y: 206 },
+        stack: [
+          { text: 'KALİTE KONTROL RAPORU', fontSize: 13, bold: true, color: '#ffffff', characterSpacing: 3.2 },
+          { canvas: [{ type: 'rect', x: 0, y: 0, w: 44, h: 2.5, color: '#ffffff' }], margin: [0, 8, 0, 12] },
+          { text: T(v.model), fontSize: modelBoyut, bold: true, color: '#ffffff', lineHeight: 1 },
+          {
+            text: [{ text: (v.tur === 'Proje' ? 'Proje formu' : 'Seri no') + '   ' }, { text: T(v.seri), bold: true }],
+            fontSize: 15, color: '#ffffff', margin: [0, 8, 0, 14]
+          },
+          {
+            columns: [{
+              width: tamam ? 104 : 150,
+              stack: [
+                { canvas: [{ type: 'rect', x: 0, y: 0, w: tamam ? 104 : 150, h: 22, r: 11, color: '#ffffff' }] },
+                {
+                  text: tamam ? 'TAMAMLANDI' : 'TASLAK · ' + v.say.dolu + '/' + v.say.toplam + ' DOLU',
+                  fontSize: 8.5, bold: true, color: K.kirmizi, alignment: 'center', characterSpacing: 0.8,
+                  relativePosition: { x: 0, y: -16 }
+                }
+              ]
+            }, { width: '*', text: '' }]
+          }
+        ]
+      },
+      {
+        absolutePosition: { x: 44, y: 548 },
+        stack: [
+          {
+            table: {
+              widths: [163, 163, 165],
+              body: [
+                [hucreBilgi('KONTROL TARİHİ', v.tarih), hucreBilgi('KONTROL EDEN', v.kontrolEden), hucreBilgi('KONTROL SÜRESİ', v.sureMetin)],
+                [hucreBilgi('KAYNAKÇI', v.kaynakci), hucreBilgi('MONTAJCI', v.montajci), hucreBilgi('İÇERİK', icerik)]
+              ]
+            },
+            layout: {
+              hLineWidth: (i) => i === 1 ? 0.6 : 0, vLineWidth: () => 0, hLineColor: () => K.cizgi,
+              paddingLeft: () => 0, paddingRight: () => 8, paddingTop: () => 0, paddingBottom: () => 0
+            }
+          },
+          {
+            margin: [0, 14, 0, 0],
+            ...kutucuklar([
+              { ad: 'Madde', deger: String(v.say.toplam), renk: K.ikincil },
+              { ad: 'Evet', deger: String(v.say.evet), renk: K.evet },
+              { ad: 'Hayır', deger: String(v.say.hayir), renk: K.kirmizi },
+              { ad: 'KD', deger: String(v.say.kd), renk: K.kd },
+              { ad: 'Geçme oranı', deger: yuzde(v.say.gecme), renk: K.ikincil }
+            ], 507, 24)
+          },
+          {
+            margin: [0, 12, 0, 0],
+            table: {
+              widths: ['*'],
+              body: [[{
+                fillColor: seviye.z,
+                columns: [
+                  { svg: sonucSimge, width: 20, margin: [2, 1, 0, 0] },
+                  {
+                    width: '*', margin: [8, 0, 0, 0],
+                    stack: [
+                      { text: T(v.sonuc.baslik), fontSize: 12, bold: true, color: seviye.c },
+                      { text: T(v.sonuc.alt), fontSize: 8.5, color: K.ikincil, margin: [0, 1, 0, 0] }
+                    ]
+                  }
+                ]
+              }]]
+            },
+            layout: { hLineWidth: () => 0, vLineWidth: () => 0, paddingLeft: () => 9, paddingRight: () => 9, paddingTop: () => 8, paddingBottom: () => 8 }
+          }
+        ]
+      },
+      { text: '', pageBreak: 'after' }
+    ];
+    const kapakArka = () => ({
+      stack: [{
+        absolutePosition: { x: 0, y: 0 },
+        width: 595.28, height: 841.89,
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="595.28" height="841.89" viewBox="0 0 595.28 841.89">
+        <path fill="${K.pembe2}" d="M0 0H595.28V462C520 506 432 522 336 498C232 472 110 468 0 522Z"/>
+        <path fill="${K.pembe3}" d="M0 0H595.28V446C520 490 432 506 336 482C232 456 110 452 0 506Z"/>
+        <path fill="${K.derin}" d="M0 0H595.28V432C520 476 432 492 336 468C232 442 110 438 0 492Z"/>
+        <path fill="${K.kirmizi}" d="M0 0H595.28V420C520 464 432 480 336 456C232 430 110 426 0 480Z"/>
+        <g fill="none" stroke="#ffffff" stroke-width="1.1" stroke-opacity="0.13">
+          <circle cx="552" cy="66" r="70"/><circle cx="552" cy="66" r="122"/><circle cx="552" cy="66" r="178"/><circle cx="552" cy="66" r="238"/>
+        </g>
+        <rect x="0" y="829.89" width="595.28" height="12" fill="${K.kirmizi}"/>
+      </svg>`
+      }, { text: 'KaliteX ile ' + v.olusturmaMetin + ' tarihinde oluşturuldu', fontSize: 7.5, color: K.soluk, absolutePosition: { x: 44, y: 806 } }]
+    });
+
+    // ── İçerik yardımcıları ──
+    let no = 0, altNo = 0;
+    const kirilsin = id => !!(kir && kir.has(id));
+    const bolum = (baslik, blokIcinde) => {
+      no++;
+      const id = 'kxb-' + no, kirik = !blokIcinde && kirilsin(id);
+      return {
+        text: [{ text: no + '   ', color: K.kirmizi }, { text: baslik }],
+        fontSize: 13, bold: true, color: K.metin,
+        margin: [0, (no === 1 || kirik) ? 0 : 16, 0, 7],
+        ...(blokIcinde ? {} : { id }), ...(kirik ? { pageBreak: 'before' } : {})
+      };
+    };
+    const altBaslik = (baslik, sayi, renk) => {
+      const id = 'kxa-' + (++altNo), kirik = kirilsin(id);
+      return {
+        id, ...(kirik ? { pageBreak: 'before' } : {}),
+        text: [{ text: baslik, color: renk || K.metin }, { text: sayi != null ? '   ' + sayi : '', color: K.soluk, bold: false, fontSize: 8.5 }],
+        fontSize: 10, bold: true, margin: [0, kirik ? 0 : 9, 0, 4]
+      };
+    };
+    const kayitYok = metin => ({ text: metin, fontSize: 8.5, italics: true, color: K.soluk, margin: [0, 0, 0, 4] });
+    const tablo = { // yatay ince çizgili sade tablo
+      hLineWidth: (i, n) => (i === 0 || i === n.table.body.length) ? 0.6 : 0.4, vLineWidth: () => 0, hLineColor: () => K.cizgi,
+      paddingLeft: () => 5, paddingRight: () => 5, paddingTop: () => 3.2, paddingBottom: () => 3.2
+    };
+    const sutunBasi = (metin, hiza) => ({ text: metin, fontSize: 6.5, bold: true, color: K.soluk, characterSpacing: 0.4, alignment: hiza || 'left', fillColor: K.zemin });
+    const fotoBag = (fotolar) => {
+      const parcalar = [];
+      fotolar.forEach((f, i) => {
+        if (i) parcalar.push({ text: ', ', color: K.soluk });
+        parcalar.push({ text: f.no, linkToDestination: 'kxf-' + f.no, color: K.kirmizi, bold: true });
+      });
+      return { text: parcalar, fontSize: 7.5 };
+    };
+
+    const govde = [];
+
+    // ── 1. Genel bilgiler ──
+    govde.push(bolum('Genel Bilgiler'));
+    const alan = (ad, deger) => ({
+      stack: [
+        { text: ad, fontSize: 6.5, bold: true, color: K.soluk, characterSpacing: 0.4 },
+        { text: T(deger) || '—', fontSize: 9, bold: true, color: K.metin, margin: [0, 1, 0, 0] }
+      ],
+      margin: [0, 1, 0, 1]
+    });
+    govde.push({
+      table: {
+        widths: ['*', '*', '*', '*'],
+        body: [
+          [alan(v.tur === 'Proje' ? 'PROJE' : 'MODEL', v.model), alan('SERİ NO / FORM', v.seri), alan('DURUM', tamam ? 'Tamamlandı' : 'Taslak (' + v.say.dolu + '/' + v.say.toplam + ')'), alan('KONTROL SÜRESİ', v.sureMetin)],
+          [alan('KONTROL TARİHİ', v.tarih), alan('SON GÜNCELLEME', v.guncelleme), alan('BAŞLANGIÇ', v.baslangic), alan('BİTİŞ', v.bitis)],
+          [alan('KONTROL EDEN', v.kontrolEden), alan('KAYNAKÇI', v.kaynakci), alan('MONTAJCI', v.montajci), alan('İÇERİK', icerik)]
+        ]
+      },
+      layout: tablo
+    });
+    if (v.kaydedilmemis) govde.push({ text: 'Bu rapor, formun henüz kaydedilmemiş değişikliklerini içerir.', fontSize: 8, bold: true, color: K.bosY, margin: [0, 5, 0, 0] });
+
+    // ── 2. Kontrol özeti ──
+    govde.push(bolum('Kontrol Özeti'));
+    govde.push(kutucuklar([
+      { ad: 'Madde', deger: String(v.say.toplam), renk: K.ikincil },
+      { ad: 'Evet', deger: String(v.say.evet), renk: K.evet },
+      { ad: 'Hayır', deger: String(v.say.hayir), renk: K.kirmizi },
+      { ad: 'KD', deger: String(v.say.kd), renk: K.kd },
+      { ad: 'Ölçüm / metin', deger: String(v.say.deger), renk: K.deger },
+      { ad: 'Boş', deger: String(v.say.bos), renk: K.bos },
+      { ad: 'Geçme oranı', deger: yuzde(v.say.gecme), renk: K.ikincil }
+    ], G, 17));
+    const seritCiz = (deger, gen, yuk) => {
+      const parca = kxRaporSegment(deger, gen);
+      return parca.length
+        ? { canvas: parca.map(p => ({ type: 'rect', x: p.x, y: 0, w: p.w, h: yuk, r: Math.min(yuk / 2, p.w / 2, 2), color: KX_R_PARCA_RENK[p.k] })) }
+        : { text: '' };
+    };
+    govde.push({ ...seritCiz(v.say, G, 8), margin: [0, 10, 0, 5] });
+    const lejant = [];
+    KX_R_PARCA.forEach(([k, ad]) => {
+      if (!v.say[k]) return;
+      lejant.push({ canvas: [{ type: 'rect', x: 0, y: 1.4, w: 7, h: 7, r: 1.5, color: KX_R_PARCA_RENK[k] }], width: 10 });
+      lejant.push({ text: ad + ' %' + Math.round(v.say[k] / (v.say.toplam || 1) * 100), fontSize: 7.5, color: K.ikincil, width: 'auto', margin: [0, 0, 12, 0] });
+    });
+    if (lejant.length) govde.push({ columns: lejant, columnGap: 0 });
+
+    govde.push(altBaslik('Grup Bazında Sonuçlar'));
+    const say0 = (n, ozel) => n ? { text: String(n), alignment: 'right', ...(ozel || {}) } : { text: '–', alignment: 'right', color: K.kd };
+    const SERIT_G = 84;
+    const grupSatir = g => [
+      { text: T(g.ad) || '—', bold: true, fontSize: 7.5 },
+      say0(g.toplam), say0(g.evet),
+      say0(g.hayir, { bold: true, color: K.kirmizi }),
+      say0(g.kd), say0(g.deger),
+      say0(g.bos, { bold: true, color: K.bosY }),
+      { text: yuzde(g.gecme), alignment: 'right', bold: true },
+      { ...seritCiz(g, SERIT_G, 6), margin: [0, 1.5, 0, 0] }
+    ];
+    govde.push({
+      table: {
+        headerRows: 1, dontBreakRows: true,
+        widths: ['*', 30, 28, 30, 24, 32, 26, 34, SERIT_G],
+        body: [
+          [sutunBasi('GRUP'), sutunBasi('MADDE', 'right'), sutunBasi('EVET', 'right'), sutunBasi('HAYIR', 'right'), sutunBasi('KD', 'right'), sutunBasi('ÖLÇÜM', 'right'), sutunBasi('BOŞ', 'right'), sutunBasi('GEÇME', 'right'), sutunBasi('DAĞILIM')],
+          ...v.gruplar.map(grupSatir),
+          grupSatir({ ...v.say, ad: 'TOPLAM' }).map(c => ({ ...c, bold: true, fillColor: K.zemin }))
+        ]
+      },
+      layout: tablo, fontSize: 8
+    });
+
+    // ── 3. Uygunsuzluklar ──
+    govde.push(bolum('Uygunsuzluklar'));
+    if (v.uygunsuz.length) {
+      const resimli = v.uygunsuz.some(s => s.fotolar.some(f => f.dataUrl));
+      const kucukResim = (f, w0, h0) => {
+        const o = Math.min(w0 / f.w, h0 / f.h);
+        return { image: f.no, width: f.w * o, height: f.h * o };
+      };
+      govde.push({
+        table: {
+          headerRows: 1, keepWithHeaderRows: 1, dontBreakRows: true,
+          widths: resimli ? [14, 40, '*', 124] : [14, 40, '*', 40],
+          body: [
+            [sutunBasi('#'), sutunBasi('KOD'), sutunBasi('MADDE'), sutunBasi('FOTOĞRAF')],
+            ...v.uygunsuz.map((s, i) => [
+              { text: String(i + 1), color: K.soluk, fontSize: 8 },
+              { text: T(s.kod), bold: true, fontSize: 8, color: K.kirmizi, linkToDestination: 'kxs-' + s.sira },
+              {
+                stack: [
+                  { text: T(s.aciklama), bold: true, fontSize: 8.5 },
+                  { text: T(s.grup), fontSize: 7, color: K.soluk, margin: [0, 1, 0, 0] },
+                  s.durum ? { text: [{ text: 'Durum: ', bold: true }, T(s.durum)], fontSize: 8, margin: [0, 2, 0, 0] } : {},
+                  s.referans ? { text: [{ text: 'Referans: ', bold: true }, T(s.referans)], fontSize: 8, margin: [0, 1, 0, 0] } : {},
+                  s.tekrar ? { text: T(s.tekrar), fontSize: 7.5, bold: true, color: K.bosY, margin: [0, 2, 0, 0] } : {}
+                ]
+              },
+              s.fotolar.length ? {
+                stack: [
+                  ...(resimli && s.fotolar.some(f => f.dataUrl) ? [{
+                    columns: s.fotolar.filter(f => f.dataUrl).slice(0, 2).map(f => ({ ...kucukResim(f, 56, 42), width: 58 })),
+                    columnGap: 2, margin: [0, 0, 0, 2]
+                  }] : []),
+                  fotoBag(s.fotolar)
+                ]
+              } : { text: '' }
+            ])
+          ]
+        },
+        layout: {
+          ...tablo,
+          vLineWidth: (i) => i === 0 ? 2.2 : 0,
+          vLineColor: (i, n, r) => (r === 0 ? K.zemin : K.kirmizi)
+        }
+      });
+    } else {
+      govde.push(kayitYok('Bu formda HAYIR olarak işaretlenen madde yok.'));
+    }
+
+    // ── 4. Notlar ──
+    govde.push(bolum('Notlar'));
+    const notListe = (liste, renk, zemin) => ({
+      table: {
+        dontBreakRows: true, widths: [12, '*'],
+        body: liste.map((t, i) => [
+          { text: String(i + 1), fontSize: 8, bold: true, color: renk, fillColor: zemin },
+          { text: T(t), fontSize: 9, fillColor: zemin }
+        ])
+      },
+      layout: {
+        hLineWidth: () => 1.5, hLineColor: () => '#ffffff', vLineWidth: (i) => i === 0 ? 2.5 : 0, vLineColor: () => renk,
+        paddingLeft: () => 6, paddingRight: () => 6, paddingTop: () => 3.5, paddingBottom: () => 3.5
+      }
+    });
+    govde.push(altBaslik('Aksilikler', v.aksilikler.length || null, K.kirmizi));
+    govde.push(v.aksilikler.length ? notListe(v.aksilikler, K.kirmizi, K.pembe) : kayitYok('Aksilik kaydı yok.'));
+    govde.push(altBaslik('Revize Önerileri', v.revizeler.length || null, K.mavi));
+    govde.push(v.revizeler.length ? notListe(v.revizeler, K.mavi, K.maviZ) : kayitYok('Revize önerisi yok.'));
+
+    // ── 5. Test cihazları ──
+    govde.push(bolum('Kullanılan Test Cihazları'));
+    if (v.cihazlar.length) {
+      const sertifikaVar = v.cihazlar.some(c => c.sertifika);
+      const kalRenk = { good: K.evet, warning: K.bos, critical: K.kirmizi, info: K.deger, none: K.kd };
+      govde.push({
+        table: {
+          headerRows: 1, keepWithHeaderRows: 1, dontBreakRows: true,
+          widths: sertifikaVar ? ['*', 84, 140, 78] : ['*', 84, 170],
+          body: [
+            [sutunBasi('CİHAZ'), sutunBasi('SERİ NO'), sutunBasi('KALİBRASYON (FORM TARİHİNDE)'), ...(sertifikaVar ? [sutunBasi('SERTİFİKA NO')] : [])],
+            ...v.cihazlar.map(c => [
+              { stack: [{ text: T(c.ad), bold: true, fontSize: 8.5 }, c.tur ? { text: T(c.tur), fontSize: 7, color: K.soluk } : {}] },
+              { text: T(c.seriNo) || '—', fontSize: 8.5 },
+              {
+                columns: [
+                  { canvas: [{ type: 'ellipse', x: 3.5, y: 5.5, r1: 3.2, r2: 3.2, color: kalRenk[c.kalSeviye] || K.kd }], width: 11 },
+                  { text: T(c.kalMetin) || '—', fontSize: 8.5, bold: c.kalSeviye === 'critical', color: c.kalSeviye === 'critical' ? K.kirmizi : K.metin, width: '*' }
+                ]
+              },
+              ...(sertifikaVar ? [{ text: [T(c.sertifika) || '—', c.kurum ? { text: '\n' + T(c.kurum), fontSize: 7, color: K.soluk } : ''], fontSize: 8.5 }] : [])
+            ])
+          ]
+        },
+        layout: tablo
+      });
+    } else {
+      govde.push(kayitYok('Formda kullanılan test cihazı seçilmemiş.'));
+    }
+
+    // ── 6. Kontrol listesi: her grup ayrı tablo, başlığı yeni sayfada tekrar eder ──
+    govde.push(bolum('Kontrol Listesi'));
+    const durumVar = v.satirlar.some(s => s.durum), refVar = v.satirlar.some(s => s.referans), fotoVar = v.satirlar.some(s => s.fotolar.length);
+    const kolonlar = [
+      ['KOD', 40], ['AÇIKLAMA', '*'], ['SONUÇ', 58],
+      ...(durumVar ? [['DURUM', 88]] : []), ...(refVar ? [['REFERANS', 62]] : []), ...(fotoVar ? [['FOTO', 32]] : [])
+    ];
+    const sonucHucre = s => {
+      const m = T(s.sonuc);
+      if (s.tur === 'evet') return { text: 'EVET', bold: true, color: K.evetY, fillColor: K.evetZ, alignment: 'center', fontSize: 7.5 };
+      if (s.tur === 'hayir') return { text: 'HAYIR', bold: true, color: '#ffffff', fillColor: K.kirmizi, alignment: 'center', fontSize: 7.5 };
+      if (s.tur === 'kd') return { text: 'KD', bold: true, color: K.ikincil, fillColor: K.kdZ, alignment: 'center', fontSize: 7.5 };
+      if (s.tur === 'bos') return { text: 'BOŞ', bold: true, color: K.bosY, fillColor: K.bosZ, alignment: 'center', fontSize: 7.5 };
+      return { text: m, bold: true, color: K.metin, alignment: 'center', fontSize: 7.5 };
+    };
+    const izgara = {
+      hLineWidth: (i) => i < 2 ? 0 : 0.4, vLineWidth: () => 0, hLineColor: () => K.cizgi,
+      paddingLeft: () => 4.5, paddingRight: () => 4.5, paddingTop: (i) => i === 0 ? 4 : i === 1 ? 2.5 : 3, paddingBottom: (i) => i === 0 ? 4 : i === 1 ? 2.5 : 3
+    };
+    const grupBaslik = (ad, detay) => [
+      {
+        colSpan: kolonlar.length, fillColor: K.kirmizi,
+        columns: [
+          { text: T(ad) || '—', bold: true, fontSize: 8.5, color: '#ffffff', width: '*', characterSpacing: 0.3 },
+          { text: detay, fontSize: 7, color: '#ffffff', alignment: 'right', width: 'auto', margin: [0, 1, 0, 0] }
+        ]
+      },
+      ...kolonlar.slice(1).map(() => ({}))
+    ];
+    const kolonBaslik = kolonlar.map(([ad], i) => sutunBasi(ad, ad === 'SONUÇ' ? 'center' : 'left'));
+    v.bloklar.forEach(b => {
+      const n = t => b.satirlar.filter(s => s.tur === t).length;
+      const detay = [
+        b.satirlar.length + ' madde',
+        n('evet') ? n('evet') + ' evet' : '', n('hayir') ? n('hayir') + ' hayır' : '', n('kd') ? n('kd') + ' KD' : '', n('bos') ? n('bos') + ' boş' : ''
+      ].filter(Boolean).join(' · ');
+      const satirlar = b.satirlar.map(s => {
+        const z = s.tur === 'hayir' ? K.pembe : undefined;
+        const baglanti = s.tur === 'hayir' || s.fotolar.length;
+        return [
+          { text: T(s.kod), bold: true, fontSize: 7.5, color: K.ikincil, fillColor: z, ...(baglanti ? { id: 'kxs-' + s.sira } : {}) },
+          { text: T(s.aciklama), fontSize: 8, fillColor: z },
+          sonucHucre(s),
+          ...(durumVar ? [{ text: T(s.durum), fontSize: 7.5, fillColor: z }] : []),
+          ...(refVar ? [{ text: T(s.referans), fontSize: 7.5, fillColor: z }] : []),
+          ...(fotoVar ? [{ ...fotoBag(s.fotolar), fillColor: z }] : [])
+        ];
+      });
+      govde.push({
+        table: {
+          headerRows: 2, keepWithHeaderRows: 1, dontBreakRows: true,
+          widths: kolonlar.map(k => k[1]),
+          body: [grupBaslik(b.ad, detay), kolonBaslik.map(h => ({ ...h })), ...satirlar]
+        },
+        layout: izgara, margin: [0, 0, 0, 9]
+      });
+    });
+    if (v.ekSatirlar.length) {
+      govde.push(altBaslik('Ek Satırlar', v.ekSatirlar.length));
+      govde.push({
+        table: {
+          headerRows: 1, keepWithHeaderRows: 1, dontBreakRows: true,
+          widths: [46, '*', 62, 58, 70, 54],
+          body: [
+            ['KOD', 'AÇIKLAMA', 'GRUP', 'SONUÇ', 'DURUM', 'REFERANS'].map(h => sutunBasi(h)),
+            ...v.ekSatirlar.map(s => [s.kod, s.aciklama, s.grup, s.sonuc, s.durum, s.referans].map((x, i) => ({ text: T(x), fontSize: i === 1 ? 8 : 7.5, bold: i === 0 || i === 3 })))
+          ]
+        },
+        layout: tablo
+      });
+    }
+
+    // ── 7. Fotoğraflar: ikişerli, açıklamasıyla birlikte bölünmez ──
+    if (v.fotolar.length) {
+      govde.push(bolum('Fotoğraflar'));
+      const ARA = 12, FG = (G - ARA) / 2, FY = 176;
+      const figur = f => {
+        const s = f.satir;
+        const o = f.dataUrl ? Math.min(FG / f.w, FY / f.h) : 0;
+        const resim = f.dataUrl
+          ? { image: f.no, width: f.w * o, height: f.h * o, alignment: 'center', margin: [0, (FY - f.h * o) / 2, 0, (FY - f.h * o) / 2] }
+          : {
+            stack: [
+              { text: 'Fotoğraf rapora eklenemedi', fontSize: 9, bold: true, color: K.soluk, alignment: 'center' },
+              { text: T(f.hata), fontSize: 8, color: K.soluk, alignment: 'center', margin: [0, 2, 0, 0] }
+            ],
+            margin: [8, FY / 2 - 14, 8, FY / 2 - 12]
+          };
+        const baslik = s ? s.kod + ' — ' + s.aciklama : (f.kod ? f.kod : 'Genel fotoğraf');
+        const hayir = s && s.tur === 'hayir';
+        const alt = [s && s.grup, f.tarih].filter(Boolean).join(' · ');
+        return {
+          table: {
+            widths: [FG], heights: [FY, 34],
+            body: [
+              [{ ...resim, fillColor: K.kdZ }],
+              [{
+                margin: [6, 4, 6, 5],
+                stack: [
+                  {
+                    id: 'kxf-' + f.no, fontSize: 8,
+                    text: [
+                      { text: f.no + '   ', bold: true, color: K.kirmizi },
+                      s ? { text: T(baslik), bold: true, linkToDestination: 'kxs-' + s.sira } : { text: T(baslik), bold: true }
+                    ]
+                  },
+                  (alt || hayir) ? {
+                    fontSize: 7, color: K.soluk, margin: [0, 1, 0, 0],
+                    text: [hayir ? { text: 'HAYIR', bold: true, color: K.kirmizi } : '', hayir && alt ? '  ·  ' : '', T(alt)]
+                  } : {}
+                ]
+              }]
+            ]
+          },
+          layout: {
+            hLineWidth: () => 0.5, vLineWidth: () => 0.5, hLineColor: () => K.cizgi, vLineColor: () => K.cizgi,
+            paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0
+          },
+          width: FG
+        };
+      };
+      for (let i = 0; i < v.fotolar.length; i += 2) {
+        const a = v.fotolar[i], b = v.fotolar[i + 1];
+        govde.push({ columns: [figur(a), b ? figur(b) : { text: '', width: FG }], columnGap: ARA, unbreakable: true, margin: [0, 0, 0, 10] });
+      }
+    }
+
+    // ── 8. Onay ──
+    const imza = (ad, isim, alt) => ({
+      stack: [
+        { text: ad, fontSize: 6.5, bold: true, color: K.soluk, characterSpacing: 0.4 },
+        { text: T(isim) || ' ', fontSize: 9, bold: true, margin: [0, 2, 0, 30] },
+        { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 158, y2: 0, lineWidth: 0.7, lineColor: K.kd }] },
+        { text: alt, fontSize: 7, color: K.soluk, margin: [0, 2, 0, 0] }
+      ]
+    });
+    govde.push({
+      unbreakable: true,
+      stack: [
+        bolum('Onay', true),
+        { columns: [imza('KONTROL EDEN', v.kontrolEden, 'İmza'), imza('ONAYLAYAN', '', 'Ad soyad / İmza'), imza('TARİH', v.tarih.split(' ')[0], 'Kaşe')], columnGap: 16 }
+      ]
+    });
+
+    return {
+      pageSize: 'A4',
+      pageMargins: [36, 62, 36, 42],
+      info: { title: 'Kalite Kontrol Raporu - ' + T(v.model) + ' - ' + T(v.seri), author: 'DOLFIN', subject: 'Kalite Kontrol Raporu', creator: 'KaliteX', producer: 'KaliteX' },
+      defaultStyle: { font: 'Roboto', fontSize: 8.5, lineHeight: 1.12, color: K.metin },
+      images,
+      background: sayfa => sayfa === 1 ? kapakArka() : null,
+      header: sayfa => sayfa === 1 ? null : {
+        margin: [36, 20, 36, 0],
+        stack: [
+          {
+            columns: [
+              { svg: kxDolfinSvg(K.kirmizi), width: 66 },
+              {
+                width: '*', alignment: 'right', fontSize: 7.5, color: K.soluk, margin: [0, 3, 0, 0],
+                text: [tamam ? '' : { text: 'TASLAK   ', bold: true, color: K.kirmizi }, 'Kalite Kontrol Raporu · ' + T(v.model) + ' · ' + T(v.seri)]
+              }
+            ]
+          },
+          { canvas: [{ type: 'rect', x: 0, y: 5, w: G, h: 1.2, color: K.kirmizi }] }
+        ]
+      },
+      footer: (sayfa, toplam) => {
+        v._sayfa = toplam;
+        return sayfa === 1 ? null : {
+          margin: [36, 12, 36, 0],
+          columns: [
+            { text: 'KaliteX · ' + v.olusturmaMetin, fontSize: 7, color: K.soluk },
+            { text: 'Sayfa ' + sayfa + ' / ' + toplam, fontSize: 7, color: K.soluk, alignment: 'right' }
+          ]
+        };
+      },
+      content: [...kapak, ...govde]
+    };
+  }
+
+  // pdfmake düzen hatasını yakalanmamış söz reddi olarak atar; pencere "hazırlanıyor"da takılı kalmasın
+  function kxPdfCalistir(is) {
+    return new Promise((res, rej) => {
+      const bitir = () => window.removeEventListener('unhandledrejection', yakala);
+      const yakala = e => { bitir(); e.preventDefault(); rej(e.reason || new Error('PDF oluşturulamadı.')); };
+      window.addEventListener('unhandledrejection', yakala);
+      try { is(x => { bitir(); res(x); }); } catch (e) { bitir(); rej(e); }
+    });
+  }
+  // Sayfa sonunda altında içerik kalmadan duran ilk başlık (art arda başlıklarda en üstteki)
+  function kxRaporYetimBaslik(sayfalar) {
+    for (const sf of sayfalar) {
+      const satirlar = sf.items.filter(it => it.type === 'line' && it.item.y >= 60 && it.item.y < 800)
+        .map(it => it.item).sort((a, b) => a.y - b.y);
+      let i = satirlar.length;
+      while (i > 0 && /^kx[ab]-/.test(satirlar[i - 1].id || '')) i--;
+      if (i > 0 && i < satirlar.length) return satirlar[i].id; // üstünde içerik var, altında yok
+    }
+    return null;
+  }
+  // Düzeni pdfmake'in ürettiği gerçek sayfalara bakarak düzeltir. (pageBreakBefore kancası bölünmez
+  // bloklardaki konumları yanlış bildirdiği ve blok içi kırılmada içerik kaybettiği için kullanılmıyor.)
+  async function kxRaporPdfDuzen(v) {
+    const kir = new Set();
+    for (let tur = 0; tur < 12; tur++) {
+      const belge = await kxPdfCalistir(bitti => window.pdfMake.createPdf(kxRaporPdfTanim(v, kir))._createDoc({}, bitti));
+      const yetim = kxRaporYetimBaslik(belge._pdfMakePages || []);
+      if (!yetim) break;
+      kir.add(yetim);
+    }
+    return kir;
+  }
+  async function kxRaporPdf(v) {
+    if (!window.pdfMake || !window.pdfMake.createPdf) throw new Error('PDF kütüphanesi yüklenemedi.');
+    const kir = await kxRaporPdfDuzen(v);
+    const blob = await kxPdfCalistir(bitti => window.pdfMake.createPdf(kxRaporPdfTanim(v, kir)).getBlob(bitti));
+    return { blob, sayfa: v._sayfa || 0 };
+  }
+
+  // ── Excel ──
+  async function kxRaporExcel(v) {
+    if (!window.ExcelJS) throw new Error('Excel kütüphanesi yüklenemedi.');
+    const R = {
+      kirmizi: 'FFDC2626', koyu: 'FF991B1B', pembe: 'FFFEF2F2', beyaz: 'FFFFFFFF', metin: 'FF111827', ikincil: 'FF4B5563', soluk: 'FF6B7280',
+      cizgi: 'FFE5E7EB', zemin: 'FFF9FAFB', evetY: 'FF006300', evetZ: 'FFDCFCE7', kdZ: 'FFF3F4F6', bosY: 'FF92400E', bosZ: 'FFFEF3C7',
+      maviY: 'FF1E40AF', maviZ: 'FFEFF6FF', mavi: 'FF2563EB'
+    };
+    const dolgu = c => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: c } });
+    const yazi = (size, renk, bold, ad) => ({ name: ad || 'Calibri', size, bold: !!bold, color: { argb: renk } });
+    const ince = { style: 'thin', color: { argb: R.cizgi } };
+    const kenar = { top: ince, left: ince, bottom: ince, right: ince };
+    const orta = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    const sol = { vertical: 'middle', horizontal: 'left', wrapText: true };
+    const yaz = (ws, r, c, deger, stil) => { const h = ws.getCell(r, c); if (deger !== undefined) h.value = deger; Object.assign(h, stil || {}); return h; };
+    // Excel birleşik / sarmalı satırların yüksekliğini her yerde hesaplamaz; metne göre biz veririz
+    const yukseklik = (ciftler, enaz) => {
+      const satir = ciftler.reduce((en, [metin, gen]) => Math.max(en, String(metin || '').split('\n')
+        .reduce((t, p) => t + Math.max(1, Math.ceil(p.length * 1.18 / gen)), 0)), 1);
+      return Math.max(enaz || 18, satir * 13.5 + 5);
+    };
+    const altBilgi = 'DOLFIN Kalite Raporu · ' + v.model + ' · ' + v.seri;
+    const wb = new window.ExcelJS.Workbook();
+    wb.creator = 'KaliteX'; wb.lastModifiedBy = 'KaliteX'; wb.company = 'DOLFIN';
+    wb.title = 'Kalite Kontrol Raporu - ' + v.model + ' - ' + v.seri;
+    wb.subject = 'Kalite Kontrol Raporu'; wb.created = v.olusturma; wb.modified = v.olusturma;
+
+    const sayfa = (ad, sutunlar, sec) => {
+      sec = sec || {};
+      const ws = wb.addWorksheet(ad, {
+        properties: { tabColor: { argb: sec.renk || R.kirmizi } },
+        views: [{ showGridLines: false, ...(sec.dondur ? { state: 'frozen', ySplit: sec.dondur } : {}) }],
+        pageSetup: {
+          paperSize: 9, orientation: sec.yatay ? 'landscape' : 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+          margins: { left: 0.4, right: 0.4, top: 0.45, bottom: 0.6, header: 0.2, footer: 0.25 },
+          ...(sec.dondur ? { printTitlesRow: sec.dondur + ':' + sec.dondur } : {}),
+          ...(sec.olcek ? { fitToPage: false, scale: sec.olcek } : {})
+        },
+        headerFooter: { oddFooter: '&L&8' + altBilgi.replace(/&/g, '&&') + '&R&8Sayfa &P / &N' }
+      });
+      ws.columns = sutunlar.map(width => ({ width }));
+      return ws;
+    };
+    const bant = (ws, n, alt) => {
+      ws.mergeCells(1, 1, 1, n); ws.mergeCells(2, 1, 2, n);
+      ws.getRow(1).height = 34; ws.getRow(2).height = 20; ws.getRow(3).height = 8;
+      yaz(ws, 1, 1, 'DOLFIN', { font: yazi(20, R.beyaz, true, 'Arial Black'), fill: dolgu(R.kirmizi), alignment: { vertical: 'middle', indent: 1 } });
+      yaz(ws, 2, 1, alt, { font: yazi(10, R.beyaz, true), fill: dolgu(R.koyu), alignment: { vertical: 'middle', indent: 1 } });
+    };
+    const baslikSatiri = (ws, r, basliklar, hizalar) => {
+      ws.getRow(r).height = 22;
+      basliklar.forEach((b, i) => yaz(ws, r, i + 1, b, {
+        font: yazi(9.5, R.beyaz, true), fill: dolgu(R.kirmizi), border: kenar,
+        alignment: { vertical: 'middle', horizontal: (hizalar && hizalar[i]) || 'left', wrapText: true }
+      }));
+    };
+    const kayitYok = (ws, r, n, metin) => {
+      ws.mergeCells(r, 1, r, n);
+      yaz(ws, r, 1, metin, { font: { ...yazi(10, R.soluk), italic: true }, alignment: { vertical: 'middle', indent: 1 } });
+      ws.getRow(r).height = 22;
+    };
+    const altMetin = baslik => baslik + ' · ' + v.model + ' · ' + v.seri + (v.durum === 'tamamlandi' ? '' : ' · TASLAK');
+
+    // Fotoğraf hücrelerinin yeri baştan bellidir; diğer sayfalar buraya bağlantı verir
+    const FOTO_SAYFA = 'Fotoğraflar';
+    const fotoKonum = f => { const i = v.fotolar.indexOf(f); return { satir: 4 + 3 * Math.floor(i / 2), sutun: i % 2 ? 3 : 1 }; };
+    const fotoBag = fotolar => {
+      if (!fotolar.length) return '';
+      const k = fotoKonum(fotolar[0]);
+      return { text: fotolar.map(f => f.no).join(', '), hyperlink: "#'" + FOTO_SAYFA + "'!" + (k.sutun === 1 ? 'A' : 'C') + k.satir };
+    };
+    const BAGLANTI = { font: { ...yazi(10, R.koyu, true), underline: true }, alignment: orta };
+    const SONUC_STIL = {
+      evet: { font: yazi(10, R.evetY, true), fill: dolgu(R.evetZ) },
+      hayir: { font: yazi(10, R.beyaz, true), fill: dolgu(R.kirmizi) },
+      kd: { font: yazi(10, R.ikincil, true), fill: dolgu(R.kdZ) },
+      bos: { font: yazi(10, R.bosY, true), fill: dolgu(R.bosZ) },
+      deger: { font: yazi(10, R.metin, true) }
+    };
+
+    // ── Özet ──
+    const oz = sayfa('Özet', [13, 13, 13, 13, 13, 13, 13, 13, 13]);
+    const N = 9;
+    oz.mergeCells(1, 1, 1, N); oz.mergeCells(2, 1, 2, N); oz.mergeCells(3, 1, 3, N);
+    oz.getRow(1).height = 48; oz.getRow(2).height = 18; oz.getRow(3).height = 26; oz.getRow(4).height = 10;
+    yaz(oz, 1, 1, 'DOLFIN', { font: yazi(30, R.beyaz, true, 'Arial Black'), fill: dolgu(R.kirmizi), alignment: { vertical: 'middle', indent: 1 } });
+    yaz(oz, 2, 1, 'ENDÜSTRİYEL YIKAMA MAKİNELERİ', { font: yazi(9, R.beyaz, true), fill: dolgu(R.kirmizi), alignment: { vertical: 'top', indent: 2 } });
+    yaz(oz, 3, 1, 'KALİTE KONTROL RAPORU', { font: yazi(13, R.beyaz, true), fill: dolgu(R.koyu), alignment: { vertical: 'middle', indent: 1 } });
+    oz.mergeCells(5, 1, 5, 6); oz.mergeCells(5, 7, 5, 9); oz.mergeCells(6, 1, 6, 6); oz.mergeCells(6, 7, 6, 9);
+    oz.getRow(5).height = 32; oz.getRow(6).height = 20; oz.getRow(7).height = 8;
+    yaz(oz, 5, 1, v.model, { font: yazi(22, R.metin, true), alignment: { vertical: 'middle', indent: 1 } });
+    yaz(oz, 6, 1, (v.tur === 'Proje' ? 'Proje formu: ' : 'Seri no: ') + v.seri, { font: yazi(12, R.ikincil), alignment: { vertical: 'middle', indent: 1 } });
+    const tamam = v.durum === 'tamamlandi';
+    yaz(oz, 5, 7, tamam ? 'TAMAMLANDI' : 'TASLAK', { font: yazi(14, tamam ? R.evetY : R.bosY, true), fill: dolgu(tamam ? R.evetZ : R.bosZ), alignment: orta });
+    yaz(oz, 6, 7, v.say.dolu + ' / ' + v.say.toplam + ' madde dolu', { font: yazi(10, tamam ? R.evetY : R.bosY), fill: dolgu(tamam ? R.evetZ : R.bosZ), alignment: orta });
+
+    let r = 8;
+    const bilgi = [
+      [v.tur === 'Proje' ? 'Proje' : 'Model', v.model, 'Seri no / form', v.seri],
+      ['Kontrol tarihi', v.tarih, 'Son güncelleme', v.guncelleme],
+      ['Başlangıç', v.baslangic, 'Bitiş', v.bitis],
+      ['Kontrol süresi', v.sureMetin, 'Kontrol eden', v.kontrolEden || '—'],
+      ['Kaynakçı', v.kaynakci || '—', 'Montajcı', v.montajci || '—']
+    ];
+    bilgi.forEach(([a1, d1, a2, d2]) => {
+      oz.mergeCells(r, 1, r, 2); oz.mergeCells(r, 3, r, 5); oz.mergeCells(r, 6, r, 7); oz.mergeCells(r, 8, r, 9);
+      const etiket = { font: yazi(10, R.soluk, true), fill: dolgu(R.zemin), border: kenar, alignment: { vertical: 'middle', indent: 1 } };
+      const deger = { font: yazi(11, R.metin, true), border: kenar, alignment: { vertical: 'middle', indent: 1, wrapText: true } };
+      yaz(oz, r, 1, a1, etiket); yaz(oz, r, 3, d1, deger); yaz(oz, r, 6, a2, etiket); yaz(oz, r, 8, d2, deger);
+      oz.getRow(r).height = 20; r++;
+    });
+    if (v.kaydedilmemis) {
+      oz.mergeCells(r, 1, r, N);
+      yaz(oz, r, 1, 'Bu rapor, formun henüz kaydedilmemiş değişikliklerini içerir.', { font: yazi(10, R.bosY, true), fill: dolgu(R.bosZ), alignment: { vertical: 'middle', indent: 1 } });
+      oz.getRow(r).height = 20; r++;
+    }
+    oz.getRow(r).height = 8; r++;
+    const sevR = { kritik: [R.pembe, R.koyu, '⚠ '], uyari: [R.bosZ, R.bosY, '⚠ '], iyi: [R.evetZ, R.evetY, '✓ '] }[v.sonuc.seviye];
+    oz.mergeCells(r, 1, r, N);
+    yaz(oz, r, 1, sevR[2] + v.sonuc.baslik + ' — ' + v.sonuc.alt, { font: yazi(12, sevR[1], true), fill: dolgu(sevR[0]), alignment: { vertical: 'middle', indent: 1 } });
+    oz.getRow(r).height = 28; r++;
+    oz.getRow(r).height = 8; r++;
+    const kutu = [
+      ['Madde', v.say.toplam, R.metin], ['Evet', v.say.evet, R.evetY], ['Hayır', v.say.hayir, v.say.hayir ? R.kirmizi : R.metin],
+      ['KD', v.say.kd, R.ikincil], ['Ölçüm / metin', v.say.deger, R.maviY], ['Boş', v.say.bos, v.say.bos ? R.bosY : R.metin],
+      ['Geçme oranı', v.say.gecme, R.metin], ['Fotoğraf', v.fotolar.length, R.metin], ['Not', v.aksilikler.length + v.revizeler.length, R.metin]
+    ];
+    kutu.forEach(([ad, deger, renk], i) => {
+      yaz(oz, r, i + 1, deger == null ? '—' : deger, {
+        font: yazi(18, renk, true), fill: dolgu(R.zemin), alignment: orta, numFmt: ad === 'Geçme oranı' ? '"%"0' : '0',
+        border: { top: { style: 'medium', color: { argb: R.kirmizi } }, left: ince, right: ince }
+      });
+      yaz(oz, r + 1, i + 1, ad, { font: yazi(9, R.ikincil), fill: dolgu(R.zemin), alignment: orta, border: { bottom: ince, left: ince, right: ince } });
+    });
+    oz.getRow(r).height = 30; oz.getRow(r + 1).height = 18; r += 2;
+    oz.getRow(r).height = 10; r++;
+
+    oz.mergeCells(r, 1, r, N);
+    yaz(oz, r, 1, 'Grup bazında sonuçlar', { font: yazi(12, R.metin, true), alignment: { vertical: 'middle' } });
+    oz.getRow(r).height = 20; r++;
+    oz.mergeCells(r, 1, r, 2);
+    ['GRUP', , 'MADDE', 'EVET', 'HAYIR', 'KD', 'ÖLÇÜM', 'BOŞ', 'GEÇME'].forEach((b, i) => {
+      if (b) yaz(oz, r, i + 1, b, { font: yazi(9.5, R.beyaz, true), fill: dolgu(R.kirmizi), border: kenar, alignment: i ? orta : { vertical: 'middle', indent: 1 } });
+    });
+    oz.getRow(r).height = 20; r++;
+    const grupYaz = (g, kalin) => {
+      oz.mergeCells(r, 1, r, 2);
+      const z = kalin ? { fill: dolgu(R.zemin) } : {};
+      yaz(oz, r, 1, g.ad || '—', { font: yazi(10, R.metin, true), border: kenar, alignment: { vertical: 'middle', indent: 1, wrapText: true }, ...z });
+      [g.toplam, g.evet, g.hayir, g.kd, g.deger, g.bos].forEach((n, i) => {
+        const vurgu = i === 2 && n ? R.kirmizi : i === 5 && n ? R.bosY : R.metin;
+        yaz(oz, r, i + 3, n, { font: yazi(10, vurgu, kalin || (vurgu !== R.metin)), border: kenar, alignment: orta, numFmt: '0;-0;"–"', ...z });
+      });
+      yaz(oz, r, 9, g.gecme == null ? '—' : g.gecme, { font: yazi(10, R.metin, true), border: kenar, alignment: orta, numFmt: '"%"0', ...z });
+      oz.getRow(r).height = yukseklik([[g.ad, 24]]); r++;
+    };
+    v.gruplar.forEach(g => grupYaz(g));
+    grupYaz({ ...v.say, ad: 'TOPLAM' }, true);
+    oz.getRow(r).height = 10; r++;
+
+    // İçindekiler: tek tıkla ilgili sayfaya
+    const dizin = [['Kontrol Listesi', v.satirlar.length + ' madde'], ['Uygunsuzluklar', v.uygunsuz.length + ' madde'], ['Notlar', (v.aksilikler.length + v.revizeler.length) + ' not'], ['Test Cihazları', v.cihazlar.length + ' cihaz']];
+    if (v.fotolar.length) dizin.push([FOTO_SAYFA, v.fotolar.length + ' fotoğraf']);
+    oz.mergeCells(r, 1, r, N);
+    yaz(oz, r, 1, 'Bu çalışma kitabında', { font: yazi(12, R.metin, true), alignment: { vertical: 'middle' } });
+    oz.getRow(r).height = 20; r++;
+    dizin.forEach(([ad, alt]) => {
+      oz.mergeCells(r, 1, r, 3); oz.mergeCells(r, 4, r, 9);
+      yaz(oz, r, 1, { text: ad, hyperlink: "#'" + ad + "'!A1" }, { font: { ...yazi(10, R.koyu, true), underline: true }, border: kenar, alignment: { vertical: 'middle', indent: 1 } });
+      yaz(oz, r, 4, alt, { font: yazi(10, R.ikincil), border: kenar, alignment: { vertical: 'middle', indent: 1 } });
+      oz.getRow(r).height = 18; r++;
+    });
+    r++;
+    oz.mergeCells(r, 1, r, N);
+    yaz(oz, r, 1, 'KaliteX ile ' + v.olusturmaMetin + ' tarihinde oluşturuldu', { font: yazi(9, R.soluk), alignment: { vertical: 'middle', indent: 1 } });
+
+    // ── Kontrol listesi: düz tablo — filtre ve sıralama bozulmaz ──
+    const GEN = { sira: 5, grup: 20, kod: 9, aciklama: 54, sonuc: 12, durum: 26, referans: 18, foto: 11 };
+    const kl = sayfa('Kontrol Listesi', [GEN.sira, GEN.grup, GEN.kod, GEN.aciklama, GEN.sonuc, GEN.durum, GEN.referans, GEN.foto], { dondur: 4, yatay: true });
+    bant(kl, 8, altMetin('Kontrol Listesi'));
+    baslikSatiri(kl, 4, ['#', 'GRUP', 'KOD', 'AÇIKLAMA', 'SONUÇ', 'DURUM', 'REFERANS', 'FOTOĞRAF'], ['center', 'left', 'left', 'left', 'center', 'left', 'left', 'center']);
+    const sayiMi = s => /^-?(0|[1-9]\d*)([.,]\d+)?$/.test(s);
+    const listeSatiri = (s, r, sira) => {
+      const z = s.tur === 'hayir' ? { fill: dolgu(R.pembe) } : {};
+      const temel = { font: yazi(10, R.metin), border: kenar, alignment: sol, ...z };
+      yaz(kl, r, 1, sira, { ...temel, font: yazi(9, R.soluk), alignment: orta });
+      yaz(kl, r, 2, s.grup, { ...temel, font: yazi(9, R.ikincil) });
+      yaz(kl, r, 3, s.kod, { ...temel, font: yazi(10, R.metin, true) });
+      yaz(kl, r, 4, s.aciklama, temel);
+      const sayi = s.tur === 'deger' && sayiMi(s.sonuc);
+      const ondalik = sayi ? (s.sonuc.split(/[.,]/)[1] || '').length : 0;
+      yaz(kl, r, 5, s.tur === 'bos' ? 'BOŞ' : sayi ? parseFloat(s.sonuc.replace(',', '.')) : (s.tur === 'deger' ? s.sonuc : s.sonuc.toUpperCase()), {
+        ...SONUC_STIL[s.tur], border: kenar, alignment: orta, ...(sayi ? { numFmt: ondalik ? '0.' + '0'.repeat(ondalik) : '0' } : {})
+      });
+      yaz(kl, r, 6, s.durum, temel);
+      yaz(kl, r, 7, s.referans, temel);
+      yaz(kl, r, 8, fotoBag(s.fotolar), { ...temel, ...BAGLANTI });
+      kl.getRow(r).height = yukseklik([[s.aciklama, GEN.aciklama], [s.durum, GEN.durum], [s.referans, GEN.referans], [s.grup, GEN.grup], [s.sonuc, GEN.sonuc]]);
+    };
+    let klSatir = 5;
+    v.satirlar.forEach(s => { listeSatiri(s, klSatir, s.sira); klSatir++; });
+    v.ekSatirlar.forEach(s => { listeSatiri({ ...s, grup: s.grup || 'Ek satır' }, klSatir, '+'); klSatir++; });
+    kl.autoFilter = { from: { row: 4, column: 1 }, to: { row: Math.max(4, klSatir - 1), column: 8 } };
+
+    // ── Uygunsuzluklar ──
+    const uy = sayfa('Uygunsuzluklar', [5, 9, 46, 18, 26, 18, 22, 11, 18], { dondur: 4, yatay: true });
+    bant(uy, 9, altMetin('Uygunsuzluklar'));
+    baslikSatiri(uy, 4, ['#', 'KOD', 'AÇIKLAMA', 'GRUP', 'DURUM', 'REFERANS', 'TEKRAR', 'FOTOĞRAF', 'GÖRSEL'], ['center', 'left', 'left', 'left', 'left', 'left', 'left', 'center', 'center']);
+    const gorselId = {};
+    const gorsel = f => {
+      if (!gorselId[f.no]) gorselId[f.no] = wb.addImage({ base64: f.dataUrl.split(',')[1], extension: 'jpeg' });
+      return gorselId[f.no];
+    };
+    const EMU = 9525; // piksel → EMU
+    if (v.uygunsuz.length) {
+      v.uygunsuz.forEach((s, i) => {
+        const rr = 5 + i;
+        const temel = { font: yazi(10, R.metin), border: kenar, alignment: sol };
+        yaz(uy, rr, 1, i + 1, { ...temel, font: yazi(9, R.soluk), alignment: orta });
+        yaz(uy, rr, 2, s.kod, { ...temel, font: yazi(10, R.kirmizi, true) });
+        yaz(uy, rr, 3, s.aciklama, { ...temel, font: yazi(10, R.metin, true) });
+        yaz(uy, rr, 4, s.grup, { ...temel, font: yazi(9, R.ikincil) });
+        yaz(uy, rr, 5, s.durum, temel);
+        yaz(uy, rr, 6, s.referans, temel);
+        yaz(uy, rr, 7, s.tekrar, { ...temel, font: yazi(9, R.bosY, true) });
+        yaz(uy, rr, 8, fotoBag(s.fotolar), { ...temel, ...BAGLANTI });
+        yaz(uy, rr, 9, '', temel);
+        const ilk = s.fotolar.find(f => f.dataUrl);
+        const yuk = yukseklik([[s.aciklama, 46], [s.durum, 26], [s.referans, 18], [s.tekrar, 22]], ilk ? 66 : 20);
+        uy.getRow(rr).height = yuk;
+        if (ilk) {
+          const KG = 120, KY = Math.round(yuk * 4 / 3) - 6, o = Math.min(KG / ilk.w, KY / ilk.h);
+          const g = Math.round(ilk.w * o), h = Math.round(ilk.h * o);
+          uy.addImage(gorsel(ilk), {
+            tl: { nativeCol: 8, nativeColOff: Math.round((131 - g) / 2) * EMU, nativeRow: rr - 1, nativeRowOff: 3 * EMU },
+            ext: { width: g, height: h }, editAs: 'oneCell'
+          });
+        }
+      });
+    } else {
+      kayitYok(uy, 5, 9, 'Bu formda HAYIR olarak işaretlenen madde yok.');
+    }
+
+    // ── Notlar ──
+    const nt = sayfa('Notlar', [5, 18, 90], { dondur: 4, renk: R.mavi });
+    bant(nt, 3, altMetin('Notlar'));
+    baslikSatiri(nt, 4, ['#', 'TÜR', 'NOT'], ['center', 'left', 'left']);
+    const notlar = [...v.aksilikler.map(t => ['Aksilik', t]), ...v.revizeler.map(t => ['Revize önerisi', t])];
+    if (notlar.length) {
+      notlar.forEach(([tur, t], i) => {
+        const rr = 5 + i, aks = tur === 'Aksilik';
+        const z = dolgu(aks ? R.pembe : R.maviZ);
+        yaz(nt, rr, 1, i + 1, { font: yazi(9, R.soluk), border: kenar, alignment: orta, fill: z });
+        yaz(nt, rr, 2, tur, { font: yazi(10, aks ? R.koyu : R.maviY, true), border: kenar, alignment: sol, fill: z });
+        yaz(nt, rr, 3, t, { font: yazi(10.5, R.metin), border: kenar, alignment: sol, fill: z });
+        nt.getRow(rr).height = yukseklik([[t, 90]], 20);
+      });
+      nt.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4 + notlar.length, column: 3 } };
+    } else {
+      kayitYok(nt, 5, 3, 'Bu formda aksilik veya revize önerisi kaydı yok.');
+    }
+
+    // ── Test cihazları ──
+    const tc = sayfa('Test Cihazları', [5, 26, 40, 20, 36, 18, 24], { dondur: 4, yatay: true, renk: 'FF6B7280' });
+    bant(tc, 7, altMetin('Test Cihazları'));
+    baslikSatiri(tc, 4, ['#', 'CİHAZ', 'TÜR', 'SERİ NO', 'KALİBRASYON (FORM TARİHİNDE)', 'SERTİFİKA NO', 'KURUM'], ['center', 'left', 'left', 'left', 'left', 'left', 'left']);
+    const KAL = {
+      good: [R.evetZ, R.evetY], warning: [R.bosZ, R.bosY], critical: [R.kirmizi, R.beyaz], info: [R.maviZ, R.maviY], none: [R.kdZ, R.ikincil]
+    };
+    if (v.cihazlar.length) {
+      v.cihazlar.forEach((c, i) => {
+        const rr = 5 + i, temel = { font: yazi(10, R.metin), border: kenar, alignment: sol };
+        const kal = KAL[c.kalSeviye] || KAL.none;
+        yaz(tc, rr, 1, i + 1, { ...temel, font: yazi(9, R.soluk), alignment: orta });
+        yaz(tc, rr, 2, c.ad, { ...temel, font: yazi(10, R.metin, true) });
+        yaz(tc, rr, 3, c.tur, { ...temel, font: yazi(9, R.ikincil) });
+        yaz(tc, rr, 4, c.seriNo || '—', temel);
+        yaz(tc, rr, 5, c.kalMetin || '—', { font: yazi(10, kal[1], true), fill: dolgu(kal[0]), border: kenar, alignment: sol });
+        yaz(tc, rr, 6, c.sertifika || '—', temel);
+        yaz(tc, rr, 7, c.kurum || '—', temel);
+        tc.getRow(rr).height = yukseklik([[c.ad, 26], [c.tur, 40], [c.kalMetin, 36]], 20);
+      });
+    } else {
+      kayitYok(tc, 5, 7, 'Formda kullanılan test cihazı seçilmemiş.');
+    }
+
+    // ── Fotoğraflar: ikişerli, açıklama + görsel ──
+    if (v.fotolar.length) {
+      const FG = 56, FP = 397, FYP = 300; // sütun genişliği, hücre pikseli
+      const fs = sayfa(FOTO_SAYFA, [FG, 2, FG], { renk: 'FF7C3AED', olcek: 75 }); // el ile sayfa sonu "sığdır" ayarıyla çalışmaz
+      bant(fs, 3, altMetin('Fotoğraflar'));
+      for (let i = 0; i < v.fotolar.length; i += 2) {
+        const parca = [v.fotolar[i], v.fotolar[i + 1]].filter(Boolean);
+        const rBas = 4 + 3 * (i / 2);
+        const etiketler = parca.map(f => {
+          const s = f.satir;
+          return f.no + '  ·  ' + (s ? s.kod + ' — ' + s.aciklama : (f.kod || 'Genel fotoğraf'))
+            + (s && s.tur === 'hayir' ? '  ·  HAYIR' : '') + ([s && s.grup, f.tarih].filter(Boolean).length ? '\n' + [s && s.grup, f.tarih].filter(Boolean).join(' · ') : '');
+        });
+        parca.forEach((f, j) => {
+          const c = j ? 3 : 1, hayir = f.satir && f.satir.tur === 'hayir';
+          yaz(fs, rBas, c, etiketler[j], {
+            font: yazi(10, hayir ? R.koyu : R.metin, true), fill: dolgu(hayir ? R.pembe : R.zemin), alignment: { vertical: 'top', horizontal: 'left', wrapText: true }, border: kenar
+          });
+          yaz(fs, rBas + 1, c, f.dataUrl ? '' : 'Fotoğraf rapora eklenemedi: ' + f.hata, {
+            font: { ...yazi(10, R.soluk), italic: true }, alignment: orta, border: kenar
+          });
+          if (f.dataUrl) {
+            const o = Math.min((FP - 8) / f.w, (FYP - 8) / f.h);
+            const g = Math.round(f.w * o), y = Math.round(f.h * o);
+            fs.addImage(gorsel(f), {
+              tl: { nativeCol: c - 1, nativeColOff: Math.round((FP - g) / 2) * EMU, nativeRow: rBas, nativeRowOff: Math.round((FYP - y) / 2) * EMU },
+              ext: { width: g, height: y }, editAs: 'oneCell'
+            });
+          }
+        });
+        fs.getRow(rBas).height = yukseklik(etiketler.map(t => [t, FG]), 32);
+        fs.getRow(rBas + 1).height = FYP * 0.75;
+        fs.getRow(rBas + 2).height = 10;
+        if ((i / 2 + 1) % 3 === 0 && i + 2 < v.fotolar.length) fs.getRow(rBas + 2).addPageBreak();
+      }
+    }
+
+    const buf = await wb.xlsx.writeBuffer();
+    return { blob: new Blob([buf], { type: KX_RAPOR_BICIM.xlsx.mime }) };
   }
 
   // Yeni bileşenlerin stilleri
@@ -7611,6 +8793,23 @@
     .kxm-choice span{font-size:24px;} .kxm-choice b{font-size:13px;color:#111827;} .kxm-choice small{font-size:10.5px;color:#6b7280;text-align:center;}
     .kxm-spin{width:28px;height:28px;border:3px solid #fee2e2;border-top-color:#dc2626;border-radius:50%;margin:14px auto 4px;animation:kxspin .8s linear infinite;}
     @keyframes kxspin{to{transform:rotate(360deg);}}
+    .kxr-ozet{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px;}
+    .kxr-ozet span{font-size:11px;font-weight:600;color:#4b5563;background:#f3f4f6;border-radius:999px;padding:3px 10px;}
+    .kxr-ozet b{color:#111827;font-weight:800;}
+    .kxr-ozet .no{background:#fef2f2;color:#991b1b;} .kxr-ozet .no b{color:#dc2626;}
+    .kxr-bicimler{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .kxr-bicim{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:14px;border:1.5px solid #e5e7eb;border-radius:12px;background:#fff;text-align:left;cursor:pointer;font-family:inherit;touch-action:manipulation;transition:border-color .15s,background .15s;}
+    .kxr-bicim:hover,.kxr-bicim:focus-visible{border-color:#dc2626;background:#fef2f2;outline:none;}
+    .kxr-bicim b{font-size:14px;color:#111827;} .kxr-bicim small{font-size:11.5px;line-height:1.45;color:#6b7280;}
+    .kxr-ikon{display:inline-flex;align-items:center;justify-content:center;min-width:46px;height:26px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:900;letter-spacing:.04em;color:#fff;}
+    .kxr-pdf{background:#dc2626;} .kxr-xls{background:#107c41;}
+    .kxr-not{display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;font-size:11.5px;line-height:1.45;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;}
+    .kxr-not span{flex:1;min-width:0;}
+    .kxr-not-kritik{color:#991b1b;background:#fef2f2;border-color:#fecaca;}
+    .kxr-kaydet{flex-shrink:0;border:1.5px solid currentColor;background:#fff;color:inherit;border-radius:7px;padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+    .kxr-bar{height:6px;margin:12px 0 4px;background:#fee2e2;border-radius:3px;overflow:hidden;}
+    .kxr-bar i{display:block;width:4%;height:100%;background:#dc2626;border-radius:3px;transition:width .25s;}
+    @media(max-width:480px){.kxr-bicimler{grid-template-columns:1fr;}}
     .kx-st{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;}
     .kx-st-good{background:#f0fdf4;color:#006300;} .kx-st-warning{background:#fffbeb;color:#92400e;}
     .kx-st-critical{background:#fef2f2;color:#b91c1c;} .kx-st-info{background:#eff6ff;color:#1e40af;} .kx-st-none{background:#f3f4f6;color:#6b7280;}
@@ -7946,7 +9145,6 @@
   function kfFormMenu(btn) {
     kxMenuAc(btn, [
       ['📄', 'Farklı kaydet (kopya)', () => handleFormAction('save-as')],
-      ['🖨️', 'PDF kalite belgesi', () => kfPrintCurrent()],
     ]);
   }
 
@@ -7986,9 +9184,9 @@
 
   document.head.insertAdjacentHTML('beforeend', `<style>
     /* Sade araç çubuğu: Kaydet kırmızı kalır, diğerleri beyaz; simgeler işlev rengini korur */
-    .kfhb.kfhb-org,.kfhb.kfhb-blu,.kfhb.kfhb-grn,.kfhb.kfhb-pur,.kfhb.kfhb-tel,.kfhb.kfhb-more{background:#fff;color:#374151;border:1.5px solid #e5e7eb;}
-    .kfhb.kfhb-org:hover,.kfhb.kfhb-blu:hover,.kfhb.kfhb-grn:hover,.kfhb.kfhb-pur:hover,.kfhb.kfhb-tel:hover,.kfhb.kfhb-more:hover{opacity:1;background:#f9fafb;border-color:#cbd5e1;}
-    .kfhb-grn svg{color:#16a34a;} .kfhb-pur svg{color:#7c3aed;} .kfhb-blu svg{color:#2563eb;} .kfhb-org svg{color:#ea580c;} .kfhb-tel svg{color:#0d9488;}
+    .kfhb.kfhb-org,.kfhb.kfhb-blu,.kfhb.kfhb-grn,.kfhb.kfhb-pur,.kfhb.kfhb-tel,.kfhb.kfhb-rap,.kfhb.kfhb-more{background:#fff;color:#374151;border:1.5px solid #e5e7eb;}
+    .kfhb.kfhb-org:hover,.kfhb.kfhb-blu:hover,.kfhb.kfhb-grn:hover,.kfhb.kfhb-pur:hover,.kfhb.kfhb-tel:hover,.kfhb.kfhb-rap:hover,.kfhb.kfhb-more:hover{opacity:1;background:#f9fafb;border-color:#cbd5e1;}
+    .kfhb-grn svg{color:#16a34a;} .kfhb-pur svg{color:#7c3aed;} .kfhb-blu svg{color:#2563eb;} .kfhb-org svg{color:#ea580c;} .kfhb-tel svg{color:#0d9488;} .kfhb-rap svg{color:#dc2626;}
     .kfhb.kfhb-red{border:1.5px solid #dc2626;}
     #kf-status-btn,#pf-status-btn{border:1.5px solid transparent;}
     #model-select-btn,#project-select-btn{border-color:#99f6e4;color:#0f766e;}
@@ -8510,7 +9708,7 @@
     // kalite.html ağdan geldiği için çoğu zaman sayfa zaten yenidir — o zaman ikinci yenileme yapılmaz.
     // Yenileme gerektiren durum: uygulama çevrimdışıyken önbellekteki eski sürümle açılmışsa.
     // İlk kurulumda (önceden SW yokken) yenileme gereksiz.
-    const KX_SURUM = 'kalitex-v26'; // sw.js içindeki CACHE ile AYNI olmalı
+    const KX_SURUM = 'kalitex-v27'; // sw.js içindeki CACHE ile AYNI olmalı
     const _kxHadSW = !!navigator.serviceWorker.controller;
     const _kxSwSurum = () => new Promise(res => {
       const c = navigator.serviceWorker.controller;
